@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width" />
+        <link href="css/bootstrap.min.css" type="text/css" rel="stylesheet" />
+        <link href="ratchet/css/ratchet.css" type="text/css" rel="stylesheet" />
+        <link href="ratchet/css/ratchet-theme-android.css" type="text/css" rel="stylesheet" />
+        <link href="css/home.css" type="text/css" rel="stylesheet"/>
+        <script type="text/javascript" src="../framework/libs/jquery.1.10.2.js"></script>
+        <script type="text/javascript" src="../framework/libs/jquery.mobile-1.4.2.min.js"></script>
+        <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    </head>
+
+    <body id="main">
+    <header class="bar bar-nav">
+      <h1 class="title">ODK Scan</h1>
+    </header>
+    <div id="content-container">
+
+    <div class="description-text" id="description">Report: Trimester at first ANC</div>
+
+    <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+          Months <span class="caret"></span>
+        </button>
+      <ul class="dropdown-menu" role="menu" >
+            <li><a role="menuitem" tabindex="-1" href="#">All</a></li>
+            <li><a role="menuitem" tabindex="-1" href="#">Jan 2015</a></li>
+            <li><a role="menuitem" tabindex="-1" href="#">Feb 2015</a></li>
+            <li><a role="menuitem" tabindex="-1" href="#">March 2015</a></li>
+            <li><a role="menuitem" tabindex="-1" href="#">April 2015</a></li>
+            <li><a role="menuitem" tabindex="-1" href="#">May 2015</a></li>
+            <li><a role="menuitem" tabindex="-1" href="#">June 2015</a></li>
+            <li><a role="menuitem" tabindex="-1" href="#">July 2015</a></li>
+            <li><a role="menuitem" tabindex="-1" href="#">August 2015</a></li>
+            <li><a role="menuitem" tabindex="-1" href="#">September 2015</a></li>
+            <li><a role="menuitem" tabindex="-1" href="#">October 2015</a></li>
+            <li><a role="menuitem" tabindex="-1" href="#">November 2015</a></li>
+            <li><a role="menuitem" tabindex="-1" href="#">December 2015</a></li>
+      </ul>
+    </div>
+
+    <ul id="navigation-buttons">
+        <li><button class="btn btn-primary btn-block btn-launch" id="show-ANC-report-button">
+          Show report
+        </button>
+        </li>
+    </ul>
+  </div>
+        <script type="text/javascript">
+            $(display());
+        </script>
+    </body>
+</html>
