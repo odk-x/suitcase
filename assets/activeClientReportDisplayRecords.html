@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width" />
+        <link href="css/bootstrap.min.css" type="text/css" rel="stylesheet" />
+        <link href="ratchet/css/ratchet.css" type="text/css" rel="stylesheet" />
+        <link href="ratchet/css/ratchet-theme-android.css" type="text/css" rel="stylesheet" />
+        <link href="css/home.css" type="text/css" rel="stylesheet"/>
+        <script type="text/javascript" src="../framework/libs/jquery.1.10.2.js"></script>
+        <script type="text/javascript" src="../framework/libs/jquery.mobile-1.4.2.min.js"></script>
+    </head>
+
+    <body id="main">
+    <header class="bar bar-nav">
+      <h1 class="title">ODK Scan</h1>
+    </header>
+    <div id="content-container">
+
+    <div class="description-text" id="description">Report: Active Clients</div>
+
+      <div class="container">
+        <p>Filter:</p>
+        <p>Month: <span class="first">March 2015</span></p>
+        <p>HSA: <span class="second">All</span></p>
+      </div>
+
+    <ul id="navigation-buttons">
+        <li><button id="back-to-active-clients" class="btn-launch btn btn-positive btn-block">
+          Retrun to reports</button>
+        </li>
+    </ul>
+  </div>
+    <script>
+        $('#back-to-active-clients').on('click', function() {
+        control.launchHTML('assets/activeClientReport.html');
+    });
+    </script>
+    </body>
+</html>
