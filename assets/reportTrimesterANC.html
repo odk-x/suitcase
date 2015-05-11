@@ -2,6 +2,7 @@
 <html>
     <head>
         <meta name="viewport" content="width=device-width" />
+        <link rel="stylesheet" type="text/css" href="css/bootstrap-select.css">
         <link href="css/bootstrap.min.css" type="text/css" rel="stylesheet" />
         <link href="ratchet/css/ratchet.css" type="text/css" rel="stylesheet" />
         <link href="ratchet/css/ratchet-theme-android.css" type="text/css" rel="stylesheet" />
@@ -9,6 +10,8 @@
         <script type="text/javascript" src="../framework/libs/jquery.1.10.2.js"></script>
         <script type="text/javascript" src="../framework/libs/jquery.mobile-1.4.2.min.js"></script>
         <script type="text/javascript" src="js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="js/bootstrap-select.js"></script>
+        <script type="text/javascript" src="../framework/tables/js/control.js"></script>
     </head>
 
     <body id="main">
@@ -19,25 +22,52 @@
 
     <div class="description-text" id="description">Report: Trimester at first ANC</div>
 
-    <div class="btn-group">
-        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-          Months <span class="caret"></span>
-        </button>
-      <ul class="dropdown-menu" role="menu" >
-            <li><a role="menuitem" tabindex="-1" href="#">All</a></li>
-            <li><a role="menuitem" tabindex="-1" href="#">Jan 2015</a></li>
-            <li><a role="menuitem" tabindex="-1" href="#">Feb 2015</a></li>
-            <li><a role="menuitem" tabindex="-1" href="#">March 2015</a></li>
-            <li><a role="menuitem" tabindex="-1" href="#">April 2015</a></li>
-            <li><a role="menuitem" tabindex="-1" href="#">May 2015</a></li>
-            <li><a role="menuitem" tabindex="-1" href="#">June 2015</a></li>
-            <li><a role="menuitem" tabindex="-1" href="#">July 2015</a></li>
-            <li><a role="menuitem" tabindex="-1" href="#">August 2015</a></li>
-            <li><a role="menuitem" tabindex="-1" href="#">September 2015</a></li>
-            <li><a role="menuitem" tabindex="-1" href="#">October 2015</a></li>
-            <li><a role="menuitem" tabindex="-1" href="#">November 2015</a></li>
-            <li><a role="menuitem" tabindex="-1" href="#">December 2015</a></li>
-      </ul>
+    <div class="btn-group">Months</div>
+
+
+    <div class="form-group">
+      <select class="selectpicker" multiple>
+          <option>All</option>
+          <option>Jan 2015</option>
+          <option>Feb 2015</option>
+          <option>March 2015</option>
+          <option>April 2015</option>
+          <option>May 2015</option>
+          <option>June 2015</option>
+          <option>July 2015</option>
+          <option>August 2015</option>
+          <option>September 2015</option>
+          <option>October 2015</option>
+          <option>November 2015</option>
+          <option>December 2015</option>
+      </select>
+    </div>
+
+    <div class="btn-group">HSA</div>
+
+    <div class="form-group">
+      <select class="selectpicker" multiple>
+            <option>Rodney Kamaliza</option>
+            <option>Mercy Macholowe</option>
+            <option>Luka M'bawa</option>
+            <option>Ben Banda</option>
+            <option>Cosmas Bakili</option>
+            <option>Mackson Khalawako</option>
+            <option>Gladys Kaselo</option>
+            <option>Tobias Kadzoma</option>
+            <option>Asnty Chikapaza</option>
+            <option>George Koloko</option>
+            <option>Mabvuto Mandere</option>
+            <option>Acklen Mdoka</option>
+            <option>Maxwel Kadzilawa</option>
+            <option>Chisomo Chisada</option>
+            <option>Beatrice Chikaoneka</option>
+            <option>Charles Isaac</option>
+            <option>George Chidulo</option>
+            <option>Emma Muwa</option>
+            <option>Pemphero Katondo</option>
+            <option>Catherine Kazembe</option>
+      </select>
     </div>
 
     <ul id="navigation-buttons">
@@ -47,6 +77,11 @@
         </li>
     </ul>
   </div>
+    <script>
+        $('#show-ANC-report-button').on('click', function() {
+        control.launchHTML('assets/reportTrimesterANCgraph.html');
+    });
+    </script>
         <script type="text/javascript">
             $(display());
         </script>
