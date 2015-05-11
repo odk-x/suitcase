@@ -10,4 +10,12 @@ function display() {
         control.launchHTML('assets/reportTrimesterANC.html');
     });
 
+    $('#active-clients-button').on('click', function() {
+        control.launchHTML('assets/activeClientReport.html');
+    });
+
+    $('#find-client-button').on('click', function() {
+        control.launchHTML('assets/findClient.html');
+    });
+
 }
