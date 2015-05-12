@@ -1,3 +1,19 @@
 #ignore sublime project files
 assets/reports.sublime-project
 assets/reports.sublime-workspace
+
+# app target folder
+webapp/target/*
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+
+# IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+out/
