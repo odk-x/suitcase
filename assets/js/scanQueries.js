@@ -6,6 +6,7 @@ var scanQueries = {};
 scanQueries.month = 'month';
 scanQueries.hsa_name = 'hsa'; 
 
+var TABLE_NAME = 'scan_MNH_Register1';
 scanQueries.getKeysToAppendToURL = function(newMonth, newHSAName) {
     var result =
         '?' +
@@ -58,4 +59,28 @@ scanQueries.showResultPage = function(pagePath) {
         window.location.href = url;
     });
 
+};
+
+scanQueries.getAllExistingRecords = function() {
+    var whereClause = null; 
+    var selectionArgs = null;
+    
+    var records = control.query(
+            TABLE_NAME,
+            whereClause,
+            selectionArgs);
+
+    return records;
+};
+
+scanQueries.getExistingRecordsByHSA = function(hsa_name) {
+    var whereClause = 'HSA_name = ?'; 
+    var selectionArgs = [hsa_name];
+    
+    var records = control.query(
+            TABLE_NAME,
+            whereClause,
+            selectionArgs);
+
+    return records;
 };

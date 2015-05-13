@@ -8,10 +8,37 @@
         <link href="css/home.css" type="text/css" rel="stylesheet"/>
         <script type="text/javascript" src="../framework/libs/jquery.1.10.2.js"></script>
         <script type="text/javascript" src="../framework/libs/jquery.mobile-1.4.2.min.js"></script>
+        <script type="text/javascript" src="../framework/tables/js/data.js"></script>
         <script type="text/javascript" src="../framework/tables/js/control.js"></script> 
+        <script type="text/javascript" src="js/ACRDisplayRecords.js"></script>
         <script type="text/javascript" src="js/scanQueries.js"></script>
     </head>
-
+    <style>
+      p, div{
+        text-indent: 50px;
+      }
+      #chart{
+        color: green;
+        font-weight: bold;
+        font-size: 15px;
+      }
+      p{
+        font-size: 24px;
+        font-weight: bold;
+      }
+      .first {
+        color: green;
+      }
+      .second {
+        color: red;
+      }
+      table { 
+        table-layout: fixed; 
+      }
+      table th, table td { 
+        overflow: hidden; 
+      }
+    </style>
     <body id="main">
     <header class="bar bar-nav">
       <h1 class="title">ODK Scan</h1>
@@ -20,12 +47,21 @@
 
     <div class="description-text" id="description">Report: Active Clients</div>
 
-      <div class="container">
-        <p>Filter:</p>
-        <p>Month: <span id="month" class="first"></span></p>
-        <p>HSA: <span id="hsa" class="second"></span></p>
-      </div>
-
+    <div class="container">
+      <p>Filter:</p>
+      <p>Month: <span id="month" class="first"></span></p>
+      <p>HSA: <span id="hsa" class="second"></span></p>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-striped table-condensed">
+        <tbody id="report-table">
+          <tr class="info">
+            <td class="col-md-2">Total</td>
+            <td class="col-md-2" id="total"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <ul id="navigation-buttons">
         <li><button id="back-to-active-clients" class="btn-launch btn btn-positive btn-block">
           Retrun to reports</button>
@@ -34,8 +70,10 @@
   </div>
     <script type="text/javascript">
         $(scanQueries.showQueryParams());
+        $(display());
         $('#back-to-active-clients').on('click', function() {
-            control.launchHTML('assets/activeClientReport.html');
+            var url = control.getFileAsUrl('assets/activeClientReport.html');
+            window.location.href = url;
         });
     </script>
     </body>
