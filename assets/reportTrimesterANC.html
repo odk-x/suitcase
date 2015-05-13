@@ -12,6 +12,7 @@
         <script type="text/javascript" src="js/bootstrap.min.js"></script>
         <script type="text/javascript" src="js/bootstrap-select.js"></script>
         <script type="text/javascript" src="../framework/tables/js/control.js"></script>
+        <script type="text/javascript" src="js/scanQueries.js"></script> 
     </head>
 
     <body id="main">
@@ -22,65 +23,60 @@
 
     <div class="description-text" id="description">Report: Trimester at first ANC</div>
 
-    <div class="btn-group">Months</div>
+      <div class="btn-group">Months</div>
+      <div class="form-group">
+        <select id="month" class="selectpicker" multiple>
+            <option value="all" >All</option>
+            <option value="Jan 2015" >Jan 2015</option>
+            <option value="Feb 2015" >Feb 2015</option>
+            <option value="March 2015" >March 2015</option>
+            <option value="April 2015" >April 2015</option>
+            <option value="May 2015" >May 2015</option>
+            <option value="June 2015" >June 2015</option>
+            <option value="July 2015" >July 2015</option>
+            <option value="August 2015" >August 2015</option>
+            <option value="September 2015" >September 2015</option>
+            <option value="October 2015" >October 2015</option>
+            <option value="November 2015" >November 2015</option>
+            <option value="December 2015" >December 2015</option>
+        </select>
+      </div>
 
-
-    <div class="form-group">
-      <select class="selectpicker" multiple>
-          <option>All</option>
-          <option>Jan 2015</option>
-          <option>Feb 2015</option>
-          <option>March 2015</option>
-          <option>April 2015</option>
-          <option>May 2015</option>
-          <option>June 2015</option>
-          <option>July 2015</option>
-          <option>August 2015</option>
-          <option>September 2015</option>
-          <option>October 2015</option>
-          <option>November 2015</option>
-          <option>December 2015</option>
-      </select>
-    </div>
-
-    <div class="btn-group">HSA</div>
-
-    <div class="form-group">
-      <select class="selectpicker" multiple>
-            <option>Rodney Kamaliza</option>
-            <option>Mercy Macholowe</option>
-            <option>Luka M'bawa</option>
-            <option>Ben Banda</option>
-            <option>Cosmas Bakili</option>
-            <option>Mackson Khalawako</option>
-            <option>Gladys Kaselo</option>
-            <option>Tobias Kadzoma</option>
-            <option>Asnty Chikapaza</option>
-            <option>George Koloko</option>
-            <option>Mabvuto Mandere</option>
-            <option>Acklen Mdoka</option>
-            <option>Maxwel Kadzilawa</option>
-            <option>Chisomo Chisada</option>
-            <option>Beatrice Chikaoneka</option>
-            <option>Charles Isaac</option>
-            <option>George Chidulo</option>
-            <option>Emma Muwa</option>
-            <option>Pemphero Katondo</option>
-            <option>Catherine Kazembe</option>
-      </select>
-    </div>
+      <div class="btn-group">HSA</div>
+      <div class="form-group">
+        <select id="hsa" class="selectpicker" multiple>
+              <option value="Rodney Kamaliza" >Rodney Kamaliza</option>
+              <option value="Mercy Macholowe" >Mercy Macholowe</option>
+              <option value="Luka M'bawa" >Luka M'bawa</option>
+              <option value="Ben Banda" >Ben Banda</option>
+              <option value="Cosmas Bakili" >Cosmas Bakili</option>
+              <option value="Mackson Khalawako" >Mackson Khalawako</option>
+              <option value="Gladys Kaselo" >Gladys Kaselo</option>
+              <option value="Tobias Kadzoma" >Tobias Kadzoma</option>
+              <option value="Asnty Chikapaza" >Asnty Chikapaza</option>
+              <option value="George Koloko" >George Koloko</option>
+              <option value="Mabvuto Mandere" >Mabvuto Mandere</option>
+              <option value="Acklen Mdoka" >Acklen Mdoka</option>
+              <option value="Maxwel Kadzilawa" >Maxwel Kadzilawa</option>
+              <option value="Chisomo Chisada" >Chisomo Chisada</option>
+              <option value="Beatrice Chikaone" >Beatrice Chikaoneka</option>
+              <option value="Charles Isaac" >Charles Isaac</option>
+              <option value="George Chidulo" >George Chidulo</option>
+              <option value="Emma Muwa" >Emma Muwa</option>
+              <option value="Pemphero Katondo" >Pemphero Katondo</option>
+              <option value="Catherine Kazembe" >Catherine Kazembe</option>
+        </select>
+      </div>
 
     <ul id="navigation-buttons">
-        <li><button class="btn btn-primary btn-block btn-launch" id="show-ANC-report-button">
+        <li><button class="btn btn-primary btn-block btn-launch" id="show-report-button">
           Show report
         </button>
         </li>
     </ul>
   </div>
-    <script>
-        $('#show-ANC-report-button').on('click', function() {
-        control.launchHTML('assets/reportTrimesterANCgraph.html');
-    });
+    <script type="text/javascript">
+      $(scanQueries.showResultPage('assets/reportTrimesterANCgraph.html'));
     </script>
     </body>
 </html>

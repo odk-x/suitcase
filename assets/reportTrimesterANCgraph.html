@@ -10,9 +10,9 @@
     <link href="ratchet/css/ratchet.css" type="text/css" rel="stylesheet" />
     <link href="css/scanHomeScreen.css" type="text/css" rel="stylesheet" />
     <link href="css/bootstrap.min.css" type="text/css" rel="stylesheet" />
-        <link href="css/bootstrap.min.css" type="text/css" rel="stylesheet" />
-        <link href="ratchet/css/ratchet-theme-android.css" type="text/css" rel="stylesheet" />
-        <link href="css/home.css" type="text/css" rel="stylesheet"/>
+    <link href="css/bootstrap.min.css" type="text/css" rel="stylesheet" />
+    <link href="ratchet/css/ratchet-theme-android.css" type="text/css" rel="stylesheet" />
+    <link href="css/home.css" type="text/css" rel="stylesheet"/>
     <script type="text/javascript" src="../framework/libs/jquery.1.10.2.js"></script>
     <script type="text/javascript" src="js/bootstrap.js"></script>
     <script type="text/javascript" src="js/ratchet.js"></script>
@@ -79,8 +79,8 @@
     <div id="graph" class="container">
       <div>
         <p>Filter:</p>
-        <p>Month: <span class="first">March 2015</span></p>
-        <p>HSA: <span class="second">All</span></p>
+        <p>Month: <span id="month" class="first"></span></p>
+        <p>HSA: <span id="hsa" class="second"></span></p>
       </div>
       <svg class="chart"></svg>
     </div>
@@ -142,6 +142,7 @@ var data = [
       .attr("height", function(d) { return height - y(d.value); })
       .attr("width", x.rangeBand());
 
+    $(scanQueries.showQueryParams());
     $('#go_home').on('click', function() {
         var url = control.getFileAsUrl('assets/index.html');
         window.location.href = url;
