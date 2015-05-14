@@ -42,10 +42,13 @@ scanQueries.getQueryParameter = function(key) {
 };
 
 scanQueries.showQueryParams = function() {
+    var idCell;
     var month = scanQueries.getQueryParameter(scanQueries.month);
     var hsa_name = scanQueries.getQueryParameter(scanQueries.hsa_name);
-    var idCell = $('#month');
-    $(idCell).html(month);
+    if (month !== null) {
+        idCell = $('#month');
+        $(idCell).html(month);
+    };
     idCell = $('#hsa');
     $(idCell).html(hsa_name);
 };
@@ -62,7 +65,7 @@ scanQueries.showResultPage = function(pagePath) {
 };
 
 scanQueries.getExistingRecordsByHSA = function(hsa_name) {
-    var whereClause = 'HSA_name = ?'; 
+    var whereClause = 'HSA_name = ? AND dischar_comp is NULL'; 
     var selectionArgs = [hsa_name];
     
     var records = control.query(
