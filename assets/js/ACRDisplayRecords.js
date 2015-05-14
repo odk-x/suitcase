@@ -31,13 +31,20 @@ function display() {
     var arr_hsa = hsa.split(','); 
 
     var total = 0;
-    if (arr_month.length == 1 && arr_hsa.length == 1) {
-      if (arr_month[0] == "all" && arr_hsa[0] == "all") {
-        //TODO: 
-        var record = scanQueries.getAllExistingRecords();
+    //TODO : temporary we don't care about months
+    if (arr_hsa.length == 1) {
+      if (arr_hsa[0] == "all") {
+        HSA_list.forEach(function(entry){
+          var record = scanQueries.getExistingRecordsByHSA(entry);
+          var subTotal = record.getCount();
+          if (subTotal !== 0) {
+            createRow(entry, subTotal);
+            total += subTotal;
+          }
+        });
       } else {
         // one HSA and one MONTH
-        // so only one row
+        // so only one row to display
         var record = scanQueries.getExistingRecordsByHSA(arr_hsa[0]);
         total = record.getCount();
         createRow(arr_hsa[0], total);
@@ -51,12 +58,6 @@ function display() {
       });
     }
     $('#total').html(total);
-}
-
-function addRowAndCell(arr_hsa_names, arr_hsa_total) {
-  for(var i = 0; i < arr_hsa_names.length; i ++) {
-      createRow(arr_hsa_names[i], arr_hsa_total[i]);
-  }
 }
 
 function createRow(name, value) {

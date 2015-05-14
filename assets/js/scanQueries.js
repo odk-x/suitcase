@@ -61,18 +61,6 @@ scanQueries.showResultPage = function(pagePath) {
 
 };
 
-scanQueries.getAllExistingRecords = function() {
-    var whereClause = null; 
-    var selectionArgs = null;
-    
-    var records = control.query(
-            TABLE_NAME,
-            whereClause,
-            selectionArgs);
-
-    return records;
-};
-
 scanQueries.getExistingRecordsByHSA = function(hsa_name) {
     var whereClause = 'HSA_name = ?'; 
     var selectionArgs = [hsa_name];
