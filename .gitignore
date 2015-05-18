@@ -17,3 +17,8 @@ webapp/target/*
 *.iws
 .idea/
 out/
+
+
+
+framework/
+*~

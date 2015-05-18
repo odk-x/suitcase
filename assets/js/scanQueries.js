@@ -80,6 +80,31 @@ scanQueries.getExistingRecordsByHSA = function(hsa_name) {
     return records;
 };
 
+scanQueries.getExistingRecordsByClientID = function(id) {
+    var whereClause = 'clientID = ?';
+    var selectionArgs = [id];
+    
+    var records = control.query(
+            TABLE_NAME,
+            whereClause,
+            selectionArgs);
+
+    return records;
+};
+
+
+scanQueries.getExistingRecordByName = function(name) {
+   
+    var whereClause = 'name = ?'; 
+    var selectionArgs = [name];
+    
+    var records = control.query(
+            TABLE_NAME,
+            whereClause,
+            selectionArgs);
+
+    return records;
+};
 scanQueries.toast = function(msg){
     $("<div class='ui-loader ui-overlay-shadow ui-body-e ui-corner-all'><h3>"+msg+"</h3></div>")
     .css({ display: "block", 
