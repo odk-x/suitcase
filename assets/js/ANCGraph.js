@@ -24,6 +24,10 @@ var HSA_list = [
     "Catherine Kazembe"
 ];
 
+Array.prototype.contains = function(element){
+    return this.indexOf(element) > -1;
+};
+
 function display() {
   var month = scanQueries.getQueryParameter(scanQueries.month);
   var arr_month = month.split(',');
@@ -43,28 +47,35 @@ function display() {
     if (recordList.getCount() > 0) {
       var edd_dates = recordList.getColumnData("EDD");
       var anc_v1s = recordList.getColumnData("ANC_v1");
+      var hv1_dates = recordList.getColumnData("V1_date");
 
       for (var i = 0; i < recordList.getCount(); i++) {
-        var testEDD = JSON.parse(edd_dates);
-        var testANC = JSON.parse(anc_v1s);
+        var testHV1 = JSON.parse(hv1_dates);
+        var hv1_date = testHV1[i].toString();
+        var arr_hv1_date = hv1_date.split('/');
 
-        var edd_date = testEDD[i].toString();
-        var anc_v1 = testANC[i].toString();
-       
-        var arr_edd_date = edd_date.split('/');
-        var data_edd = new Date("20"+arr_edd_date[2], arr_edd_date[1] , arr_edd_date[0]).getTime();
+        if (arr_month[0] == "all" || arr_month.contains(arr_hv1_date[1])) {
+          var testEDD = JSON.parse(edd_dates);
+          var testANC = JSON.parse(anc_v1s);
 
-        var arr_anc_v1 = anc_v1.split('/');
-        var data_anc_v1 = new Date("20"+arr_anc_v1[2], arr_anc_v1[1] , arr_anc_v1[0]).getTime();
+          var edd_date = testEDD[i].toString();
+          var anc_v1 = testANC[i].toString();
 
-        var days_pregnant = 252 - ((data_edd - data_anc_v1)/(1000*60*60*24));
+          var arr_edd_date = edd_date.split('/');
+          var data_edd = new Date("20"+arr_edd_date[2], arr_edd_date[1] , arr_edd_date[0]).getTime();
 
-        if (days_pregnant <= 82) {
-          tri1++;
-        } else if (days_pregnant <= 168) {
-          tri2++;
-        } else {
-          tri3++;
+          var arr_anc_v1 = anc_v1.split('/');
+          var data_anc_v1 = new Date("20"+arr_anc_v1[2], arr_anc_v1[1] , arr_anc_v1[0]).getTime();
+
+          var days_pregnant = 252 - ((data_edd - data_anc_v1)/(1000*60*60*24));
+
+          if (days_pregnant <= 82) {
+            tri1++;
+          } else if (days_pregnant <= 168) {
+            tri2++;
+          } else {
+            tri3++;
+          }
         }
       }
     }
