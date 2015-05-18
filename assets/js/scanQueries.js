@@ -57,9 +57,13 @@ scanQueries.showResultPage = function(pagePath) {
     $('#show-report-button').on('click', function() {
         var month = $("#month").val();
         var hsa_name = $("#hsa").val();
-        var queryString = scanQueries.getKeysToAppendToURL(month, hsa_name);
-        var url = control.getFileAsUrl(pagePath + queryString);
-        window.location.href = url;
+        if (null == hsa_name) {
+            scanQueries.toast('Please select HSA from list.');
+        } else {
+            var queryString = scanQueries.getKeysToAppendToURL(month, hsa_name);
+            var url = control.getFileAsUrl(pagePath + queryString);
+            window.location.href = url;
+        };
     });
 
 };
@@ -75,3 +79,33 @@ scanQueries.getExistingRecordsByHSA = function(hsa_name) {
 
     return records;
 };
+
+scanQueries.toast = function(msg){
+    $("<div class='ui-loader ui-overlay-shadow ui-body-e ui-corner-all'><h3>"+msg+"</h3></div>")
+    .css({ display: "block", 
+        opacity: 0.90, 
+        position: "fixed",
+        padding: "7px",
+        background: "#969696",
+        color: "#ffffff",
+        "text-align": "center",
+        width: "270px",
+        left: ($(window).width() - 284)/2,
+        top: $(window).height()/2 })
+    .appendTo( $('#content-container')).delay( 1500 )
+    .fadeOut( 400, function(){
+        $(this).remove();
+    });
+}
+
+$(document).ready(function () {
+    $(function() {
+        $('#hsa').on('change', function(){
+          var selected = $(this).find("option:selected").val();
+          if (selected === "all") {
+            $('#hsa').selectpicker('deselectAll');
+            $('#hsa').selectpicker('val', 'all');          
+          };
+        });
+    });
+})
