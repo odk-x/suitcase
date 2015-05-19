@@ -84,7 +84,7 @@ var displayGroup = function(idxStart) {
         var item = $('<li>');
         item.attr('rowId', data.getRowId(i));
         item.attr('class', 'item_space');
-        item.text(data.getData(i, 'name'));
+        item.text("Name: "+ data.getData(i, 'name') + " ID: " + data.getData(i, 'clientID'));
 
 
         /* Creates arrow icon (Nothing to edit here) */
