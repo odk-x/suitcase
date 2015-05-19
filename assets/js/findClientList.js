@@ -1,4 +1,4 @@
-**
+/**
  * This is the file that will be creating the list view.
  */
 /* global $, control, data */
