@@ -6,7 +6,7 @@
     </head>
     <body>
 
-        <div class="container">
+        <div>
             <#include "${templateName}">
         </div>
 
