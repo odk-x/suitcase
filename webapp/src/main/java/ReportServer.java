@@ -22,6 +22,7 @@ public class ReportServer {
     static RESTClient client = new RESTClient();
     static TableInfo tableInfo;
     static RowsData rows;
+    static boolean isFirstTime = true;
 
     public static void main(String[] args) {
         downloadData();
@@ -33,6 +34,10 @@ public class ReportServer {
         get(new FreeMarkerRoute("/") {
             @Override
             public ModelAndView handle(Request request, Response response) {
+                if (!isFirstTime) {
+                    downloadData();
+                }
+                isFirstTime = false;
                 Map<String, Object> viewObjects = new HashMap<String, Object>();
                 viewObjects.put("templateName", "spreedsheet.ftl");
                 viewObjects.put("spreedsheet", builder.buildSpreedSheet());
