@@ -18,8 +18,4 @@ public class RowsData implements Serializable {
     public List<Row> getRows() {
         return mRows;
     }
-
-    public void setRows(List<Row> rows) {
-        mRows = rows;
-    }
 }

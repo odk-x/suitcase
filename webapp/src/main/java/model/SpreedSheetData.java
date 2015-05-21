@@ -27,16 +27,8 @@ public class SpreedSheetData {
         return mFormName;
     }
 
-    public void setFormName(String formName) {
-        mFormName = formName;
-    }
-
     public List<List<SpreedSheetBuilder.SpreedSheetColumn>> getSpreedSheetColumns() {
         return mSpreedSheetColumns;
-    }
-
-    public void setSpreedSheetColumns(List<List<SpreedSheetBuilder.SpreedSheetColumn>> spreedSheetColumns) {
-        mSpreedSheetColumns = spreedSheetColumns;
     }
 
     public Integer getColumnsNumb() {

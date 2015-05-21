@@ -20,15 +20,8 @@ public class Column implements Serializable {
         return mColumnName;
     }
 
-    public void setColumnName(String columnName) {
-        mColumnName = columnName;
-    }
-
     public String getColumnValue() {
         return mColumnValue;
     }
 
-    public void setColumnValue(String columnValue) {
-        mColumnValue = columnValue;
-    }
 }

@@ -21,15 +21,8 @@ public class Row implements Serializable {
         return mRowID;
     }
 
-    public void setRowID(String rowID) {
-        mRowID = rowID;
-    }
-
     public List<Column> getOrderedColumns() {
         return mOrderedColumns;
     }
 
-    public void setOrderedColumns(List<Column> orderedColumns) {
-        mOrderedColumns = orderedColumns;
-    }
 }

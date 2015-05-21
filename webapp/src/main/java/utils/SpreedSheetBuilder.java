@@ -25,15 +25,9 @@ public class SpreedSheetBuilder {
 
     public String buildSpreedSheet() {
         StringBuilder html = new StringBuilder();
-        html.append("<style type=\"text/css\">\n" +
-                ".report  {border-collapse:collapse;border-spacing:0;}\n" +
-                ".report td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}\n" +
-                ".report th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}\n" +
-                ".report .label{text-align:center}\n" +
-                "</style>");
-        html.append("<table class='report'>");
+        html.append("<table class=\"table table-striped table-condensed\">");
         html.append("<thead>")
-                .append("<th collspan='" + mSheetData.getColumnsNumb() + "'>"
+                .append("<th collspan=\"" + mSheetData.getColumnsNumb() + "\">"
                         + mSheetData.getFormName() + "</th>").append("</thead>")
                 .append("<tbody>");
 
@@ -43,14 +37,14 @@ public class SpreedSheetBuilder {
             if (formIndex == 1) {
                 html.append("<tr><td></td>");
                 for (SpreedSheetColumn column : row) {
-                    html.append("<td class='label' collspan='4'>" + column.getFieldLabelColumn().getValue() + "</td>");
+                    html.append("<td collspan=\"4\">" + column.getFieldLabelColumn().getValue() + "</td>");
                 }
                 html.append("</tr>");
-                html.append("<tr><td>" + SpreedSheetData.LABELS_ROW[0] + "</td>");
+                html.append("<tr class=\"info\"><td>" + SpreedSheetData.LABELS_ROW[0] + "</td>");
                 for (int i = 0; i < mSheetData.getColumnsNumb(); i++) {
                     html.append("<td>" + SpreedSheetData.LABELS_ROW[1] + "</td>");
                     html.append("<td>" + SpreedSheetData.LABELS_ROW[2] + "</td>");
-                    html.append("><td>" + SpreedSheetData.LABELS_ROW[3] + "</td>");
+                    html.append("<td>" + SpreedSheetData.LABELS_ROW[3] + "</td>");
                     html.append("<td>" + SpreedSheetData.LABELS_ROW[4] + "</td>");
                 }
                 html.append("</tr>");
@@ -61,7 +55,12 @@ public class SpreedSheetBuilder {
                 html.append("<td>" + column.getFieldLabelColumn().getValue() + "</td>");
                 html.append("<td>" + "TBD"/*column.getRawValueColumn().getValue()*/ + "</td>");
                 html.append("<td>" + column.getFinalValueColumn().getValue() + "</td>");
-                html.append("<td><img src='" + column.getImageColumn().getValue() + "'></td>");
+                String imgValue = column.getImageColumn().getValue();
+                if (imgValue == null) {
+                    html.append("<td></td>");
+                } else {
+                    html.append("<td><img src=\"" + imgValue + "\"></td>");
+                }
             }
             html.append("</tr>");
             formIndex++;
@@ -79,8 +78,12 @@ public class SpreedSheetBuilder {
                 // column orderedColumns.get(i) creates two columns
                 // column orderedColumns.get(i + 1) contains type of field AND is redundant IMO 
                 // orderedColumns.get(i + 2) contains image file name value
-                String imgURL = info.getInstanceFilesURL() + File.separator + row.getRowID() + File.separator +
-                        "file/" + orderedColumns.get(i + 2).getColumnValue();
+                String imgName = orderedColumns.get(i + 2).getColumnValue();
+                String imgURL = null;
+                if (null != imgName) {
+                    imgURL = info.getInstanceFilesURL() + File.separator + row.getRowID() + File.separator +
+                            "file/" + imgName;
+                }
                 rowColumns.add(generateSheetColumn(orderedColumns.get(i), imgURL));
             }
             sheetRow.add(rowColumns);
@@ -138,10 +141,6 @@ public class SpreedSheetBuilder {
 
         public String getValue() {
             return value;
-        }
-
-        public void setValue(String value) {
-            this.value = value;
         }
     }
 }

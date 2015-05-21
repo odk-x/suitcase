@@ -3,7 +3,6 @@ package model.serialization;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -22,38 +21,16 @@ public class TableInfo implements Serializable {
 
     private List<Row> mRowList;
 
-    public TableInfo() {
-    }
-
-    public TableInfo(String schemaTag, String tableID, String instanceFilesURL) {
-        mSchemaTag = schemaTag;
-        mTableID = tableID;
-        mInstanceFilesURL = instanceFilesURL;
-        mRowList = new ArrayList<Row>();
-    }
-
     public String getSchemaTag() {
         return mSchemaTag;
-    }
-
-    public void setSchemaTag(String schemaTag) {
-        mSchemaTag = schemaTag;
     }
 
     public String getTableID() {
         return mTableID;
     }
 
-    public void setTableID(String tableID) {
-        mTableID = tableID;
-    }
-
     public String getInstanceFilesURL() {
         return mInstanceFilesURL;
-    }
-
-    public void setInstanceFilesURL(String instanceFilesURL) {
-        mInstanceFilesURL = instanceFilesURL;
     }
 
     public List<Row> getRowList() {
