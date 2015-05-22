@@ -122,7 +122,7 @@ public class ReportServer {
                 break;
             case MAC:
                 Runtime rt = Runtime.getRuntime();
-                rt.exec( "open" + LOCAL_URL);
+                rt.exec( "open " + LOCAL_URL);
                 break;
             case LINUX:
                 Runtime runtime = Runtime.getRuntime();
