@@ -13,12 +13,16 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
 import static spark.Spark.get;
 
 public class ReportServer {
+    private static final String LOCAL_URL = "http://localhost:4567";
+    private static final String ERROR = "An error occurred when trying to open browser ERROR: ";
     static RESTClient client = new RESTClient();
     static TableInfo tableInfo;
     static RowsData rows;
@@ -61,25 +65,88 @@ public class ReportServer {
 
     private static void buildJFrame() {
         final JFrame frame = new JFrame("M&E Report");
-        JPanel panel = new JPanel();
-        panel.setLayout(new FlowLayout());
-        JLabel label = new JLabel("Stop server");
-        JButton button = new JButton();
-
-        button.setText("Stop");
-        button.addActionListener(new ActionListener() {
+        JPanel contentPanel = new JPanel(new GridLayout(2, 1));
+        JPanel buttonsPanel = new JPanel(new GridLayout(2, 2));
+        JPanel textPanel = new JPanel(new GridLayout(1, 1));
+        JLabel serverLabel = new JLabel("Stop server");
+        JButton stopServerButton = new JButton();
+        JLabel goToReportLabel = new JLabel("Show Report");
+        JButton showReportButton = new JButton();
+        final JTextArea textArea = new JTextArea ();
+        JScrollPane scroll = new JScrollPane (textArea,
+                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        textArea.append("M&E report is available\n at " + LOCAL_URL);
+        showReportButton.setText("Show");
+        showReportButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    openBrowser();
+                } catch (IOException ioe) {
+                    textArea.append(ERROR + ioe.getMessage() + "\n");
+                } catch (URISyntaxException use) {
+                    textArea.append(ERROR + use.getMessage() + "\n");
+                }
+            }
+        });
+        stopServerButton.setText("Stop");
+        stopServerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 frame.dispose();
                 System.exit(0);
             }
         });
-        panel.add(label);
-        panel.add(button);
-        frame.add(panel);
+        buttonsPanel.add(goToReportLabel);
+        buttonsPanel.add(showReportButton);
+        buttonsPanel.add(serverLabel);
+        buttonsPanel.add(stopServerButton);
+        textPanel.add(scroll);
+        contentPanel.add(buttonsPanel, 0);
+        contentPanel.add(textPanel, 1);
+        buttonsPanel.setSize(300, 150);
+        textArea.setSize(300, 150);
+        textPanel.setSize(300, 150);
+        contentPanel.setSize(300, 300);
+        frame.add(contentPanel);
         frame.setSize(300, 300);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
+    }
+
+    private static void openBrowser() throws URISyntaxException, IOException{
+        switch (determineSystem()) {
+            case WIN:
+                Desktop.getDesktop().browse(new URI(LOCAL_URL));
+                break;
+            case MAC:
+                Runtime rt = Runtime.getRuntime();
+                rt.exec( "open" + LOCAL_URL);
+                break;
+            case LINUX:
+                Runtime runtime = Runtime.getRuntime();
+                runtime.exec("/usr/bin/firefox -new-window " + LOCAL_URL);
+                break;
+            default:
+            break;
+        }
+    }
+
+    private static OS determineSystem() {
+        OS runningOn = null;
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.indexOf( "win" ) >= 0) {
+            runningOn = OS.WIN;
+        } else if (os.indexOf( "mac" ) >= 0) {
+            runningOn = OS.MAC;
+        } else if (os.indexOf( "nix") >=0 || os.indexOf( "nux") >=0) {
+            runningOn = OS.LINUX;
+        }
+        return runningOn;
+    }
+
+    enum OS {
+        WIN, MAC, LINUX
     }
 }
