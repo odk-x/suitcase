@@ -24,4 +24,8 @@ public class Column implements Serializable {
         return mColumnValue;
     }
 
+    @Override
+    public String toString() {
+        return mColumnName;
+    }
 }

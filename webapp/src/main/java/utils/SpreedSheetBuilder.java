@@ -27,7 +27,7 @@ public class SpreedSheetBuilder {
         StringBuilder html = new StringBuilder();
         html.append("<table class=\"table table-striped table-condensed\">");
         html.append("<thead>")
-                .append("<tr><th colspan=\"" + mSheetData.getColumnsNumb() + "\">"
+                .append("<tr><th colspan=\"" + SpreedSheetData.COLS_COUNT + "\">"
                         + mSheetData.getFormName() + "</th></tr>");
 
         int formIndex = 1;
@@ -40,7 +40,7 @@ public class SpreedSheetBuilder {
                 }
                 html.append("</tr>");
                 html.append("<tr class=\"info\"><th>" + SpreedSheetData.LABELS_ROW[0] + "</th>");
-                for (int i = 0; i < mSheetData.getColumnsNumb(); i++) {
+                for (int i = 0; i < SpreedSheetData.COLS_COUNT; i++) {
                     html.append("<th>" + SpreedSheetData.LABELS_ROW[1] + "</th>");
                     html.append("<th>" + SpreedSheetData.LABELS_ROW[2] + "</th>");
                     html.append("<th>" + SpreedSheetData.LABELS_ROW[3] + "</th>");
@@ -72,32 +72,40 @@ public class SpreedSheetBuilder {
         List<List<SpreedSheetColumn>> sheetRow = new ArrayList<List<SpreedSheetColumn>>();
         for (Row row : info.getRowList()) {
             List<Column> orderedColumns = row.getOrderedColumns();
-            List<SpreedSheetColumn> rowColumns = new ArrayList<SpreedSheetColumn>();
-            for (int i = 0; i < orderedColumns.size(); i += 3) {
-                // column orderedColumns.get(i) creates two columns
-                // column orderedColumns.get(i + 1) contains type of field AND is redundant IMO 
-                // orderedColumns.get(i + 2) contains image file name value
-                String imgName = orderedColumns.get(i + 2).getColumnValue();
-                String imgURL = null;
-                if (null != imgName) {
-                    imgURL = info.getInstanceFilesURL() + File.separator + row.getRowID() + File.separator +
-                            "file/" + imgName;
+            List<AbstractColumn> labelColumns = new ArrayList<AbstractColumn>();
+            List<AbstractColumn> finalColumns = new ArrayList<AbstractColumn>();
+            List<AbstractColumn> imageColumns = new ArrayList<AbstractColumn>();
+            String rawJSONFileURL = null;
+            for (Column c : orderedColumns) {
+                if (JSONUtils.isValidColumn(c.getColumnName())) {
+                    if (JSONUtils.isValueColumn(c.getColumnName())) {
+                        labelColumns.add(new AbstractColumn(c.getColumnName()));
+                        finalColumns.add(new AbstractColumn(c.getColumnValue()));
+                    } else if (JSONUtils.isImgURIColumn(c.getColumnName())) {
+                        imageColumns.add(new AbstractColumn(getFullURL(info, row, c)));
+                    } else if (JSONUtils.isRawJSONColumn(c.getColumnName())) {
+                        rawJSONFileURL = getFullURL(info, row, c);
+                    }
                 }
-                rowColumns.add(generateSheetColumn(orderedColumns.get(i), imgURL));
             }
-            sheetRow.add(rowColumns);
+            sheetRow.add(generateSheetColumn(labelColumns, finalColumns, imageColumns));
         }
 
         return new SpreedSheetData(info.getTableID(), sheetRow);
     }
 
+    private String getFullURL(TableInfo info, Row row, Column c) {
+        return info.getInstanceFilesURL() + File.separator + row.getRowID() + File.separator +
+                "file/" + c.getColumnValue();
+    }
 
-    private SpreedSheetColumn generateSheetColumn(Column fieldLabelAndFinalValue, String imgURL) {
-        AbstractColumn labelColumn = new AbstractColumn(fieldLabelAndFinalValue.getColumnName());
-        AbstractColumn rawColumn = null;
-        AbstractColumn finalColumn = new AbstractColumn(fieldLabelAndFinalValue.getColumnValue());
-        AbstractColumn imageColumn = new AbstractColumn(imgURL);
-        return new SpreedSheetColumn(labelColumn, rawColumn, finalColumn, imageColumn);
+
+    private List<SpreedSheetColumn> generateSheetColumn(List<AbstractColumn> labels, List<AbstractColumn> finals, List<AbstractColumn> images) {
+        List<SpreedSheetColumn> sheetColumns = new ArrayList<SpreedSheetColumn>();
+        for (int i = 0; i < SpreedSheetData.COLS_COUNT; i++) {
+            sheetColumns.add(new SpreedSheetColumn(labels.get(i), null, finals.get(i), images.get(i)));
+        }
+        return sheetColumns;
     }
 
 
@@ -129,6 +137,11 @@ public class SpreedSheetBuilder {
         public AbstractColumn getImageColumn() {
             return mImageColumn;
         }
+
+        @Override
+        public String toString() {
+            return mFieldLabelColumn.getValue().toString();
+        }
     }
 
     public class AbstractColumn {
@@ -139,6 +152,11 @@ public class SpreedSheetBuilder {
         }
 
         public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
             return value;
         }
     }

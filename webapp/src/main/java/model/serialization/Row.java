@@ -17,6 +17,16 @@ public class Row implements Serializable {
     @SerializedName("orderedColumns")
     private List<Column> mOrderedColumns;
 
+    private String mJSONFile;
+
+    public String getJSONFile() {
+        return mJSONFile;
+    }
+
+    public void setJSONFile(String JSONFile) {
+        mJSONFile = JSONFile;
+    }
+
     public String getRowID() {
         return mRowID;
     }
