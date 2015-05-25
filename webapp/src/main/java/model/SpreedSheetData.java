@@ -1,7 +1,5 @@
 package model;
 
-import utils.SpreedSheetBuilder;
-
 import java.util.List;
 
 /**
@@ -17,19 +15,19 @@ public class SpreedSheetData {
     // addtl_text column is included
     public static final Integer COLS_COUNT = 62;
     private String mFormName;
-    private List<List<SpreedSheetBuilder.SpreedSheetColumn>> mSpreedSheetColumns;
+    private List<SpreedSheetRow> mSheetRows;
 
-    public SpreedSheetData(String formName, List<List<SpreedSheetBuilder.SpreedSheetColumn>> spreedSheetColumns) {
+    public SpreedSheetData(String formName, List<SpreedSheetRow> spreedSheetColumns) {
         mFormName = formName;
-        mSpreedSheetColumns = spreedSheetColumns;
+        mSheetRows = spreedSheetColumns;
     }
 
     public String getFormName() {
         return mFormName;
     }
 
-    public List<List<SpreedSheetBuilder.SpreedSheetColumn>> getSpreedSheetColumns() {
-        return mSpreedSheetColumns;
+    public List<SpreedSheetRow> getSheetRows() {
+        return mSheetRows;
     }
 
 }

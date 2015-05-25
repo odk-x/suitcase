@@ -25,18 +25,16 @@ import static spark.Spark.get;
 public class ReportServer {
     private static final String LOCAL_URL = "http://localhost:4567";
     private static final String ERROR = "An error occurred when trying to open browser ERROR: ";
-    static RESTClient client = new RESTClient();
-    static TableInfo tableInfo;
-    static RowsData rows;
-    static boolean isFirstTime = true;
+    static RESTClient sClient = new RESTClient();
+    static SpreedSheetBuilder sBuilder;
+    static TableInfo sInfo;
+    static RowsData sRows;
+    static JTextArea sTextArea = new JTextArea();
 
-    static JTextArea textArea = new JTextArea();
+    static boolean isFirstTime = true;
 
     public static void main(String[] args) {
         downloadData();
-
-        final SpreedSheetBuilder builder = new SpreedSheetBuilder(tableInfo);
-
         buildJFrame();
 
         get(new FreeMarkerRoute("/") {
@@ -48,7 +46,7 @@ public class ReportServer {
                 isFirstTime = false;
                 Map<String, Object> viewObjects = new HashMap<String, Object>();
                 viewObjects.put("templateName", "spreedsheet.ftl");
-                viewObjects.put("spreedsheet", builder.buildSpreedSheet());
+                viewObjects.put("spreedsheet", sBuilder.buildSpreedSheet());
 
                 return modelAndView(viewObjects, "layout.ftl");
             }
@@ -57,13 +55,14 @@ public class ReportServer {
 
     private static void downloadData() {
         try {
-            tableInfo = client.getTableResource();
-            rows = client.getAllDataRows(tableInfo.getSchemaTag());
-            tableInfo.setRowList(rows.getRows());
+            sInfo = sClient.getTableResource();
+            sRows = sClient.getAllDataRows(sInfo.getSchemaTag());
+            sInfo.setRowList(sRows.getRows());
+            sBuilder = new SpreedSheetBuilder(sInfo);
         } catch (IOException e) {
-            textArea.append(ERROR + e.getMessage() + "\n");
+            sTextArea.append(ERROR + e.getMessage() + "\n");
         } catch (JSONException ex) {
-            textArea.append(ERROR + ex.getMessage() + "\n");
+            sTextArea.append(ERROR + ex.getMessage() + "\n");
         }
     }
 
@@ -76,9 +75,9 @@ public class ReportServer {
         JButton stopServerButton = new JButton();
         JLabel goToReportLabel = new JLabel("Show Report");
         JButton showReportButton = new JButton();
-        JScrollPane scroll = new JScrollPane(textArea,
+        JScrollPane scroll = new JScrollPane(sTextArea,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        textArea.append("M&E report is available\n at " + LOCAL_URL);
+        sTextArea.append("M&E report is available\n at " + LOCAL_URL);
         showReportButton.setText("Show");
         showReportButton.addActionListener(new ActionListener() {
             @Override
@@ -86,9 +85,9 @@ public class ReportServer {
                 try {
                     openBrowser();
                 } catch (IOException ioe) {
-                    textArea.append(ERROR + ioe.getMessage() + "\n");
+                    sTextArea.append(ERROR + ioe.getMessage() + "\n");
                 } catch (URISyntaxException use) {
-                    textArea.append(ERROR + use.getMessage() + "\n");
+                    sTextArea.append(ERROR + use.getMessage() + "\n");
                 }
             }
         });
@@ -108,7 +107,7 @@ public class ReportServer {
         contentPanel.add(buttonsPanel, 0);
         contentPanel.add(textPanel, 1);
         buttonsPanel.setSize(300, 150);
-        textArea.setSize(300, 150);
+        sTextArea.setSize(300, 150);
         textPanel.setSize(300, 150);
         contentPanel.setSize(300, 300);
         frame.add(contentPanel);

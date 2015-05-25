@@ -2,6 +2,7 @@ package net;
 
 import com.squareup.okhttp.Request;
 import model.ResponseWrapper;
+import model.serialization.FieldsWrapper;
 import model.serialization.RowsData;
 import model.serialization.TableInfo;
 import org.json.JSONException;
@@ -25,8 +26,6 @@ public class RESTClient {
     public static final String REF = "/ref";
     public static final String ROWS = "/rows";
     public static final String TABLES = "/tables";
-    public static final String ATTACHMENTS = "/attachments/";
-    public static final String MANIFEST = "/manifest";
 
     public static final String URL = AGGREGATE_URL + File.separator + PREFIX_PATH + File.separator + APP_ID;
 
@@ -56,13 +55,13 @@ public class RESTClient {
         return JSONUtils.getObj(responseWrapper.getResponse().body().string(), RowsData.class);
     }
 
-    public String getRawJSONValue(String fullURL) throws IOException, JSONException {
+    public FieldsWrapper getRawJSONValue(String fullURL) throws IOException, JSONException {
         Request request = new Request.Builder()
                 .url(fullURL)
                 .header("User-Agent", "OkHttp Headers.java")
                 .addHeader("Accept", "application/json;")
                 .build();
         ResponseWrapper responseWrapper = mWebAgent.doGET(request);
-        return responseWrapper.getResponse().body().string();
+        return JSONUtils.getObj(responseWrapper.getResponse().body().string(), FieldsWrapper.class);
     }
 }

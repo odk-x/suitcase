@@ -1,6 +1,6 @@
 package utils;
 
-import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.lang.reflect.Type;
 
@@ -23,11 +23,11 @@ public final class JSONUtils {
     }
 
     public static <T> T getObj(String json, java.lang.Class<T> afterClass) {
-        return new Gson().fromJson(json, afterClass);
+        return new GsonBuilder().serializeNulls().create().fromJson(json, afterClass);
     }
 
     public static <T> T getObj(String json, Type type) {
-        return new Gson().fromJson(json, type);
+        return new GsonBuilder().serializeNulls().create().fromJson(json, type);
     }
 
     public static boolean isValueColumn(String s) {
