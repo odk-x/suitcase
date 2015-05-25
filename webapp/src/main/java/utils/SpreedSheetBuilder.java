@@ -2,7 +2,6 @@ package utils;
 
 import model.SpreedSheetColumn;
 import model.SpreedSheetData;
-import model.SpreedSheetRow;
 import model.serialization.Column;
 import model.serialization.Field;
 import model.serialization.Row;
@@ -38,11 +37,11 @@ public class SpreedSheetBuilder {
                         + mSheetData.getFormName() + "</th></tr>");
 
         int formIndex = 1;
-        for (SpreedSheetRow row : mSheetData.getSheetRows()) {
+        for (List<SpreedSheetColumn> row : mSheetData.getSheetRows()) {
             // building first three rows
             if (formIndex == 1) {
                 html.append("<tr><th></th>");
-                for (SpreedSheetColumn column : row.getColumns()) {
+                for (SpreedSheetColumn column : row) {
                     html.append("<th colspan=\"4\" style=\"text-align:center;\">" + column.getFieldLabelColumn() + "</th>");
                 }
                 html.append("</tr>");
@@ -57,7 +56,7 @@ public class SpreedSheetBuilder {
             }
             // building rows with data
             html.append("<tr><td style=\"text-align:center;font-family:Arial, sans-serif;font-size:35px;font-weight:bold;\">" + formIndex + "</td>");
-            for (SpreedSheetColumn column : row.getColumns()) {
+            for (SpreedSheetColumn column : row) {
                 html.append("<td>" + column.getFieldLabelColumn() + "</td>");
                 html.append("<td>" + column.getRawValueColumn() + "</td>");
                 html.append("<td>" + column.getFinalValueColumn() + "</td>");
@@ -76,7 +75,7 @@ public class SpreedSheetBuilder {
     }
 
     private SpreedSheetData prepareDataForSpreedSheet(TableInfo info) throws IOException, JSONException {
-        List<SpreedSheetRow> sheetRow = new ArrayList<SpreedSheetRow>();
+        List<List<SpreedSheetColumn>> sheetRow = new ArrayList<List<SpreedSheetColumn>>();
         for (Row row : info.getRowList()) {
             List<Column> orderedColumns = row.getOrderedColumns();
             List<String> labelColumns = new ArrayList<String>();
@@ -107,12 +106,12 @@ public class SpreedSheetBuilder {
                 "file/" + c.getColumnValue();
     }
 
-    private SpreedSheetRow generateSheetColumn(List<String> labels, List<String> finals, List<String> images, List<Field> rawFields) {
+    private List<SpreedSheetColumn> generateSheetColumn(List<String> labels, List<String> finals, List<String> images, List<Field> rawFields) {
         List<SpreedSheetColumn> sheetColumns = new ArrayList<SpreedSheetColumn>();
         Collections.sort(rawFields);
         for (int i = 0; i < SpreedSheetData.COLS_COUNT; i++) {
             sheetColumns.add(new SpreedSheetColumn(labels.get(i), rawFields.get(i).getValue(), finals.get(i), images.get(i)));
         }
-        return new SpreedSheetRow(sheetColumns);
+        return SortUtils.sort(sheetColumns);
     }
 }

@@ -12,6 +12,9 @@ public class SpreedSheetColumn {
     private String mFinalValueColumn;
     private String mImageColumn;
 
+    public SpreedSheetColumn() {
+    }
+
     public SpreedSheetColumn(String fieldLabelColumn, String rawValueColumn, String finalValueColumn, String imageColumn) {
         mFieldLabelColumn = fieldLabelColumn;
         mRawValueColumn = rawValueColumn;

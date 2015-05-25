@@ -15,9 +15,9 @@ public class SpreedSheetData {
     // addtl_text column is included
     public static final Integer COLS_COUNT = 62;
     private String mFormName;
-    private List<SpreedSheetRow> mSheetRows;
+    private List<List<SpreedSheetColumn>> mSheetRows;
 
-    public SpreedSheetData(String formName, List<SpreedSheetRow> spreedSheetColumns) {
+    public SpreedSheetData(String formName, List<List<SpreedSheetColumn>> spreedSheetColumns) {
         mFormName = formName;
         mSheetRows = spreedSheetColumns;
     }
@@ -26,7 +26,7 @@ public class SpreedSheetData {
         return mFormName;
     }
 
-    public List<SpreedSheetRow> getSheetRows() {
+    public List<List<SpreedSheetColumn>> getSheetRows() {
         return mSheetRows;
     }
 
