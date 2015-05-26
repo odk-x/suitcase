@@ -121,8 +121,8 @@ scanQueries.getExistingRecordsByClientID = function(id) {
 
 scanQueries.getExistingRecordByName = function(name) {
    
-    var whereClause = 'name = ?'; 
-    var selectionArgs = [name];
+    var whereClause = 'name LIKE ?'; 
+    var selectionArgs = ["%" + name + "%"];
     
     var records = control.query(
             TABLE_NAME,
