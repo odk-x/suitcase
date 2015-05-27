@@ -97,7 +97,8 @@ function display() {
 
   var yAxis = d3.svg.axis()
       .scale(y)
-      .orient("left");
+      .orient("left")
+      .tickFormat(d3.format("d"));
 
   var chart = d3.select(".chart")
       .attr("width", width + margin.left + margin.right)
@@ -105,11 +106,12 @@ function display() {
     .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+  var sum = tri1 + tri2 + tri3;
   var data = [
-    {name: "1st",    value:  tri1},
-    {name: "2nd",    value:  tri2},
-    {name: "3rd",     value: tri3}
-  ];
+      {name: "1st", value: tri1},
+      {name: "2nd", value: tri2},
+      {name: "3rd", value: tri3}
+    ];
 
   x.domain(data.map(function(d) { return d.name; }));
   y.domain([0, d3.max(data, function(d) { return d.value; })]);
@@ -131,5 +133,26 @@ function display() {
       .attr("y", function(d) { return y(d.value); })
       .attr("height", function(d) { return height - y(d.value); })
       .attr("width", x.rangeBand());
+
+  chart.selectAll(".bartext")
+      .data(data)
+    .enter()
+    .append("text")
+      .attr("class", "bartext")
+      .attr("text-anchor", "middle")
+      .attr("fill", "black")
+      .attr("x", function(d,i) {
+          return x(d.name)+x.rangeBand()/2;
+      })
+      .attr("y", function(d,i) {
+          return y(d.value) - 5;
+      })
+      .text(function(d){
+        if (sum == 0) {
+          return "0.00%"
+        } else {
+          return (d.value*100/sum).toFixed(2) + "%"
+        }        
+      });
 }
  

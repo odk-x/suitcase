@@ -46,6 +46,14 @@
   .bar:hover {
     fill: yellow;
   }
+
+  .bartext {
+    fill: #000;
+    opacity: .6;
+    font-weight: 200%;
+    font-size : .9em;
+  }
+
   .axis path,
   .axis line {
     fill: none;
@@ -87,16 +95,20 @@
       </div>
       <svg class="chart"></svg>
     </div>
+    <button id="back" class="btn-launch btn btn-positive btn-block">Back</button>
     <button id="go_home" class="btn-launch btn btn-positive btn-block">Home Page</button>
   
-<script type="text/javascript" src="../framework/libs/d3-amd/d3.min.js"></script>
-<script>
-    $(scanQueries.showQueryParams());
-    $(display());
-    $('#go_home').on('click', function() {
-        var url = control.getFileAsUrl('assets/index.html');
-        window.location.href = url;
-    });
+    <script type="text/javascript" src="../framework/libs/d3-amd/d3.min.js"></script>
+    <script>
+      $(scanQueries.showQueryParams());
+      $(display());
+      $('#back').on('click', function() {
+          window.history.back();
+      });
+      $('#go_home').on('click', function() {
+          var url = control.getFileAsUrl('assets/index.html');
+          window.location.href = url;
+      });
     </script>
   </body>
 </html>

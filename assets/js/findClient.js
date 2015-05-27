@@ -36,8 +36,8 @@ function display() {
                 //We found multiple records associated with this id so let's look for more identifiers
                 control.openTableToListView(
                 'scan_MNH_Register1',
-                'name = ?',
-                [name],
+                'name LIKE ?',
+                ["%" + name + "%"],
                 'assets/find_client_list.html');
             } else {
                 alert("Patient with name: " + name + " not found");
