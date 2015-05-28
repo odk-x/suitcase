@@ -28,6 +28,11 @@ Array.prototype.contains = function(element){
     return this.indexOf(element) > -1;
 };
 
+
+function onlyUnique(value, index, self) { 
+    return self.indexOf(value) === index;
+}
+
 function display() {
   var month = scanQueries.getQueryParameter(scanQueries.month);
   var arr_month = month.split(',');
@@ -49,12 +54,16 @@ function display() {
       var anc_v1s = recordList.getColumnData("ANC_v1");
       var hv1_dates = recordList.getColumnData("V1_date");
 
+      var ids = recordList.getColumnData("clientID");
+      var idsArr = JSON.parse(ids);
+      var uniqueIDs = idsArr.filter(onlyUnique);
+
       for (var i = 0; i < recordList.getCount(); i++) {
         var testHV1 = JSON.parse(hv1_dates);
         var hv1_date = testHV1[i].toString();
         var arr_hv1_date = hv1_date.split('/');
 
-        if (arr_month[0] == "all" || arr_month.contains(arr_hv1_date[1])) {
+        if ((arr_month[0] == "all" || arr_month.contains(arr_hv1_date[1])) && uniqueIDs.contains(idsArr[i])) {
           var testEDD = JSON.parse(edd_dates);
           var testANC = JSON.parse(anc_v1s);
 
@@ -75,6 +84,12 @@ function display() {
             tri2++;
           } else {
             tri3++;
+          }
+
+          //remove used id from uniqueIDs array
+          var index = uniqueIDs.indexOf(idsArr[i]);
+          if (index > -1) {
+            uniqueIDs.splice(index, 1);
           }
         }
       }

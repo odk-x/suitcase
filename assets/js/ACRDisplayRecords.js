@@ -24,9 +24,11 @@ var HSA_list = [
     "Catherine Kazembe"
 ];
 
+function onlyUnique(value, index, self) { 
+    return self.indexOf(value) === index;
+}
+
 function display() {
-    var month = scanQueries.getQueryParameter(scanQueries.month);
-    var arr_month = month.split(',');
     var hsa = scanQueries.getQueryParameter(scanQueries.hsa_name);
     var arr_hsa = hsa.split(','); 
 
@@ -36,7 +38,11 @@ function display() {
       if (arr_hsa[0] == "all") {
         HSA_list.forEach(function(entry){
           var record = scanQueries.getExistingRecordsByHSA(entry);
-          var subTotal = record.getCount();
+
+          var ids = record.getColumnData("clientID");
+          var idsArr = JSON.parse(ids);
+          var uniqueIDs = idsArr.filter(onlyUnique);
+          var subTotal = uniqueIDs.length;
           if (subTotal !== 0) {
             createRow(entry, subTotal);
             total += subTotal;
