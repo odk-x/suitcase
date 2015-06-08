@@ -106,6 +106,18 @@ scanQueries.getExistingRecordsByHSA = function(hsa_name) {
     return records;
 };
 
+scanQueries.isClientDischarComp = function(id) {
+    var whereClause = 'clientID = ? AND dischar_comp IS NOT NULL'; 
+    var selectionArgs = [id];
+    
+    var records = control.query(
+            TABLE_NAME,
+            whereClause,
+            selectionArgs);
+
+    return records;
+};
+
 scanQueries.getExistingRecordsByClientID = function(id) {
     var whereClause = 'clientID = ?';
     var selectionArgs = [id];

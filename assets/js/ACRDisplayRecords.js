@@ -37,11 +37,8 @@ function display() {
     if (arr_hsa.length == 1) {
       if (arr_hsa[0] == "all") {
         HSA_list.forEach(function(entry){
-          var record = scanQueries.getExistingRecordsByHSA(entry);
+          var uniqueIDs = filterPatientForHSA(entry);
 
-          var ids = record.getColumnData("clientID");
-          var idsArr = JSON.parse(ids);
-          var uniqueIDs = idsArr.filter(onlyUnique);
           var subTotal = uniqueIDs.length;
           if (subTotal !== 0) {
             createRow(entry, subTotal);
@@ -51,19 +48,42 @@ function display() {
       } else {
         // one HSA and one MONTH
         // so only one row to display
-        var record = scanQueries.getExistingRecordsByHSA(arr_hsa[0]);
-        total = record.getCount();
+        var uniqueIDs = filterPatientForHSA(arr_hsa[0]);
+
+        total = uniqueIDs.length;
         createRow(arr_hsa[0], total);
       }
     } else {
       arr_hsa.forEach(function(entry) {
-        var record = scanQueries.getExistingRecordsByHSA(entry);
-        var subTotal = record.getCount();
-        createRow(entry, subTotal);
+        var uniqueIDs = filterPatientForHSA(entry);
+
+        var subTotal = uniqueIDs.length;
         total += subTotal;
+        createRow(entry, subTotal);
       });
     }
     $('#total').html(total);
+}
+
+function filterPatientForHSA(hsaName) {
+  var record = scanQueries.getExistingRecordsByHSA(hsaName);
+
+  var ids = record.getColumnData("clientID");
+  var idsArr = JSON.parse(ids);
+  var uniqueIDs = idsArr.filter(onlyUnique);
+
+  uniqueIDs.forEach(function(uniqueID){
+    var isDischar = scanQueries.isClientDischarComp(uniqueID);
+    if (isDischar.getCount()>0) {
+      //remove id if discharge completed
+      var index = uniqueIDs.indexOf(uniqueID);
+      if (index > -1) {
+        uniqueIDs.splice(index, 1);
+      }
+    }
+  });
+
+  return uniqueIDs;
 }
 
 function createRow(name, value) {

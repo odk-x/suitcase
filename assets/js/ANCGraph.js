@@ -58,6 +58,17 @@ function display() {
       var idsArr = JSON.parse(ids);
       var uniqueIDs = idsArr.filter(onlyUnique);
 
+      uniqueIDs.forEach(function(uniqueID){
+        var isDischar = scanQueries.isClientDischarComp(uniqueID);
+        if (isDischar.getCount()>0) {
+          //remove id if discharge completed
+          var index = uniqueIDs.indexOf(uniqueID);
+          if (index > -1) {
+            uniqueIDs.splice(index, 1);
+          }
+        }
+      });
+
       for (var i = 0; i < recordList.getCount(); i++) {
         var testHV1 = JSON.parse(hv1_dates);
         var hv1_date = testHV1[i].toString();
