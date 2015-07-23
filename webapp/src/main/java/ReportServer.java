@@ -31,19 +31,14 @@ public class ReportServer {
     static RowsData sRows;
     static JTextArea sTextArea = new JTextArea();
 
-    static boolean isFirstTime = true;
 
     public static void main(String[] args) {
-        downloadData();
         buildJFrame();
 
         get(new FreeMarkerRoute("/") {
             @Override
             public ModelAndView handle(Request request, Response response) {
-                if (!isFirstTime) {
-                    downloadData();
-                }
-                isFirstTime = false;
+                downloadData();
                 Map<String, Object> viewObjects = new HashMap<String, Object>();
                 viewObjects.put("templateName", "spreedsheet.ftl");
                 viewObjects.put("spreedsheet", sBuilder.buildSpreedSheet());

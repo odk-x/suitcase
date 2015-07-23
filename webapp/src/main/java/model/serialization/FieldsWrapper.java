@@ -3,6 +3,7 @@ package model.serialization;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,4 +20,10 @@ public class FieldsWrapper implements Serializable {
         return mFields;
     }
 
+    /**
+     * In case that jsonRAWFile does not exist
+     */
+    public FieldsWrapper() {
+        mFields = new ArrayList<Field>();
+    }
 }

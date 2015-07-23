@@ -62,6 +62,13 @@ public class RESTClient {
                 .addHeader("Accept", "application/json;")
                 .build();
         ResponseWrapper responseWrapper = mWebAgent.doGET(request);
-        return JSONUtils.getObj(responseWrapper.getResponse().body().string(), FieldsWrapper.class);
+        String json = responseWrapper.getResponse().body().string();
+        FieldsWrapper obj;
+        if (JSONUtils.doesJSONExists(json)) {
+            obj = JSONUtils.getObj(json, FieldsWrapper.class);
+        } else {
+            obj = new FieldsWrapper();
+        }
+        return obj;
     }
 }

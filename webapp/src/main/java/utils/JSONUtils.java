@@ -61,4 +61,12 @@ public final class JSONUtils {
         }
         return result;
     }
+
+    public static boolean doesJSONExists(String s) {
+        boolean result = true;
+        if (s.startsWith("\"No file found for:")) {
+            result = false;
+        }
+        return result;
+    }
 }

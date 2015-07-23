@@ -110,7 +110,11 @@ public class SpreedSheetBuilder {
         List<SpreedSheetColumn> sheetColumns = new ArrayList<SpreedSheetColumn>();
         Collections.sort(rawFields);
         for (int i = 0; i < SpreedSheetData.COLS_COUNT; i++) {
-            sheetColumns.add(new SpreedSheetColumn(labels.get(i), rawFields.get(i).getValue(), finals.get(i), images.get(i)));
+            if (!rawFields.isEmpty()) {
+                sheetColumns.add(new SpreedSheetColumn(labels.get(i), rawFields.get(i).getValue(), finals.get(i), images.get(i)));
+            } else {
+                sheetColumns.add(new SpreedSheetColumn(labels.get(i), null, finals.get(i), images.get(i)));
+            }
         }
         return SortUtils.sort(sheetColumns);
     }
