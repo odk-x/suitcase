@@ -2,10 +2,6 @@ package utils;
 
 import model.SpreedSheetColumn;
 import model.SpreedSheetData;
-import model.serialization.Column;
-import model.serialization.Field;
-import model.serialization.Row;
-import model.serialization.TableInfo;
 import net.RESTClient;
 import org.json.JSONException;
 
@@ -25,9 +21,11 @@ public class SpreedSheetBuilder {
 
     private SpreedSheetData mSheetData;
 
+    /* TODO
     public SpreedSheetBuilder(TableInfo tableInfo) throws IOException, JSONException {
         mSheetData = prepareDataForSpreedSheet(tableInfo);
     }
+    */
 
     public String buildSpreedSheet() {
         StringBuilder html = new StringBuilder();
@@ -74,6 +72,7 @@ public class SpreedSheetBuilder {
         return html.toString();
     }
 
+    /* TODO
     private SpreedSheetData prepareDataForSpreedSheet(TableInfo info) throws IOException, JSONException {
         List<List<SpreedSheetColumn>> sheetRow = new ArrayList<List<SpreedSheetColumn>>();
         for (Row row : info.getRowList()) {
@@ -118,4 +117,5 @@ public class SpreedSheetBuilder {
         }
         return SortUtils.sort(sheetColumns);
     }
+    */
 }

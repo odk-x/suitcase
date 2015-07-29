@@ -1,5 +1,3 @@
-import model.serialization.RowsData;
-import model.serialization.TableInfo;
 import net.RESTClient;
 import org.json.JSONException;
 import spark.ModelAndView;
@@ -27,8 +25,9 @@ public class ReportServer {
     private static final String ERROR = "An error occurred when trying to open browser ERROR: ";
     static RESTClient sClient = new RESTClient();
     static SpreedSheetBuilder sBuilder;
-    static TableInfo sInfo;
-    static RowsData sRows;
+    // TODO
+    //static TableInfo sInfo;
+    //static RowsData sRows;
     static JTextArea sTextArea = new JTextArea();
 
 
@@ -49,6 +48,8 @@ public class ReportServer {
     }
 
     private static void downloadData() {
+        // TODO
+        /*
         try {
             sInfo = sClient.getTableResource();
             sRows = sClient.getAllDataRows(sInfo.getSchemaTag());
@@ -59,6 +60,7 @@ public class ReportServer {
         } catch (JSONException ex) {
             sTextArea.append(ERROR + ex.getMessage() + "\n");
         }
+        */
     }
 
     private static void buildJFrame() {

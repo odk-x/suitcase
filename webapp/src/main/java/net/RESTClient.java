@@ -2,9 +2,6 @@ package net;
 
 import com.squareup.okhttp.Request;
 import model.ResponseWrapper;
-import model.serialization.FieldsWrapper;
-import model.serialization.RowsData;
-import model.serialization.TableInfo;
 import org.json.JSONException;
 import utils.JSONUtils;
 
@@ -29,12 +26,10 @@ public class RESTClient {
 
     public static final String URL = AGGREGATE_URL + File.separator + PREFIX_PATH + File.separator + APP_ID;
 
-    private WebAgent mWebAgent;
-
     public RESTClient() {
-        mWebAgent = new WebAgent();
     }
 
+    /* TODO
     public TableInfo getTableResource() throws IOException, JSONException {
         Request request = new Request.Builder()
                 .url(URL + TABLES + File.separator + TABLE_ID)
@@ -71,4 +66,5 @@ public class RESTClient {
         }
         return obj;
     }
+    */
 }
