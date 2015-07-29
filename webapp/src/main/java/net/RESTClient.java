@@ -7,6 +7,7 @@ import utils.JSONUtils;
 
 import java.io.File;
 import java.io.IOException;
+import org.opendatakit.wink.client.WinkClient;
 
 /**
  * Created by Kamil Kalfas
@@ -26,7 +27,10 @@ public class RESTClient {
 
     public static final String URL = AGGREGATE_URL + File.separator + PREFIX_PATH + File.separator + APP_ID;
 
+    private WinkClient mWinkClient;
+
     public RESTClient() {
+        mWinkClient = new WinkClient();
     }
 
     /* TODO
