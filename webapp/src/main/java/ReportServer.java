@@ -37,7 +37,7 @@ public class ReportServer {
         get(new FreeMarkerRoute("/") {
             @Override
             public ModelAndView handle(Request request, Response response) {
-                downloadData();
+                fetchReportData();
                 Map<String, Object> viewObjects = new HashMap<String, Object>();
                 viewObjects.put("templateName", "spreedsheet.ftl");
                 viewObjects.put("spreedsheet", sBuilder.buildSpreedSheet());
@@ -47,8 +47,15 @@ public class ReportServer {
         });
     }
 
-    private static void downloadData() {
+    private static void fetchReportData() {
         // TODO
+        try {
+            //sClient.getTableManifest();
+
+            sBuilder = new SpreedSheetBuilder();
+        } catch (Exception e) {
+            sTextArea.append(ERROR + e.getMessage() + "\n");
+        }
         /*
         try {
             sInfo = sClient.getTableResource();
@@ -66,12 +73,14 @@ public class ReportServer {
     private static void buildJFrame() {
         final JFrame frame = new JFrame("M&E Report");
         JPanel contentPanel = new JPanel(new GridLayout(2, 1));
-        JPanel buttonsPanel = new JPanel(new GridLayout(2, 2));
+        JPanel buttonsPanel = new JPanel(new GridLayout(3, 2));
         JPanel textPanel = new JPanel(new GridLayout(1, 1));
         JLabel serverLabel = new JLabel("Stop server");
         JButton stopServerButton = new JButton();
         JLabel goToReportLabel = new JLabel("Show Report");
         JButton showReportButton = new JButton();
+        JLabel downloadDataLabel = new JLabel("Download Data");
+        JButton downloadDataButton = new JButton();
         JScrollPane scroll = new JScrollPane(sTextArea,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         sTextArea.append("M&E report is available\n at " + LOCAL_URL);
@@ -96,10 +105,23 @@ public class ReportServer {
                 System.exit(0);
             }
         });
+        downloadDataButton.setText("Download");
+        downloadDataButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    sClient.downloadData("me-report-data");
+                } catch (Exception exc) {
+                    sTextArea.append("Error when trying to download data: ERROR " + exc.getMessage() + "\n");
+                }
+            }
+        });
         buttonsPanel.add(goToReportLabel);
         buttonsPanel.add(showReportButton);
         buttonsPanel.add(serverLabel);
         buttonsPanel.add(stopServerButton);
+        buttonsPanel.add(downloadDataLabel);
+        buttonsPanel.add(downloadDataButton);
         textPanel.add(scroll);
         contentPanel.add(buttonsPanel, 0);
         contentPanel.add(textPanel, 1);
