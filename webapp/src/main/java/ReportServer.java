@@ -23,6 +23,7 @@ import static spark.Spark.get;
 public class ReportServer {
     private static final String LOCAL_URL = "http://localhost:4567";
     private static final String ERROR = "An error occurred when trying to open browser ERROR: ";
+    private static final String DIR_TO_SAVE_TO = "me-report";
     static RESTClient sClient = new RESTClient();
     static SpreedSheetBuilder sBuilder;
     // TODO
@@ -73,14 +74,20 @@ public class ReportServer {
     private static void buildJFrame() {
         final JFrame frame = new JFrame("M&E Report");
         JPanel contentPanel = new JPanel(new GridLayout(2, 1));
-        JPanel buttonsPanel = new JPanel(new GridLayout(3, 2));
+        JPanel buttonsPanel = new JPanel(new GridLayout(6, 2));
         JPanel textPanel = new JPanel(new GridLayout(1, 1));
         JLabel serverLabel = new JLabel("Stop server");
         JButton stopServerButton = new JButton();
         JLabel goToReportLabel = new JLabel("Show Report");
         JButton showReportButton = new JButton();
+        JLabel resetLabel = new JLabel("Reset data");
+        JButton resetButton = new JButton();
+        JLabel downloadDefinitionsLabel = new JLabel("Download Definitions");
+        JButton downloadDefinitionsButton = new JButton();
         JLabel downloadDataLabel = new JLabel("Download Data");
         JButton downloadDataButton = new JButton();
+        JLabel downloadAttachmentsLabel = new JLabel("Download Attachments");
+        JButton downloadAttachmentsButton = new JButton();
         JScrollPane scroll = new JScrollPane(sTextArea,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         sTextArea.append("M&E report is available\n at " + LOCAL_URL);
@@ -105,14 +112,47 @@ public class ReportServer {
                 System.exit(0);
             }
         });
+        resetButton.setText("Reset");
+        resetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    sClient.resetData(DIR_TO_SAVE_TO);
+                } catch (Exception exc) {
+                    sTextArea.append("\nError when trying to download data: ERROR " + exc.getMessage() + "\n");
+                }
+            }
+        });
+        downloadDefinitionsButton.setText("Download");
+        downloadDefinitionsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    sClient.downloadDefinitions(DIR_TO_SAVE_TO);
+                } catch (Exception exc) {
+                    sTextArea.append("\nError when trying to download data: ERROR " + exc.getMessage() + "\n");
+                }
+            }
+        });
         downloadDataButton.setText("Download");
         downloadDataButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    sClient.downloadData("me-report-data");
+                    sClient.downloadData(DIR_TO_SAVE_TO);
                 } catch (Exception exc) {
-                    sTextArea.append("Error when trying to download data: ERROR " + exc.getMessage() + "\n");
+                    sTextArea.append("\nError when trying to download data: ERROR " + exc.getMessage() + "\n");
+                }
+            }
+        });
+        downloadAttachmentsButton.setText("Download");
+        downloadAttachmentsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    sClient.downloadAttachments(DIR_TO_SAVE_TO);
+                } catch (Exception exc) {
+                    sTextArea.append("\nError when trying to download data: ERROR " + exc.getMessage() + "\n");
                 }
             }
         });
@@ -120,17 +160,23 @@ public class ReportServer {
         buttonsPanel.add(showReportButton);
         buttonsPanel.add(serverLabel);
         buttonsPanel.add(stopServerButton);
+        buttonsPanel.add(downloadDefinitionsLabel);
+        buttonsPanel.add(downloadDefinitionsButton);
         buttonsPanel.add(downloadDataLabel);
         buttonsPanel.add(downloadDataButton);
+        buttonsPanel.add(downloadAttachmentsLabel);
+        buttonsPanel.add(downloadAttachmentsButton);
+        buttonsPanel.add(resetLabel);
+        buttonsPanel.add(resetButton);
         textPanel.add(scroll);
         contentPanel.add(buttonsPanel, 0);
         contentPanel.add(textPanel, 1);
-        buttonsPanel.setSize(300, 150);
-        sTextArea.setSize(300, 150);
-        textPanel.setSize(300, 150);
-        contentPanel.setSize(300, 300);
+        buttonsPanel.setSize(400, 150);
+        sTextArea.setSize(400, 150);
+        textPanel.setSize(400, 150);
+        contentPanel.setSize(400, 300);
         frame.add(contentPanel);
-        frame.setSize(300, 300);
+        frame.setSize(400, 300);
         frame.setLocationRelativeTo(null);
         frame.addWindowListener(new WindowAdapter() {
             @Override
