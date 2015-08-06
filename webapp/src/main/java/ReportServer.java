@@ -1,3 +1,5 @@
+import model.serialization.RowsData;
+import model.serialization.TableInfo;
 import net.RESTClient;
 import org.json.JSONException;
 import spark.ModelAndView;
@@ -26,9 +28,8 @@ public class ReportServer {
     private static final String DIR_TO_SAVE_TO = "me-report";
     static RESTClient sClient = new RESTClient();
     static SpreedSheetBuilder sBuilder;
-    // TODO
-    //static TableInfo sInfo;
-    //static RowsData sRows;
+    static TableInfo sInfo;
+    static RowsData sRows;
     static JTextArea sTextArea = new JTextArea();
 
 
@@ -38,7 +39,7 @@ public class ReportServer {
         get(new FreeMarkerRoute("/") {
             @Override
             public ModelAndView handle(Request request, Response response) {
-                fetchReportData();
+                downloadData();
                 Map<String, Object> viewObjects = new HashMap<String, Object>();
                 viewObjects.put("templateName", "spreedsheet.ftl");
                 viewObjects.put("spreedsheet", sBuilder.buildSpreedSheet());
@@ -48,17 +49,7 @@ public class ReportServer {
         });
     }
 
-    private static void fetchReportData() {
-        // TODO
-        try {
-            //sClient.getTableManifest();
-            sClient.fetchRows(10);
-
-            sBuilder = new SpreedSheetBuilder();
-        } catch (Exception e) {
-            sTextArea.append(ERROR + e.getMessage() + "\n");
-        }
-        /*
+    private static void downloadData() {
         try {
             sInfo = sClient.getTableResource();
             sRows = sClient.getAllDataRows(sInfo.getSchemaTag());
@@ -69,13 +60,12 @@ public class ReportServer {
         } catch (JSONException ex) {
             sTextArea.append(ERROR + ex.getMessage() + "\n");
         }
-        */
     }
 
     private static void buildJFrame() {
         final JFrame frame = new JFrame("M&E Report");
         JPanel contentPanel = new JPanel(new GridLayout(2, 1));
-        JPanel buttonsPanel = new JPanel(new GridLayout(6, 2));
+        JPanel buttonsPanel = new JPanel(new GridLayout(7, 2));
         JPanel textPanel = new JPanel(new GridLayout(1, 1));
         JLabel serverLabel = new JLabel("Stop server");
         JButton stopServerButton = new JButton();

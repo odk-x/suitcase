@@ -2,6 +2,10 @@ package utils;
 
 import model.SpreedSheetColumn;
 import model.SpreedSheetData;
+import model.serialization.Column;
+import model.serialization.Field;
+import model.serialization.Row;
+import model.serialization.TableInfo;
 import net.RESTClient;
 import org.json.JSONException;
 
@@ -19,32 +23,20 @@ import java.util.List;
  */
 public class SpreedSheetBuilder {
 
-    //private SpreedSheetData mSheetData;
+    private SpreedSheetData mSheetData;
 
-    /* TODO
     public SpreedSheetBuilder(TableInfo tableInfo) throws IOException, JSONException {
         mSheetData = prepareDataForSpreedSheet(tableInfo);
-    }
-    */
-    public SpreedSheetBuilder() {
-
     }
 
     public String buildSpreedSheet() {
         StringBuilder html = new StringBuilder();
         html.append("<table class=\"table table-striped table-condensed\">");
-        /* TODO
         html.append("<thead>")
                 .append("<tr><th colspan=\"" + SpreedSheetData.COLS_COUNT + "\">"
                         + mSheetData.getFormName() + "</th></tr>");
-                        */
-        html.append("<thead>")
-                .append("<tr><th colspan=\"" + SpreedSheetData.COLS_COUNT + "\">"
-                        + "FORM_NAME" + "</th></tr>");
-        /* Above is a stand in */
 
         int formIndex = 1;
-        /* TODO
         for (List<SpreedSheetColumn> row : mSheetData.getSheetRows()) {
             // building first three rows
             if (formIndex == 1) {
@@ -78,12 +70,10 @@ public class SpreedSheetBuilder {
             html.append("</tr>");
             formIndex++;
         }
-        */
         html.append("</tbody></table>");
         return html.toString();
     }
 
-    /* TODO
     private SpreedSheetData prepareDataForSpreedSheet(TableInfo info) throws IOException, JSONException {
         List<List<SpreedSheetColumn>> sheetRow = new ArrayList<List<SpreedSheetColumn>>();
         for (Row row : info.getRowList()) {
@@ -128,5 +118,4 @@ public class SpreedSheetBuilder {
         }
         return SortUtils.sort(sheetColumns);
     }
-    */
 }

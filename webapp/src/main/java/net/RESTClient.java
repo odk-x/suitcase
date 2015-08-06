@@ -1,6 +1,11 @@
 package net;
 
+import com.squareup.okhttp.Request;
 import model.FormattedCSV;
+import model.ResponseWrapper;
+import model.serialization.FieldsWrapper;
+import model.serialization.RowsData;
+import model.serialization.TableInfo;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -19,6 +24,7 @@ import org.opendatakit.wink.client.WinkClient;
 import org.opendatakit.aggregate.odktables.rest.RFC4180CsvReader;
 import org.opendatakit.aggregate.odktables.rest.RFC4180CsvWriter;
 import org.opendatakit.aggregate.odktables.rest.entity.Row;
+import utils.JSONUtils;
 
 /**
  * Created by Kamil Kalfas
@@ -28,6 +34,7 @@ import org.opendatakit.aggregate.odktables.rest.entity.Row;
  */
 public class RESTClient {
     // Server data
+    public static final String LEGACY_AGGREGATE_URL = "https://vraggregate2.appspot.com/";
     public static final String AGGREGATE_URL = "https://vraggregate2.appspot.com/odktables";
     public static final String APP_ID = "tables";
     public static final String TABLE_ID = "scan_MNH_Register1";
@@ -62,51 +69,28 @@ public class RESTClient {
     private WinkClient mWinkClient;
     private String schemaETag;
 
+    /************************************** Legacy *************************************/
+    public static final String PREFIX_PATH = "odktables";
+    public static final String REF = "/ref";
+    public static final String ROWS = "/rows";
+    public static final String TABLES = "/tables";
+
+    public static final String URL = LEGACY_AGGREGATE_URL + File.separator + PREFIX_PATH + File.separator + APP_ID;
+
+    private WebAgent mWebAgent;
+
     public RESTClient() {
         mWinkClient = new WinkClient();
         schemaETag = WinkClient.getSchemaETagForTable(AGGREGATE_URL, APP_ID, TABLE_ID);
+
+        // Legacy
+        mWebAgent = new WebAgent();
     }
 
     public void resetData(String dirToSaveDataTo) throws Exception {
         FileUtils.deleteDirectory(new File(dirToSaveDataTo));
 
         schemaETag = WinkClient.getSchemaETagForTable(AGGREGATE_URL, APP_ID, TABLE_ID);
-    }
-
-    public void fetchRows(int numRows) throws Exception {
-        JSONObject rowWrapper;
-        String resumeCursor = null;
-
-        rowWrapper = mWinkClient.getRows(AGGREGATE_URL, APP_ID, TABLE_ID, schemaETag, resumeCursor, "1000");
-        JSONArray rows = rowWrapper.getJSONArray(jsonRowsString);
-
-        if (resumeCursor != null) {
-            System.out.println("CURSOR: " + resumeCursor);
-        } else {
-            System.out.println("CURSOR IS NULL");
-        }
-
-        JSONObject repRow = rows.getJSONObject(0);
-        JSONArray orderedColumnsRep = repRow.getJSONArray(orderedColumnsDef);
-        int numberOfColsToMake = 9 + orderedColumnsRep.size();
-        String[] colArray = new String[numberOfColsToMake];
-
-        int i = 0;
-        colArray[i++] = rowDefId;
-        colArray[i++] = rowDefFormId;
-        colArray[i++] = rowDefLocale;
-        colArray[i++] = rowDefSavepointType;
-        colArray[i++] = rowDefSavepointTimestamp;
-        colArray[i++] = rowDefSavepointCreator;
-
-        for (int j = 0; j < orderedColumnsRep.size(); j++) {
-            JSONObject obj = orderedColumnsRep.getJSONObject(j);
-            colArray[i++] = obj.getString("column");
-        }
-
-        colArray[i++] = rowDefRowETag;
-        colArray[i++] = rowDefFilterType;
-        colArray[i++] = rowDefFilterValue;
     }
 
     public void downloadDefinitions(String dirToSaveDataTo) throws Exception {
@@ -177,10 +161,8 @@ public class RESTClient {
             JSONObject obj = orderedColumnsRep.getJSONObject(j);
             colName = obj.getString("column");
             if (colName.contains("contentType")) {
-                System.out.println("Filter " + colName);
                 csv.filterCol();
             } else if (colName.contains("uriFragment")) {
-                System.out.println("URI " + colName);
                 csv.uriCol();
             } else {
                 csv.addHeader(colName);
@@ -255,5 +237,44 @@ public class RESTClient {
         // Get all Instance Files
         // get all rows - check for attachment
         mWinkClient.getAllTableInstanceFilesFromUri(AGGREGATE_URL, APP_ID, TABLE_ID, schemaETag, dirToSaveDataTo);
+    }
+
+
+    /*************************************** Legacy **************************************/
+    public TableInfo getTableResource() throws IOException, org.json.JSONException {
+        Request request = new Request.Builder()
+                .url(URL + TABLES + File.separator + TABLE_ID)
+                .header("User-Agent", "OkHttp Headers.java")
+                .addHeader("Accept", "application/json;")
+                .build();
+        ResponseWrapper responseWrapper = mWebAgent.doGET(request);
+        return JSONUtils.getObj(responseWrapper.getResponse().body().string(), TableInfo.class);
+    }
+
+    public RowsData getAllDataRows(String schemaTag) throws IOException, org.json.JSONException {
+        Request request = new Request.Builder()
+                .url(URL + TABLES + File.separator + TABLE_ID + REF + File.separator + schemaTag + ROWS)
+                .header("User-Agent", "OkHttp Headers.java")
+                .addHeader("Accept", "application/json;")
+                .build();
+        ResponseWrapper responseWrapper = mWebAgent.doGET(request);
+        return JSONUtils.getObj(responseWrapper.getResponse().body().string(), RowsData.class);
+    }
+
+    public FieldsWrapper getRawJSONValue(String fullURL) throws IOException, org.json.JSONException {
+        Request request = new Request.Builder()
+                .url(fullURL)
+                .header("User-Agent", "OkHttp Headers.java")
+                .addHeader("Accept", "application/json;")
+                .build();
+        ResponseWrapper responseWrapper = mWebAgent.doGET(request);
+        String json = responseWrapper.getResponse().body().string();
+        FieldsWrapper obj;
+        if (JSONUtils.doesJSONExists(json)) {
+            obj = JSONUtils.getObj(json, FieldsWrapper.class);
+        } else {
+            obj = new FieldsWrapper();
+        }
+        return obj;
     }
 }
