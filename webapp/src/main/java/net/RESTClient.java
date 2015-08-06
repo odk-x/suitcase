@@ -163,7 +163,7 @@ public class RESTClient {
             if (colName.contains("contentType")) {
                 csv.filterCol();
             } else if (colName.contains("uriFragment")) {
-                csv.uriCol();
+                csv.uriCol(colName);
             } else {
                 csv.addHeader(colName);
             }

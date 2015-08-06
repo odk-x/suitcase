@@ -73,12 +73,13 @@ public class FormattedCSV {
         columnClassMap.put(mapIndex++, COLUMN_CLASS.FILTER);
     }
 
-    public void uriCol() throws Exception {
+    public void uriCol(String value) throws Exception {
         if (currState != EXEC_STATE.DEFINE_HEADERS) {
             throw (new Exception("Invalid State"));
         }
 
         columnClassMap.put(mapIndex++, COLUMN_CLASS.URI);
+        csvArr[csvIndex++] = value;
     }
 
     public void addValue(String value, String rowId) throws Exception {
