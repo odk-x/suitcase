@@ -52,6 +52,7 @@ public class ReportServer {
         // TODO
         try {
             //sClient.getTableManifest();
+            sClient.fetchRows(10);
 
             sBuilder = new SpreedSheetBuilder();
         } catch (Exception e) {
@@ -84,8 +85,10 @@ public class ReportServer {
         JButton resetButton = new JButton();
         JLabel downloadDefinitionsLabel = new JLabel("Download Definitions");
         JButton downloadDefinitionsButton = new JButton();
-        JLabel downloadDataLabel = new JLabel("Download Data");
-        JButton downloadDataButton = new JButton();
+        JLabel downloadRawCSVLabel = new JLabel("Download Raw CSV");
+        JButton downloadRawCSVButton = new JButton();
+        JLabel downloadFormattedCSVLabel = new JLabel("Download Formatted CSV");
+        JButton downloadFormattedCSVButton = new JButton();
         JLabel downloadAttachmentsLabel = new JLabel("Download Attachments");
         JButton downloadAttachmentsButton = new JButton();
         JScrollPane scroll = new JScrollPane(sTextArea,
@@ -134,12 +137,23 @@ public class ReportServer {
                 }
             }
         });
-        downloadDataButton.setText("Download");
-        downloadDataButton.addActionListener(new ActionListener() {
+        downloadRawCSVButton.setText("Download");
+        downloadRawCSVButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    sClient.downloadData(DIR_TO_SAVE_TO);
+                    sClient.downloadRawCSV(DIR_TO_SAVE_TO);
+                } catch (Exception exc) {
+                    sTextArea.append("\nError when trying to download data: ERROR " + exc.getMessage() + "\n");
+                }
+            }
+        });
+        downloadFormattedCSVButton.setText("Download");
+        downloadFormattedCSVButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    sClient.downloadFormattedCSV(DIR_TO_SAVE_TO);
                 } catch (Exception exc) {
                     sTextArea.append("\nError when trying to download data: ERROR " + exc.getMessage() + "\n");
                 }
@@ -162,8 +176,10 @@ public class ReportServer {
         buttonsPanel.add(stopServerButton);
         buttonsPanel.add(downloadDefinitionsLabel);
         buttonsPanel.add(downloadDefinitionsButton);
-        buttonsPanel.add(downloadDataLabel);
-        buttonsPanel.add(downloadDataButton);
+        buttonsPanel.add(downloadRawCSVLabel);
+        buttonsPanel.add(downloadRawCSVButton);
+        buttonsPanel.add(downloadFormattedCSVLabel);
+        buttonsPanel.add(downloadFormattedCSVButton);
         buttonsPanel.add(downloadAttachmentsLabel);
         buttonsPanel.add(downloadAttachmentsButton);
         buttonsPanel.add(resetLabel);
