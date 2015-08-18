@@ -26,6 +26,8 @@ import org.opendatakit.aggregate.odktables.rest.RFC4180CsvWriter;
 import org.opendatakit.aggregate.odktables.rest.entity.Row;
 import utils.JSONUtils;
 
+import javax.swing.*;
+
 /**
  * Created by Kamil Kalfas
  * kkalfas@soldevelo.com
@@ -33,12 +35,6 @@ import utils.JSONUtils;
  * Time: 11:27 AM
  */
 public class RESTClient {
-    // Server data
-    public static final String LEGACY_AGGREGATE_URL = "https://vraggregate2.appspot.com/";
-    public static final String AGGREGATE_URL = "https://vraggregate2.appspot.com/odktables";
-    public static final String APP_ID = "tables";
-    public static final String TABLE_ID = "scan_MNH_Register1";
-
     // Formatting and protocol constants
     public static String separator = "/";
     public static String jsonRowsString = "rows";
@@ -66,8 +62,15 @@ public class RESTClient {
 
     public static String defaultFetchLimit = "1000";
 
+    private JTextArea outputText;
+
     private WinkClient mWinkClient;
     private String schemaETag;
+
+    // Server data
+    public static String aggregateURL;
+    public static String appId;
+    public static String tableId;
 
     /************************************** Legacy *************************************/
     public static final String PREFIX_PATH = "odktables";
@@ -75,59 +78,84 @@ public class RESTClient {
     public static final String ROWS = "/rows";
     public static final String TABLES = "/tables";
 
-    public static final String URL = LEGACY_AGGREGATE_URL + File.separator + PREFIX_PATH + File.separator + APP_ID;
+    public static String URL;
 
     private WebAgent mWebAgent;
 
     public RESTClient() {
         mWinkClient = new WinkClient();
-        schemaETag = WinkClient.getSchemaETagForTable(AGGREGATE_URL, APP_ID, TABLE_ID);
 
         // Legacy
         mWebAgent = new WebAgent();
     }
 
-    public void resetData(String dirToSaveDataTo) throws Exception {
+    public void setOutputText(JTextArea outputText) {
+        this.outputText = outputText;
+    }
+
+    public void resetData(String aggregateURL, String appId, String tableId, String dirToSaveDataTo) throws Exception {
         FileUtils.deleteDirectory(new File(dirToSaveDataTo));
 
-        schemaETag = WinkClient.getSchemaETagForTable(AGGREGATE_URL, APP_ID, TABLE_ID);
+        this.aggregateURL = aggregateURL;
+        if (!this.aggregateURL.endsWith(File.separator)) {
+            this.aggregateURL += File.separator;
+        }
+        this.aggregateURL += PREFIX_PATH;
+
+        this.appId = appId;
+        this.tableId = tableId;
+
+        // Legacy
+        this.URL = aggregateURL + File.separator + PREFIX_PATH + File.separator + appId;
+
+        schemaETag = WinkClient.getSchemaETagForTable(this.aggregateURL, this.appId, this.tableId);
     }
 
     public void downloadDefinitions(String dirToSaveDataTo) throws Exception {
+        outputText.append("\nDownloading definitions");
+
         // Get all Table Level Files
-        mWinkClient.getAllTableLevelFilesFromUri(AGGREGATE_URL, APP_ID, TABLE_ID, dirToSaveDataTo);
+        mWinkClient.getAllTableLevelFilesFromUri(aggregateURL, appId, tableId, dirToSaveDataTo);
 
         // Write out Table Definition CSV's
-        String tableDefinitionCSVPath = dirToSaveDataTo + separator + "tables" + separator + TABLE_ID
+        String tableDefinitionCSVPath = dirToSaveDataTo + separator + "tables" + separator + tableId
                 + separator + "definition.csv";
-        mWinkClient.writeTableDefinitionToCSV(AGGREGATE_URL, APP_ID, TABLE_ID, schemaETag, tableDefinitionCSVPath);
+        mWinkClient.writeTableDefinitionToCSV(aggregateURL, appId, tableId, schemaETag, tableDefinitionCSVPath);
+
+        outputText.append("\nDownload complete\n");
     }
 
     public void downloadRawCSV(String dirToSaveDataTo) throws Exception {
+        outputText.append("\nDownloading unformatted CSV file");
+
         // Write out the Table Data CSV's
         String dataCSVPath = dirToSaveDataTo + separator + "assets" + separator + "csv" + separator
-                + TABLE_ID + "_raw.csv";
+                + tableId + "_raw.csv";
 
-        // TODO: Redo this without the fetch limit
-        mWinkClient.writeRowDataToCSV(AGGREGATE_URL, APP_ID, TABLE_ID, schemaETag, dataCSVPath);
+        mWinkClient.writeRowDataToCSV(aggregateURL, appId, tableId, schemaETag, dataCSVPath);
+
+        outputText.append("\nDownload complete\n");
     }
 
     public void downloadFormattedCSV(String dirToSaveDataTo) throws Exception {
+        outputText.append("\nDownloading Excel Formatted CSV file");
+
         // Write out the Table Data CSV's
         String dataCSVPath = dirToSaveDataTo + separator + "assets" + separator + "csv" + separator
-                + TABLE_ID + "_formatted.csv";
+                + tableId + "_formatted.csv";
 
-        // TODO: Redo this without the fetch limit
         RFC4180CsvWriter writer;
         JSONObject rowWrapper;
         String resumeCursor = null;
 
-        rowWrapper = mWinkClient.getRows(AGGREGATE_URL, APP_ID, TABLE_ID, schemaETag, resumeCursor, defaultFetchLimit);
+        outputText.append("\n\tRetrieving column names");
+
+        rowWrapper = mWinkClient.getRows(aggregateURL, appId, tableId, schemaETag, resumeCursor, defaultFetchLimit);
 
         JSONArray rows = rowWrapper.getJSONArray(jsonRowsString);
 
         if (rows.size() <= 0) {
-            System.out.println("writeRowDataToCSV: There are no rows to write out!");
+            outputText.append("\nwriteRowDataToCSV: There are no rows to write out!");
             return;
         }
 
@@ -146,7 +174,7 @@ public class RESTClient {
         JSONObject repRow = rows.getJSONObject(0);
         JSONArray orderedColumnsRep = repRow.getJSONArray(orderedColumnsDef);
         int numberOfColsToMake = 9 + orderedColumnsRep.size();
-        FormattedCSV csv = new FormattedCSV(numberOfColsToMake, writer, AGGREGATE_URL, APP_ID, TABLE_ID, schemaETag);
+        FormattedCSV csv = new FormattedCSV(numberOfColsToMake, writer, aggregateURL, appId, tableId, schemaETag);
 
         csv.addHeader(rowDefId);
         csv.addHeader(rowDefFormId);
@@ -173,18 +201,27 @@ public class RESTClient {
         csv.addHeader(rowDefFilterType);
         csv.addHeader(rowDefFilterValue);
 
+        outputText.append("\n\tColumn names retrieved");
+
+        outputText.append("\n\tWriting column names to CSV");
         csv.writeHeaders();
 
         do {
-            rowWrapper = mWinkClient.getRows(AGGREGATE_URL, APP_ID, TABLE_ID, schemaETag, resumeCursor, defaultFetchLimit);
+            outputText.append("\n\tRetrieving the next " + defaultFetchLimit + " rows.");
+
+            rowWrapper = mWinkClient.getRows(aggregateURL, appId, tableId, schemaETag, resumeCursor, defaultFetchLimit);
 
             rows = rowWrapper.getJSONArray(jsonRowsString);
+
+            outputText.append("\n\tWriting fetched rows.");
 
             writeOutFetchLimitRows(writer, rows, csv);
 
             resumeCursor = rowWrapper.getString("webSafeResumeCursor");
 
         } while (rowWrapper.getBoolean("hasMoreResults"));
+
+        outputText.append("\nDownload complete\n");
 
         writer.close();
     }
@@ -234,16 +271,18 @@ public class RESTClient {
     }
 
     public void downloadAttachments(String dirToSaveDataTo) throws Exception {
+        outputText.append("\nDownloading instance files");
         // Get all Instance Files
         // get all rows - check for attachment
-        mWinkClient.getAllTableInstanceFilesFromUri(AGGREGATE_URL, APP_ID, TABLE_ID, schemaETag, dirToSaveDataTo);
+        mWinkClient.getAllTableInstanceFilesFromUri(aggregateURL, appId, tableId, schemaETag, dirToSaveDataTo);
+        outputText.append("\nDownload complete\n");
     }
 
 
     /*************************************** Legacy **************************************/
     public TableInfo getTableResource() throws IOException, org.json.JSONException {
         Request request = new Request.Builder()
-                .url(URL + TABLES + File.separator + TABLE_ID)
+                .url(URL + TABLES + File.separator + tableId)
                 .header("User-Agent", "OkHttp Headers.java")
                 .addHeader("Accept", "application/json;")
                 .build();
@@ -253,7 +292,7 @@ public class RESTClient {
 
     public RowsData getAllDataRows(String schemaTag) throws IOException, org.json.JSONException {
         Request request = new Request.Builder()
-                .url(URL + TABLES + File.separator + TABLE_ID + REF + File.separator + schemaTag + ROWS)
+                .url(URL + TABLES + File.separator + tableId + REF + File.separator + schemaTag + ROWS)
                 .header("User-Agent", "OkHttp Headers.java")
                 .addHeader("Accept", "application/json;")
                 .build();

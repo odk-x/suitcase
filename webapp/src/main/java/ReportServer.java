@@ -30,11 +30,22 @@ public class ReportServer {
     static SpreedSheetBuilder sBuilder;
     static TableInfo sInfo;
     static RowsData sRows;
-    static JTextArea sTextArea = new JTextArea();
 
+    // Global UI Hooks
+    static JTextArea sTextArea = new JTextArea();
+    static JTextField sAggregateAddressText = new JTextField();
+    static JTextField sAppIdText = new JTextField();
+    static JTextField sTableIdText = new JTextField();
+
+    // Server data
+    private static String sAggregateAddress;
+    private static String sAppId;
+    private static String sTableId;
 
     public static void main(String[] args) {
         buildJFrame();
+
+        sClient.setOutputText(sTextArea);
 
         get(new FreeMarkerRoute("/") {
             @Override
@@ -64,26 +75,136 @@ public class ReportServer {
 
     private static void buildJFrame() {
         final JFrame frame = new JFrame("M&E Report");
-        JPanel contentPanel = new JPanel(new GridLayout(2, 1));
+
+        // UI Containter Panel
+        JPanel contentPanel = new JPanel(new GridLayout(3, 1));
+        contentPanel.setSize(600, 450);
+
+        // Build the UI segments
+        JPanel inputPanel = new JPanel(new GridLayout(3,1));
+        buildInputArea(inputPanel);
+        inputPanel.setSize(600, 100);
+        contentPanel.add(inputPanel, 0);
+
         JPanel buttonsPanel = new JPanel(new GridLayout(7, 2));
+        buildButtonArea(frame, buttonsPanel);
+        buttonsPanel.setSize(600, 150);
+        contentPanel.add(buttonsPanel, 1);
+
         JPanel textPanel = new JPanel(new GridLayout(1, 1));
-        JLabel serverLabel = new JLabel("Stop server");
-        JButton stopServerButton = new JButton();
-        JLabel goToReportLabel = new JLabel("Show Report");
-        JButton showReportButton = new JButton();
-        JLabel resetLabel = new JLabel("Reset data");
-        JButton resetButton = new JButton();
-        JLabel downloadDefinitionsLabel = new JLabel("Download Definitions");
-        JButton downloadDefinitionsButton = new JButton();
-        JLabel downloadRawCSVLabel = new JLabel("Download Raw CSV");
-        JButton downloadRawCSVButton = new JButton();
-        JLabel downloadFormattedCSVLabel = new JLabel("Download Formatted CSV");
-        JButton downloadFormattedCSVButton = new JButton();
-        JLabel downloadAttachmentsLabel = new JLabel("Download Attachments");
-        JButton downloadAttachmentsButton = new JButton();
+        buildTextArea(textPanel);
+        textPanel.setSize(600, 200);
+        contentPanel.add(textPanel, 2);
+
+        // Finish building the frame
+        frame.add(contentPanel);
+        frame.setSize(600, 450);
+        frame.setLocationRelativeTo(null);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                System.exit(0);
+                super.windowClosing(e);
+            }
+        });
+        frame.setVisible(true);
+    }
+
+    private static void buildTextArea(JPanel textPanel) {
         JScrollPane scroll = new JScrollPane(sTextArea,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        sTextArea.append("M&E report is available\n at " + LOCAL_URL);
+        // TODO:
+        //sTextArea.append("M&E report is available\n at " + LOCAL_URL);
+        textPanel.add(scroll);
+
+        sTextArea.setSize(400, 200);
+    }
+
+    private static void buildInputArea(JPanel inputPanel) {
+        JLabel aggregateAddressLabel = new JLabel("Aggregate Address");
+        sAggregateAddressText.setText("https://vraggregate2.appspot.com/");
+        sAggregateAddressText.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        inputPanel.add(aggregateAddressLabel);
+        inputPanel.add(sAggregateAddressText);
+
+        JLabel appIdLabel = new JLabel("App ID");
+        sAppIdText.setText("tables");
+        sAppIdText.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        inputPanel.add(appIdLabel);
+        inputPanel.add(sAppIdText);
+
+        JLabel tableIdLabel = new JLabel("Table ID");
+        sTableIdText.setText("scan_MNH_Register1");
+        sTableIdText.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        inputPanel.add(tableIdLabel);
+        inputPanel.add(sTableIdText);
+    }
+
+    private static void buildButtonArea(final JFrame frame, JPanel buttonsPanel) {
+        // Define buttons
+        final JLabel resetLabel = new JLabel("Select Server");
+        final JButton resetButton = new JButton();
+        final JLabel serverLabel = new JLabel("Stop Server/Quit");
+        final JButton stopServerButton = new JButton();
+        final JLabel goToReportLabel = new JLabel("Show Report");
+        final JButton showReportButton = new JButton();
+        final JLabel downloadDefinitionsLabel = new JLabel("Download Definitions");
+        final JButton downloadDefinitionsButton = new JButton();
+        final JLabel downloadRawCSVLabel = new JLabel("Download Raw CSV");
+        final JButton downloadRawCSVButton = new JButton();
+        final JLabel downloadFormattedCSVLabel = new JLabel("Download Formatted CSV");
+        final JButton downloadFormattedCSVButton = new JButton();
+        final JLabel downloadAttachmentsLabel = new JLabel("Download Attachments");
+        final JButton downloadAttachmentsButton = new JButton();
+
+        // Grab the server address and make a new connection. Clear out old data.
+        resetButton.setText("Select");
+        resetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    sAggregateAddress = sAggregateAddressText.getText().trim();
+                    sAppId = sAppIdText.getText().trim();
+                    sTableId = sTableIdText.getText().trim();
+
+                    sClient.resetData(sAggregateAddress, sAppId, sTableId, DIR_TO_SAVE_TO);
+
+                    sTextArea.append("\nAggregate URL set to: " + sAggregateAddress);
+                    sTextArea.append("\nApp ID set to: " + sAppId);
+                    sTextArea.append("\nTable ID set to: " + sTableId + "\n");
+
+                    stopServerButton.setEnabled(true);
+                    showReportButton.setEnabled(true);
+                    downloadDefinitionsButton.setEnabled(true);
+                    downloadRawCSVButton.setEnabled(true);
+                    downloadFormattedCSVButton.setEnabled(true);
+                    downloadAttachmentsButton.setEnabled(true);
+
+                    resetLabel.setText("Switch/Refresh Server & Delete old data");
+                    resetButton.setText("Refresh");
+
+                } catch (Exception exc) {
+                    sTextArea.append("\nError when trying to download data: ERROR " + exc.getMessage() + "\n");
+                }
+            }
+        });
+        buttonsPanel.add(resetLabel);
+        buttonsPanel.add(resetButton);
+
+        // Close visual report and shut down
+        stopServerButton.setText("Stop");
+        stopServerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose();
+                System.exit(0);
+            }
+        });
+        buttonsPanel.add(serverLabel);
+        buttonsPanel.add(stopServerButton);
+        stopServerButton.setEnabled(false);
+
+        // Launch visual report
         showReportButton.setText("Show");
         showReportButton.addActionListener(new ActionListener() {
             @Override
@@ -97,25 +218,11 @@ public class ReportServer {
                 }
             }
         });
-        stopServerButton.setText("Stop");
-        stopServerButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                frame.dispose();
-                System.exit(0);
-            }
-        });
-        resetButton.setText("Reset");
-        resetButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    sClient.resetData(DIR_TO_SAVE_TO);
-                } catch (Exception exc) {
-                    sTextArea.append("\nError when trying to download data: ERROR " + exc.getMessage() + "\n");
-                }
-            }
-        });
+        buttonsPanel.add(goToReportLabel);
+        buttonsPanel.add(showReportButton);
+        showReportButton.setEnabled(false);
+
+        // Download the table definitions files
         downloadDefinitionsButton.setText("Download");
         downloadDefinitionsButton.addActionListener(new ActionListener() {
             @Override
@@ -127,6 +234,11 @@ public class ReportServer {
                 }
             }
         });
+        buttonsPanel.add(downloadDefinitionsLabel);
+        buttonsPanel.add(downloadDefinitionsButton);
+        downloadDefinitionsButton.setEnabled(false);
+
+        // Download the unaltered CSV file of the table data
         downloadRawCSVButton.setText("Download");
         downloadRawCSVButton.addActionListener(new ActionListener() {
             @Override
@@ -138,6 +250,11 @@ public class ReportServer {
                 }
             }
         });
+        buttonsPanel.add(downloadRawCSVLabel);
+        buttonsPanel.add(downloadRawCSVButton);
+        downloadRawCSVButton.setEnabled(false);
+
+        // Download the CSV and then format it for Excel for easier consumption
         downloadFormattedCSVButton.setText("Download");
         downloadFormattedCSVButton.addActionListener(new ActionListener() {
             @Override
@@ -149,6 +266,11 @@ public class ReportServer {
                 }
             }
         });
+        buttonsPanel.add(downloadFormattedCSVLabel);
+        buttonsPanel.add(downloadFormattedCSVButton);
+        downloadFormattedCSVButton.setEnabled(false);
+
+        // Download instance files
         downloadAttachmentsButton.setText("Download");
         downloadAttachmentsButton.addActionListener(new ActionListener() {
             @Override
@@ -160,38 +282,9 @@ public class ReportServer {
                 }
             }
         });
-        buttonsPanel.add(goToReportLabel);
-        buttonsPanel.add(showReportButton);
-        buttonsPanel.add(serverLabel);
-        buttonsPanel.add(stopServerButton);
-        buttonsPanel.add(downloadDefinitionsLabel);
-        buttonsPanel.add(downloadDefinitionsButton);
-        buttonsPanel.add(downloadRawCSVLabel);
-        buttonsPanel.add(downloadRawCSVButton);
-        buttonsPanel.add(downloadFormattedCSVLabel);
-        buttonsPanel.add(downloadFormattedCSVButton);
         buttonsPanel.add(downloadAttachmentsLabel);
         buttonsPanel.add(downloadAttachmentsButton);
-        buttonsPanel.add(resetLabel);
-        buttonsPanel.add(resetButton);
-        textPanel.add(scroll);
-        contentPanel.add(buttonsPanel, 0);
-        contentPanel.add(textPanel, 1);
-        buttonsPanel.setSize(400, 150);
-        sTextArea.setSize(400, 150);
-        textPanel.setSize(400, 150);
-        contentPanel.setSize(400, 300);
-        frame.add(contentPanel);
-        frame.setSize(400, 300);
-        frame.setLocationRelativeTo(null);
-        frame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                System.exit(0);
-                super.windowClosing(e);
-            }
-        });
-        frame.setVisible(true);
+        downloadAttachmentsButton.setEnabled(false);
     }
 
     private static void openBrowser() throws URISyntaxException, IOException {

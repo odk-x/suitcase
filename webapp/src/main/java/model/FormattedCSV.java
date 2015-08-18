@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by jbeorse on 8/5/15.
+ * Created by Jeff Beorse on 8/5/15.
  */
 public class FormattedCSV {
 
@@ -96,7 +96,6 @@ public class FormattedCSV {
                 // Do nothing; we're ignoring this column
                 break;
             case URI:
-                // TODO: Add URI formatting
                 String path = baseURI + RESTClient.separator + appId + RESTClient.uriTablesFragment
                         + RESTClient.separator + tableId + RESTClient.uriRefFragment + schemaETag
                         + RESTClient.uriAttachmentsFragment + rowId + RESTClient.uriFileFragment
