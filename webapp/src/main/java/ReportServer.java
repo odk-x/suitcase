@@ -26,6 +26,8 @@ public class ReportServer {
     private static final String LOCAL_URL = "http://localhost:4567";
     private static final String ERROR = "An error occurred when trying to open browser ERROR: ";
     private static final String DIR_TO_SAVE_TO = "me-report";
+    private static final int DEFAULT_FETCH_BATCH_SIZE = 10;
+
     static RESTClient sClient = new RESTClient();
     static SpreedSheetBuilder sBuilder;
     static TableInfo sInfo;
@@ -50,7 +52,7 @@ public class ReportServer {
         get(new FreeMarkerRoute("/") {
             @Override
             public ModelAndView handle(Request request, Response response) {
-                downloadData();
+                downloadData(DEFAULT_FETCH_BATCH_SIZE);
                 Map<String, Object> viewObjects = new HashMap<String, Object>();
                 viewObjects.put("templateName", "spreedsheet.ftl");
                 viewObjects.put("spreedsheet", sBuilder.buildSpreedSheet());
@@ -60,10 +62,10 @@ public class ReportServer {
         });
     }
 
-    private static void downloadData() {
+    private static void downloadData(int numRowsToFetch) {
         try {
             sInfo = sClient.getTableResource();
-            sRows = sClient.getAllDataRows(sInfo.getSchemaTag());
+            sRows = sClient.getAllDataRows(sInfo.getSchemaTag(), numRowsToFetch);
             sInfo.setRowList(sRows.getRows());
             sBuilder = new SpreedSheetBuilder(sInfo);
         } catch (IOException e) {

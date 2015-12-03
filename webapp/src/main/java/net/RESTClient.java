@@ -77,6 +77,7 @@ public class RESTClient {
     public static final String REF = "/ref";
     public static final String ROWS = "/rows";
     public static final String TABLES = "/tables";
+    public static final String FETCH = "?fetchLimit=";
 
     public static String URL;
 
@@ -183,18 +184,9 @@ public class RESTClient {
         csv.addHeader(rowDefSavepointTimestamp);
         csv.addHeader(rowDefSavepointCreator);
 
-        // TODO: Clean this up
-        String colName;
         for (int j = 0; j < orderedColumnsRep.size(); j++) {
             JSONObject obj = orderedColumnsRep.getJSONObject(j);
-            colName = obj.getString("column");
-            if (colName.contains("contentType")) {
-                csv.filterCol();
-            } else if (colName.contains("uriFragment")) {
-                csv.uriCol(colName);
-            } else {
-                csv.addHeader(colName);
-            }
+            csv.addHeader(obj.getString("column"));
         }
 
         csv.addHeader(rowDefRowETag);
@@ -204,7 +196,7 @@ public class RESTClient {
         outputText.append("\n\tColumn names retrieved");
 
         outputText.append("\n\tWriting column names to CSV");
-        csv.writeHeaders();
+        csv.finishedHeaders();
 
         do {
             outputText.append("\n\tRetrieving the next " + defaultFetchLimit + " rows.");
@@ -227,7 +219,7 @@ public class RESTClient {
     }
 
     private void writeOutFetchLimitRows(RFC4180CsvWriter writer, JSONArray rows, FormattedCSV csv) throws Exception {
-        String nullString = null;
+        String nullString = "null";
 
         for (int k = 0; k < rows.size(); k++) {
             JSONObject row = rows.getJSONObject(k);
@@ -266,8 +258,10 @@ public class RESTClient {
             } else {
                 csv.addValue(filterScope.getString("value"), row.getString(jsonId));
             }
-            csv.writeRow();
+            csv.finishedRow();
         }
+
+        csv.writeCSV();
     }
 
     public void downloadAttachments(String dirToSaveDataTo) throws Exception {
@@ -290,9 +284,9 @@ public class RESTClient {
         return JSONUtils.getObj(responseWrapper.getResponse().body().string(), TableInfo.class);
     }
 
-    public RowsData getAllDataRows(String schemaTag) throws IOException, org.json.JSONException {
+    public RowsData getAllDataRows(String schemaTag, int numRowsToFetch) throws IOException, org.json.JSONException {
         Request request = new Request.Builder()
-                .url(URL + TABLES + File.separator + tableId + REF + File.separator + schemaTag + ROWS)
+                .url(URL + TABLES + File.separator + tableId + REF + File.separator + schemaTag + ROWS + FETCH + numRowsToFetch)
                 .header("User-Agent", "OkHttp Headers.java")
                 .addHeader("Accept", "application/json;")
                 .build();
