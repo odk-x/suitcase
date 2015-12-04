@@ -1,5 +1,5 @@
 # app target folder
-webapp/target/*
+target/*
 
 # IntelliJ
 *.iml
