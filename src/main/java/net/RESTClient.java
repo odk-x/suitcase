@@ -1,11 +1,11 @@
 package net;
 
-import com.squareup.okhttp.Request;
+//import com.squareup.okhttp.Request;
 import model.FormattedCSV;
-import model.ResponseWrapper;
-import model.serialization.FieldsWrapper;
-import model.serialization.RowsData;
-import model.serialization.TableInfo;
+//import model.ResponseWrapper;
+//import model.serialization.FieldsWrapper;
+//import model.serialization.RowsData;
+//import model.serialization.TableInfo;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -74,20 +74,20 @@ public class RESTClient {
 
     /************************************** Legacy *************************************/
     public static final String PREFIX_PATH = "odktables";
-    public static final String REF = "/ref";
-    public static final String ROWS = "/rows";
-    public static final String TABLES = "/tables";
-    public static final String FETCH = "?fetchLimit=";
+//    public static final String REF = "/ref";
+//    public static final String ROWS = "/rows";
+//    public static final String TABLES = "/tables";
+//    public static final String FETCH = "?fetchLimit=";
 
-    public static String URL;
+//    public static String URL;
 
-    private WebAgent mWebAgent;
+//    private WebAgent mWebAgent;
 
     public RESTClient() {
         mWinkClient = new WinkClient();
 
         // Legacy
-        mWebAgent = new WebAgent();
+//        mWebAgent = new WebAgent();
     }
 
     public void setOutputText(JTextArea outputText) {
@@ -107,7 +107,7 @@ public class RESTClient {
         this.tableId = tableId;
 
         // Legacy
-        this.URL = aggregateURL + File.separator + PREFIX_PATH + File.separator + appId;
+//        this.URL = aggregateURL + File.separator + PREFIX_PATH + File.separator + appId;
 
         schemaETag = WinkClient.getSchemaETagForTable(this.aggregateURL, this.appId, this.tableId);
     }
@@ -274,40 +274,40 @@ public class RESTClient {
 
 
     /*************************************** Legacy **************************************/
-    public TableInfo getTableResource() throws IOException, org.json.JSONException {
-        Request request = new Request.Builder()
-                .url(URL + TABLES + File.separator + tableId)
-                .header("User-Agent", "OkHttp Headers.java")
-                .addHeader("Accept", "application/json;")
-                .build();
-        ResponseWrapper responseWrapper = mWebAgent.doGET(request);
-        return JSONUtils.getObj(responseWrapper.getResponse().body().string(), TableInfo.class);
-    }
-
-    public RowsData getAllDataRows(String schemaTag, int numRowsToFetch) throws IOException, org.json.JSONException {
-        Request request = new Request.Builder()
-                .url(URL + TABLES + File.separator + tableId + REF + File.separator + schemaTag + ROWS + FETCH + numRowsToFetch)
-                .header("User-Agent", "OkHttp Headers.java")
-                .addHeader("Accept", "application/json;")
-                .build();
-        ResponseWrapper responseWrapper = mWebAgent.doGET(request);
-        return JSONUtils.getObj(responseWrapper.getResponse().body().string(), RowsData.class);
-    }
-
-    public FieldsWrapper getRawJSONValue(String fullURL) throws IOException, org.json.JSONException {
-        Request request = new Request.Builder()
-                .url(fullURL)
-                .header("User-Agent", "OkHttp Headers.java")
-                .addHeader("Accept", "application/json;")
-                .build();
-        ResponseWrapper responseWrapper = mWebAgent.doGET(request);
-        String json = responseWrapper.getResponse().body().string();
-        FieldsWrapper obj;
-        if (JSONUtils.doesJSONExists(json)) {
-            obj = JSONUtils.getObj(json, FieldsWrapper.class);
-        } else {
-            obj = new FieldsWrapper();
-        }
-        return obj;
-    }
+//    public TableInfo getTableResource() throws IOException, org.json.JSONException {
+//        Request request = new Request.Builder()
+//                .url(URL + TABLES + File.separator + tableId)
+//                .header("User-Agent", "OkHttp Headers.java")
+//                .addHeader("Accept", "application/json;")
+//                .build();
+//        ResponseWrapper responseWrapper = mWebAgent.doGET(request);
+//        return JSONUtils.getObj(responseWrapper.getResponse().body().string(), TableInfo.class);
+//    }
+//
+//    public RowsData getAllDataRows(String schemaTag, int numRowsToFetch) throws IOException, org.json.JSONException {
+//        Request request = new Request.Builder()
+//                .url(URL + TABLES + File.separator + tableId + REF + File.separator + schemaTag + ROWS + FETCH + numRowsToFetch)
+//                .header("User-Agent", "OkHttp Headers.java")
+//                .addHeader("Accept", "application/json;")
+//                .build();
+//        ResponseWrapper responseWrapper = mWebAgent.doGET(request);
+//        return JSONUtils.getObj(responseWrapper.getResponse().body().string(), RowsData.class);
+//    }
+//
+//    public FieldsWrapper getRawJSONValue(String fullURL) throws IOException, org.json.JSONException {
+//        Request request = new Request.Builder()
+//                .url(fullURL)
+//                .header("User-Agent", "OkHttp Headers.java")
+//                .addHeader("Accept", "application/json;")
+//                .build();
+//        ResponseWrapper responseWrapper = mWebAgent.doGET(request);
+//        String json = responseWrapper.getResponse().body().string();
+//        FieldsWrapper obj;
+//        if (JSONUtils.doesJSONExists(json)) {
+//            obj = JSONUtils.getObj(json, FieldsWrapper.class);
+//        } else {
+//            obj = new FieldsWrapper();
+//        }
+//        return obj;
+//    }
 }

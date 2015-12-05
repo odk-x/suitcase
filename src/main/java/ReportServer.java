@@ -1,12 +1,8 @@
-import model.serialization.RowsData;
-import model.serialization.TableInfo;
+//import model.serialization.RowsData;
+//import model.serialization.TableInfo;
 import net.RESTClient;
 import org.json.JSONException;
-import spark.ModelAndView;
-import spark.Request;
-import spark.Response;
-import spark.template.freemarker.FreeMarkerRoute;
-import utils.SpreedSheetBuilder;
+//import utils.SpreedSheetBuilder;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,18 +16,18 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static spark.Spark.get;
+//import static spark.Spark.get;
 
 public class ReportServer {
-    private static final String LOCAL_URL = "http://localhost:4567";
+//    private static final String LOCAL_URL = "http://localhost:4567";
     private static final String ERROR = "An error occurred when trying to open browser ERROR: ";
     private static final String DIR_TO_SAVE_TO = "me-report";
     private static final int DEFAULT_FETCH_BATCH_SIZE = 10;
 
     static RESTClient sClient = new RESTClient();
-    static SpreedSheetBuilder sBuilder;
-    static TableInfo sInfo;
-    static RowsData sRows;
+//    static SpreedSheetBuilder sBuilder;
+//    static TableInfo sInfo;
+//    static RowsData sRows;
 
     // Global UI Hooks
     static JTextArea sTextArea = new JTextArea();
@@ -49,34 +45,34 @@ public class ReportServer {
 
         sClient.setOutputText(sTextArea);
 
-        get(new FreeMarkerRoute("/") {
-            @Override
-            public ModelAndView handle(Request request, Response response) {
-                downloadData(DEFAULT_FETCH_BATCH_SIZE);
-                Map<String, Object> viewObjects = new HashMap<String, Object>();
-                viewObjects.put("templateName", "spreedsheet.ftl");
-                viewObjects.put("spreedsheet", sBuilder.buildSpreedSheet());
-
-                return modelAndView(viewObjects, "layout.ftl");
-            }
-        });
+//        get(new FreeMarkerRoute("/") {
+//            @Override
+//            public ModelAndView handle(Request request, Response response) {
+//                downloadData(DEFAULT_FETCH_BATCH_SIZE);
+//                Map<String, Object> viewObjects = new HashMap<String, Object>();
+//                viewObjects.put("templateName", "spreedsheet.ftl");
+//                viewObjects.put("spreedsheet", sBuilder.buildSpreedSheet());
+//
+//                return modelAndView(viewObjects, "layout.ftl");
+//            }
+//        });
     }
 
-    private static void downloadData(int numRowsToFetch) {
-        try {
-            sInfo = sClient.getTableResource();
-            sRows = sClient.getAllDataRows(sInfo.getSchemaTag(), numRowsToFetch);
-            sInfo.setRowList(sRows.getRows());
-            sBuilder = new SpreedSheetBuilder(sInfo);
-        } catch (IOException e) {
-            sTextArea.append(ERROR + e.getMessage() + "\n");
-        } catch (JSONException ex) {
-            sTextArea.append(ERROR + ex.getMessage() + "\n");
-        }
-    }
+//    private static void downloadData(int numRowsToFetch) {
+//        try {
+//            sInfo = sClient.getTableResource();
+//            sRows = sClient.getAllDataRows(sInfo.getSchemaTag(), numRowsToFetch);
+//            sInfo.setRowList(sRows.getRows());
+//            sBuilder = new SpreedSheetBuilder(sInfo);
+//        } catch (IOException e) {
+//            sTextArea.append(ERROR + e.getMessage() + "\n");
+//        } catch (JSONException ex) {
+//            sTextArea.append(ERROR + ex.getMessage() + "\n");
+//        }
+//    }
 
     private static void buildJFrame() {
-        final JFrame frame = new JFrame("M&E Report");
+        final JFrame frame = new JFrame("ODK Suitcase");
 
         // UI Containter Panel
         JPanel contentPanel = new JPanel(new GridLayout(3, 1));
@@ -88,7 +84,7 @@ public class ReportServer {
         inputPanel.setSize(600, 100);
         contentPanel.add(inputPanel, 0);
 
-        JPanel buttonsPanel = new JPanel(new GridLayout(7, 2));
+        JPanel buttonsPanel = new JPanel(new GridLayout(4, 2));
         buildButtonArea(frame, buttonsPanel);
         buttonsPanel.setSize(600, 150);
         contentPanel.add(buttonsPanel, 1);
@@ -146,12 +142,12 @@ public class ReportServer {
         // Define buttons
         final JLabel resetLabel = new JLabel("Select Server");
         final JButton resetButton = new JButton();
-        final JLabel serverLabel = new JLabel("Stop Server/Quit");
-        final JButton stopServerButton = new JButton();
-        final JLabel goToReportLabel = new JLabel("Show Report");
-        final JButton showReportButton = new JButton();
-        final JLabel downloadDefinitionsLabel = new JLabel("Download Definitions");
-        final JButton downloadDefinitionsButton = new JButton();
+//        final JLabel serverLabel = new JLabel("Stop Server/Quit");
+//        final JButton stopServerButton = new JButton();
+//        final JLabel goToReportLabel = new JLabel("Show Report");
+//        final JButton showReportButton = new JButton();
+//        final JLabel downloadDefinitionsLabel = new JLabel("Download Definitions");
+//        final JButton downloadDefinitionsButton = new JButton();
         final JLabel downloadRawCSVLabel = new JLabel("Download Raw CSV");
         final JButton downloadRawCSVButton = new JButton();
         final JLabel downloadFormattedCSVLabel = new JLabel("Download Formatted CSV");
@@ -175,9 +171,9 @@ public class ReportServer {
                     sTextArea.append("\nApp ID set to: " + sAppId);
                     sTextArea.append("\nTable ID set to: " + sTableId + "\n");
 
-                    stopServerButton.setEnabled(true);
-                    showReportButton.setEnabled(true);
-                    downloadDefinitionsButton.setEnabled(true);
+//                    stopServerButton.setEnabled(true);
+//                    showReportButton.setEnabled(true);
+//                    downloadDefinitionsButton.setEnabled(true);
                     downloadRawCSVButton.setEnabled(true);
                     downloadFormattedCSVButton.setEnabled(true);
                     downloadAttachmentsButton.setEnabled(true);
@@ -193,52 +189,52 @@ public class ReportServer {
         buttonsPanel.add(resetLabel);
         buttonsPanel.add(resetButton);
 
-        // Close visual report and shut down
-        stopServerButton.setText("Stop");
-        stopServerButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                frame.dispose();
-                System.exit(0);
-            }
-        });
-        buttonsPanel.add(serverLabel);
-        buttonsPanel.add(stopServerButton);
-        stopServerButton.setEnabled(false);
-
-        // Launch visual report
-        showReportButton.setText("Show");
-        showReportButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    openBrowser();
-                } catch (IOException ioe) {
-                    sTextArea.append(ERROR + ioe.getMessage() + "\n");
-                } catch (URISyntaxException use) {
-                    sTextArea.append(ERROR + use.getMessage() + "\n");
-                }
-            }
-        });
-        buttonsPanel.add(goToReportLabel);
-        buttonsPanel.add(showReportButton);
-        showReportButton.setEnabled(false);
+//        // Close visual report and shut down
+//        stopServerButton.setText("Stop");
+//        stopServerButton.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                frame.dispose();
+//                System.exit(0);
+//            }
+//        });
+//        buttonsPanel.add(serverLabel);
+//        buttonsPanel.add(stopServerButton);
+//        stopServerButton.setEnabled(false);
+//
+//        // Launch visual report
+//        showReportButton.setText("Show");
+//        showReportButton.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                try {
+//                    openBrowser();
+//                } catch (IOException ioe) {
+//                    sTextArea.append(ERROR + ioe.getMessage() + "\n");
+//                } catch (URISyntaxException use) {
+//                    sTextArea.append(ERROR + use.getMessage() + "\n");
+//                }
+//            }
+//        });
+//        buttonsPanel.add(goToReportLabel);
+//        buttonsPanel.add(showReportButton);
+//        showReportButton.setEnabled(false);
 
         // Download the table definitions files
-        downloadDefinitionsButton.setText("Download");
-        downloadDefinitionsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    sClient.downloadDefinitions(DIR_TO_SAVE_TO);
-                } catch (Exception exc) {
-                    sTextArea.append("\nError when trying to download data: ERROR " + exc.getMessage() + "\n");
-                }
-            }
-        });
-        buttonsPanel.add(downloadDefinitionsLabel);
-        buttonsPanel.add(downloadDefinitionsButton);
-        downloadDefinitionsButton.setEnabled(false);
+//        downloadDefinitionsButton.setText("Download");
+//        downloadDefinitionsButton.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                try {
+//                    sClient.downloadDefinitions(DIR_TO_SAVE_TO);
+//                } catch (Exception exc) {
+//                    sTextArea.append("\nError when trying to download data: ERROR " + exc.getMessage() + "\n");
+//                }
+//            }
+//        });
+//        buttonsPanel.add(downloadDefinitionsLabel);
+//        buttonsPanel.add(downloadDefinitionsButton);
+//        downloadDefinitionsButton.setEnabled(false);
 
         // Download the unaltered CSV file of the table data
         downloadRawCSVButton.setText("Download");
@@ -288,39 +284,39 @@ public class ReportServer {
         buttonsPanel.add(downloadAttachmentsButton);
         downloadAttachmentsButton.setEnabled(false);
     }
-
-    private static void openBrowser() throws URISyntaxException, IOException {
-        switch (determineSystem()) {
-            case WIN:
-                Desktop.getDesktop().browse(new URI(LOCAL_URL));
-                break;
-            case MAC:
-                Runtime rt = Runtime.getRuntime();
-                rt.exec("open " + LOCAL_URL);
-                break;
-            case LINUX:
-                Runtime runtime = Runtime.getRuntime();
-                runtime.exec("/usr/bin/firefox -new-window " + LOCAL_URL);
-                break;
-            default:
-                break;
-        }
-    }
-
-    private static OS determineSystem() {
-        OS runningOn = null;
-        String os = System.getProperty("os.name").toLowerCase();
-        if (os.indexOf("win") >= 0) {
-            runningOn = OS.WIN;
-        } else if (os.indexOf("mac") >= 0) {
-            runningOn = OS.MAC;
-        } else if (os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0) {
-            runningOn = OS.LINUX;
-        }
-        return runningOn;
-    }
-
-    enum OS {
-        WIN, MAC, LINUX
-    }
+//
+//    private static void openBrowser() throws URISyntaxException, IOException {
+//        switch (determineSystem()) {
+//            case WIN:
+//                Desktop.getDesktop().browse(new URI(LOCAL_URL));
+//                break;
+//            case MAC:
+//                Runtime rt = Runtime.getRuntime();
+//                rt.exec("open " + LOCAL_URL);
+//                break;
+//            case LINUX:
+//                Runtime runtime = Runtime.getRuntime();
+//                runtime.exec("/usr/bin/firefox -new-window " + LOCAL_URL);
+//                break;
+//            default:
+//                break;
+//        }
+//    }
+//
+//    private static OS determineSystem() {
+//        OS runningOn = null;
+//        String os = System.getProperty("os.name").toLowerCase();
+//        if (os.indexOf("win") >= 0) {
+//            runningOn = OS.WIN;
+//        } else if (os.indexOf("mac") >= 0) {
+//            runningOn = OS.MAC;
+//        } else if (os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0) {
+//            runningOn = OS.LINUX;
+//        }
+//        return runningOn;
+//    }
+//
+//    enum OS {
+//        WIN, MAC, LINUX
+//    }
 }

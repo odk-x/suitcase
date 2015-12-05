@@ -1,12 +1,12 @@
 package model;
 
-import com.squareup.okhttp.Request;
-import model.serialization.Field;
-import model.serialization.FieldsWrapper;
+//import com.squareup.okhttp.Request;
+//import model.serialization.Field;
+//import model.serialization.FieldsWrapper;
 import net.RESTClient;
-import net.WebAgent;
+//import net.WebAgent;
 import org.opendatakit.aggregate.odktables.rest.RFC4180CsvWriter;
-import utils.JSONUtils;
+//import utils.JSONUtils;
 
 import java.util.*;
 
@@ -244,66 +244,67 @@ public class FormattedCSV {
      * @throws Exception
      */
     private void processRawValues() throws Exception {
-        WebAgent mWebAgent = new WebAgent();
-
-        // Get the raw json file
-        if (currRawJson == null) {
-            return;
-        }
-
-        ResponseWrapper responseWrapper;
-        try {
-            Request request = new Request.Builder()
-                    .url(currRawJson)
-                    .header("User-Agent", "OkHttp Headers.java")
-                    .addHeader("Accept", "application/json;")
-                    .build();
-            responseWrapper = mWebAgent.doGET(request);
-        } catch (Exception e) {
-            // If we can't download the raw file, just skip it
-            return;
-        }
-
-        // Read the raw json file
-        String json = responseWrapper.getResponse().body().string();
-        FieldsWrapper obj;
-        if (JSONUtils.doesJSONExists(json)) {
-            if (json.startsWith("\"Unable")) {
-                // File unavailable, skip it for now. TODO: Handle this case better
-                return;
-            }
-            obj = JSONUtils.getObj(json, FieldsWrapper.class);
-        } else {
-            obj = new FieldsWrapper();
-        }
-        List<Field> rawFields = obj.getFields();
-
-        // Transcribe the raw fields into a map
-        Map<String, String> rawFieldsMap = new HashMap<String, String>(currRow.size());
-        Iterator<Field> rawFieldsIterator = rawFields.iterator();
-        while (rawFieldsIterator.hasNext()) {
-            Field rawField = rawFieldsIterator.next();
-            rawFieldsMap.put(rawField.getLabel(), rawField.getValue());
-        }
-
-        // Iterate through the current row and insert the raw values
-        headerIterator = headerRow.listIterator();
-        Header col;
-        while (headerIterator.hasNext()) {
-            col = headerIterator.next();
-
-            if (col.colClass != COLUMN_CLASS.RAW) {
-                continue;
-            }
-
-            // Find the raw value (the 4 character prefix is "raw_")
-            String colName = col.name.substring(4);
-            if (!rawFieldsMap.containsKey(colName)) {
-                throw (new Exception("Error processing raw fields")) ;
-            }
-
-            currRow.set(headerIterator.previousIndex(), rawFieldsMap.get(colName));
-        }
+        //TODO: rewrite to use aggregate-rest-interface
+//        WebAgent mWebAgent = new WebAgent();
+//
+//        // Get the raw json file
+//        if (currRawJson == null) {
+//            return;
+//        }
+//
+//        ResponseWrapper responseWrapper;
+//        try {
+//            Request request = new Request.Builder()
+//                    .url(currRawJson)
+//                    .header("User-Agent", "OkHttp Headers.java")
+//                    .addHeader("Accept", "application/json;")
+//                    .build();
+//            responseWrapper = mWebAgent.doGET(request);
+//        } catch (Exception e) {
+//            // If we can't download the raw file, just skip it
+//            return;
+//        }
+//
+//        // Read the raw json file
+//        String json = responseWrapper.getResponse().body().string();
+//        FieldsWrapper obj;
+//        if (JSONUtils.doesJSONExists(json)) {
+//            if (json.startsWith("\"Unable")) {
+//                // File unavailable, skip it for now. TODO: Handle this case better
+//                return;
+//            }
+//            obj = JSONUtils.getObj(json, FieldsWrapper.class);
+//        } else {
+//            obj = new FieldsWrapper();
+//        }
+//        List<Field> rawFields = obj.getFields();
+//
+//        // Transcribe the raw fields into a map
+//        Map<String, String> rawFieldsMap = new HashMap<String, String>(currRow.size());
+//        Iterator<Field> rawFieldsIterator = rawFields.iterator();
+//        while (rawFieldsIterator.hasNext()) {
+//            Field rawField = rawFieldsIterator.next();
+//            rawFieldsMap.put(rawField.getLabel(), rawField.getValue());
+//        }
+//
+//        // Iterate through the current row and insert the raw values
+//        headerIterator = headerRow.listIterator();
+//        Header col;
+//        while (headerIterator.hasNext()) {
+//            col = headerIterator.next();
+//
+//            if (col.colClass != COLUMN_CLASS.RAW) {
+//                continue;
+//            }
+//
+//            // Find the raw value (the 4 character prefix is "raw_")
+//            String colName = col.name.substring(4);
+//            if (!rawFieldsMap.containsKey(colName)) {
+//                throw (new Exception("Error processing raw fields")) ;
+//            }
+//
+//            currRow.set(headerIterator.previousIndex(), rawFieldsMap.get(colName));
+//        }
     }
 
     /**
