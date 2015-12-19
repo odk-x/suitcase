@@ -235,6 +235,10 @@ public class ODKCSV implements Iterable<String[]> {
         return sum;
     }
 
+    public int getSize() {
+        return this.size;
+    }
+
     private String[] extractHeader(JSONObject oneRow) throws JSONException {
         JSONArray orderedColumns = oneRow.getJSONArray(orderedColumnsDef);
         String[] columns = new String[orderedColumns.size()];
@@ -292,7 +296,6 @@ public class ODKCSV implements Iterable<String[]> {
     }
 
     private String[] getData(JSONObject row, boolean scanFormatting, boolean localLink) throws Exception {
-        //TODO:filter, handle case when scanFormatting = 1 & localLink = 0
         String rowId = row.optString(jsonId);
 
         ScanJson scanRaw = null;
