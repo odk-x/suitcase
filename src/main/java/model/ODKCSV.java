@@ -301,8 +301,8 @@ public class ODKCSV implements Iterable<String[]> {
         ScanJson scanRaw = null;
         if (scanFormatting || localLink) {
             this.attMngr.getListOfRowAttachments(rowId);
-            this.attMngr.downloadAttachments(rowId, !localLink);
             if (scanFormatting) {
+                this.attMngr.downloadAttachments(rowId, true);
                 scanRaw = new ScanJson(this.attMngr.getScanRawJsonStream(rowId));
             }
         }
@@ -340,6 +340,10 @@ public class ODKCSV implements Iterable<String[]> {
                     data[i - offset] = value;
                     break;
             }
+        }
+
+        if (localLink) {
+            this.attMngr.downloadAttachments(rowId, false);
         }
 
         return data;
