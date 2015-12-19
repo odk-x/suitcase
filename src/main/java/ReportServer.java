@@ -24,16 +24,16 @@ public class ReportServer {
     private static final String DIR_TO_SAVE_TO = "me-report";
     private static final int DEFAULT_FETCH_BATCH_SIZE = 10;
 
-    static RESTClient sClient = new RESTClient();
+//    private RESTClient sClient = new RESTClient();
 //    static SpreedSheetBuilder sBuilder;
 //    static TableInfo sInfo;
 //    static RowsData sRows;
 
     // Global UI Hooks
-    static JTextArea sTextArea = new JTextArea();
-    static JTextField sAggregateAddressText = new JTextField();
-    static JTextField sAppIdText = new JTextField();
-    static JTextField sTableIdText = new JTextField();
+    private JTextArea sTextArea = new JTextArea();
+    private JTextField sAggregateAddressText = new JTextField();
+    private JTextField sAppIdText = new JTextField();
+    private JTextField sTableIdText = new JTextField();
 
     // Server data
     private static String sAggregateAddress;
@@ -41,9 +41,9 @@ public class ReportServer {
     private static String sTableId;
 
     public static void main(String[] args) {
-        buildJFrame();
+        ReportServer rs = new ReportServer();
 
-        sClient.setOutputText(sTextArea);
+//        sClient.setOutputText(sTextArea);
 
 //        get(new FreeMarkerRoute("/") {
 //            @Override
@@ -70,8 +70,12 @@ public class ReportServer {
 //            sTextArea.append(ERROR + ex.getMessage() + "\n");
 //        }
 //    }
+    
+    private ReportServer() {
+        buildJFrame();
+    }
 
-    private static void buildJFrame() {
+    private void buildJFrame() {
         final JFrame frame = new JFrame("ODK Suitcase");
 
         // UI Containter Panel
@@ -108,7 +112,7 @@ public class ReportServer {
         frame.setVisible(true);
     }
 
-    private static void buildTextArea(JPanel textPanel) {
+    private void buildTextArea(JPanel textPanel) {
         JScrollPane scroll = new JScrollPane(sTextArea,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         // TODO:
@@ -118,7 +122,7 @@ public class ReportServer {
         sTextArea.setSize(400, 200);
     }
 
-    private static void buildInputArea(JPanel inputPanel) {
+    private void buildInputArea(JPanel inputPanel) {
         JLabel aggregateAddressLabel = new JLabel("Aggregate Address");
         sAggregateAddressText.setText("https://vraggregate2.appspot.com/");
         sAggregateAddressText.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -138,7 +142,9 @@ public class ReportServer {
         inputPanel.add(sTableIdText);
     }
 
-    private static void buildButtonArea(final JFrame frame, JPanel buttonsPanel) {
+    private void buildButtonArea(final JFrame frame, JPanel buttonsPanel) {
+        //TODO: Check if server info changed
+
         // Define buttons
         final JLabel resetLabel = new JLabel("Select Server");
         final JButton resetButton = new JButton();
@@ -165,7 +171,7 @@ public class ReportServer {
                     sAppId = sAppIdText.getText().trim();
                     sTableId = sTableIdText.getText().trim();
 
-                    sClient.resetData(sAggregateAddress, sAppId, sTableId, DIR_TO_SAVE_TO);
+//                    sClient.resetData(sAggregateAddress, sAppId, sTableId, DIR_TO_SAVE_TO);
 
                     sTextArea.append("\nAggregate URL set to: " + sAggregateAddress);
                     sTextArea.append("\nApp ID set to: " + sAppId);
@@ -242,7 +248,7 @@ public class ReportServer {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    sClient.downloadRawCSV(DIR_TO_SAVE_TO);
+//                    sClient.downloadRawCSV(DIR_TO_SAVE_TO);
                 } catch (Exception exc) {
                     sTextArea.append("\nError when trying to download data: ERROR " + exc.getMessage() + "\n");
                 }
@@ -258,7 +264,7 @@ public class ReportServer {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    sClient.downloadFormattedCSV(DIR_TO_SAVE_TO);
+//                    sClient.downloadFormattedCSV(DIR_TO_SAVE_TO);
                 } catch (Exception exc) {
                     sTextArea.append("\nError when trying to download data: ERROR " + exc.getMessage() + "\n");
                 }
@@ -274,7 +280,7 @@ public class ReportServer {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    sClient.downloadAttachments(DIR_TO_SAVE_TO);
+//                    sClient.downloadAttachments(DIR_TO_SAVE_TO);
                 } catch (Exception exc) {
                     sTextArea.append("\nError when trying to download data: ERROR " + exc.getMessage() + "\n");
                 }

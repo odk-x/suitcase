@@ -1,22 +1,35 @@
+/*
 package model;
 
 //import com.squareup.okhttp.Request;
 //import model.serialization.Field;
 //import model.serialization.FieldsWrapper;
-import net.RESTClient;
+//import net.RESTClient;
 //import net.WebAgent;
+import net.RESTClient;
+import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.aggregate.odktables.rest.RFC4180CsvWriter;
 //import utils.JSONUtils;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 
+*/
 /**
  * Created by Jeff Beorse on 8/5/15.
  *
  * Handles processing of raw CSV files from Aggregate to M&E Formatting
  *
- */
+ *//*
+
 public class FormattedCSV {
+    public enum CSV_TYPE {
+        LINK,
+        DATA
+    }
 
     // There are two executions states: defining the headers and adding rows
     private enum EXEC_STATE {
@@ -59,6 +72,13 @@ public class FormattedCSV {
     // TODO:
     private static int rowCount = 0;
 
+    //new fields
+    private JSONObject rows;
+    private CSV_TYPE type;
+    private AggregateTableInfo tableInfo;
+    private boolean scanFormatting;
+    private boolean isComplete;
+
     public FormattedCSV(int numberOfColsToMake, RFC4180CsvWriter writer, String baseURI, String appId,
                         String tableId, String schemaETag) {
         // Keep track of which CSV columns are should be processed in which way
@@ -76,12 +96,40 @@ public class FormattedCSV {
         this.writer = writer;
     }
 
-    /**
+    */
+/* NEW *//*
+
+    public FormattedCSV(AggregateTableInfo tableInfo, JSONObject rows, CSV_TYPE type, boolean scanFormatting) {
+        this.rows = rows;
+        this.type = type;
+        this.tableInfo = tableInfo;
+        this.scanFormatting = scanFormatting;
+    }
+
+    */
+/* NEW *//*
+
+    public void writeCSV(Path path) throws IOException {
+        RFC4180CsvWriter writer = new RFC4180CsvWriter(new FileWriter(path.toFile()));
+
+        //TODO: writer write all rows
+    }
+
+    */
+/* NEW *//*
+
+    private void writeHeader() {
+        //TODO
+    }
+
+    */
+/**
      * Add a data header to the CSV
      *
      * @param colName The name of the column
      * @throws Exception
-     */
+     *//*
+
     public void addHeader(String colName) throws Exception {
         if (currState != EXEC_STATE.DEFINE_HEADERS) {
             throw (new Exception("Invalid State"));
@@ -109,13 +157,15 @@ public class FormattedCSV {
 
     }
 
-    /**
+    */
+/**
      * Users can add the unfiltered, raw csv data values and this method will apply the appropriate effects
      *
      * @param value The row value
      * @param rowId The ODK row ID, which is used for URI formatting
      * @throws Exception
-     */
+     *//*
+
     public void addValue(String value, String rowId) throws Exception {
         if (currState != EXEC_STATE.FILL_DATA) {
             throw (new Exception("Invalid State"));
@@ -157,11 +207,13 @@ public class FormattedCSV {
         }
     }
 
-    /**
+    */
+/**
      * Store the headers and prepare for row data.
      *
      * @throws Exception
-     */
+     *//*
+
     public void finishedHeaders() throws Exception {
         if (currState != EXEC_STATE.DEFINE_HEADERS) {
             throw (new Exception("Invalid State"));
@@ -183,11 +235,13 @@ public class FormattedCSV {
         beginRow();
     }
 
-    /**
+    */
+/**
      * Store this row and prepare for the next.
      *
      * @throws Exception
-     */
+     *//*
+
     public void finishedRow() throws Exception {
         if (currState != EXEC_STATE.FILL_DATA) {
             throw (new Exception("Invalid State"));
@@ -205,11 +259,13 @@ public class FormattedCSV {
         rowCount++;
     }
 
-    /**
+    */
+/**
      * Reset internal state to expect data to start a new row.
      *
      * @throws Exception
-     */
+     *//*
+
     private void beginRow() throws Exception {
         currState = EXEC_STATE.FILL_DATA;
         headerIterator = headerRow.listIterator();
@@ -217,11 +273,13 @@ public class FormattedCSV {
         currRawJson = null;
     }
 
-    /**
+    */
+/**
      * Remove the columns that are marked as filtered
      *
      * @throws Exception
-     */
+     *//*
+
     private void processFilteredValues() throws Exception {
         headerIterator = headerRow.listIterator();
         ListIterator<String> rowColIterator = currRow.listIterator();
@@ -238,11 +296,13 @@ public class FormattedCSV {
         }
     }
 
-    /**
+    */
+/**
      * Get the raw json and insert the values into the appropriate columns
      *
      * @throws Exception
-     */
+     *//*
+
     private void processRawValues() throws Exception {
         //TODO: rewrite to use aggregate-rest-interface
 //        WebAgent mWebAgent = new WebAgent();
@@ -307,11 +367,13 @@ public class FormattedCSV {
 //        }
     }
 
-    /**
+    */
+/**
      * Write out the table to the csv file.
      *
      * @throws Exception
-     */
+     *//*
+
     public void writeCSV() throws Exception {
         Iterator<List<String>> rowIterator = tableData.iterator();
 
@@ -324,3 +386,4 @@ public class FormattedCSV {
         }
     }
 }
+*/
