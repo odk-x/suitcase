@@ -8,5 +8,8 @@ target/*
 .idea/
 out/
 
+# Downloaded Data
+Download/
+
 framework/
 *~
