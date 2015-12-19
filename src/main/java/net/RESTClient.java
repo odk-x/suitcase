@@ -74,7 +74,7 @@ public class RESTClient {
     private ODKCSV csv;
 
     public static final String CSV_NAME = "data.csv";
-    private static final int FETCH_LIMIT = 1000;
+    private static final int FETCH_LIMIT = 3;
 
     /************************************** Legacy *************************************/
 //    public static final String REF = "/ref";
@@ -87,7 +87,7 @@ public class RESTClient {
 //    private WebAgent mWebAgent;
 
     //!!!ATTENTION!!! One per table
-    public RESTClient(AggregateTableInfo tableInfo) throws JSONException {
+    public RESTClient(AggregateTableInfo tableInfo) {
         this.tableInfo = tableInfo;
         tableInfo.setSchemaETag(WinkClient.getSchemaETagForTable(
                 this.tableInfo.getServerUrl(),
@@ -97,11 +97,14 @@ public class RESTClient {
         this.odkWinkClient = new WinkClient();
         this.attMngr = new AttachmentManager(this.tableInfo, this.odkWinkClient);
         this.csv = new ODKCSV(this.attMngr, this.tableInfo);
-        retrieveRows(FETCH_LIMIT);
     }
 
     /* NEW */
-    public void writeCSVToFile(boolean scanFormatting, boolean localLink) throws IOException {
+    public void writeCSVToFile(boolean scanFormatting, boolean localLink) throws IOException, JSONException {
+        if (this.csv.getSize() == 0) {
+            retrieveRows(FETCH_LIMIT);
+        }
+
         String csvFilename =
                 (localLink ? "data" : "link") +
                 (scanFormatting ? "_formatted" : "") + ".csv";
@@ -128,7 +131,7 @@ public class RESTClient {
         String cursor = null;
         JSONObject rows;
 
-        do {
+//        do {
             rows = this.odkWinkClient.getRows(
                     this.tableInfo.getServerUrl(),
                     this.tableInfo.getAppId(),
@@ -138,13 +141,13 @@ public class RESTClient {
 
             cursor = rows.optString("webSafeResumeCursor");
             this.csv.tryAdd(rows.getJSONArray(jsonRowsString));
-        } while (rows.getBoolean("hasMoreResults"));
+//        } while (rows.getBoolean("hasMoreResults"));
     }
 
 //
-//    public void setOutputText(JTextArea outputText) {
-//        this.outputText = outputText;
-//    }
+    public void setOutputText(JTextArea outputText) {
+        this.outputText = outputText;
+    }
 //
 //    public void resetData(String aggregateURL, String appId, String tableId, String dirToSaveDataTo) throws Exception {
 //        FileUtils.deleteDirectory(new File(dirToSaveDataTo));

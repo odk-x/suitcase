@@ -6,12 +6,6 @@ import java.net.URL;
 import java.util.Objects;
 
 public class AggregateTableInfo {
-//    private static final HashSet<String> HTTPS_DOMAIN;
-//    static {
-//        HTTPS_DOMAIN = new HashSet<String>();
-//        HTTPS_DOMAIN.add("appspot.com");
-//    }
-
     private static final String[] HTTPS_DOMAIN = new String[] {
         "appspot.com"
     };
