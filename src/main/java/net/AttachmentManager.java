@@ -33,8 +33,8 @@ public class AttachmentManager {
         @Override
         public void run() {
             try {
-                for (String file : files) {
-                    q.put(new String[]{rowId, file});
+                for (String filename : files) {
+                    q.put(new String[]{rowId, filename});
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -53,7 +53,8 @@ public class AttachmentManager {
         public void run() {
             try {
                 while (q.isEmpty()) {
-                    Thread.sleep(100);
+                    //wait until DownloadProducer enqueues a file
+                    Thread.sleep(200);
                 }
                 while (!q.isEmpty()) {
                     String[] file = q.take();
@@ -71,6 +72,7 @@ public class AttachmentManager {
 
     private AggregateTableInfo table;
     private Map<String, Map<String, String>> allAttachments;
+    //some rows lack attachment manifest, this map keeps track of that
     private Map<String, Boolean> hasManifestMap;
     private WinkClient wc;
     private BlockingQueue<String[]> bq;
@@ -84,10 +86,12 @@ public class AttachmentManager {
         this.wc = wc;
         this.allAttachments = new ConcurrentHashMap<String, Map<String, String>>();
         this.hasManifestMap = new ConcurrentHashMap<String, Boolean>();
+
         this.bq = new LinkedBlockingQueue<String[]>(DOWNLOAD_THREADS * 3);
         for (int i = 0; i < DOWNLOAD_THREADS; i++) {
             new Thread(new DownloadTask(bq)).start();
         }
+        //TODO: implement mechanism to shutdown unused threads
     }
 
     public void getListOfRowAttachments(String rowId) throws Exception {
@@ -148,12 +152,11 @@ public class AttachmentManager {
                 downloadFile(rowId, getJsonFilename(rowId));
             } else {
                 try {
-//                    System.out.println(rowId + ": " + this.allAttachments.get(rowId).keySet().size());
                     Thread t = new Thread(new DownloadProducer(
                             this.bq, rowId, this.allAttachments.get(rowId).keySet()
                     ));
                     t.start();
-                    t.join();
+                    t.join(); //wait for all files to be enqueued
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
