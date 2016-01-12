@@ -53,7 +53,7 @@ public class AggregateTableInfo {
     }
 
     public String getSchemaETag() {
-        return this.schemaETag == null ? "null" : this.schemaETag;
+        return this.schemaETag == null ? "" : this.schemaETag;
     }
 
     private String processUrl(String serverUrl) throws MalformedURLException {
