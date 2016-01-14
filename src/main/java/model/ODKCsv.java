@@ -47,15 +47,19 @@ public class ODKCsv implements Iterable<String[]> {
                 e.printStackTrace();
             }
 
+            if (!hasNext()) {
+                try {
+                    attMngr.waitForAttachmentDownload();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
             return nextLine;
         }
 
-        public void setScanFormatting(boolean set) {
-            this.scanFormatting = set;
-        }
-
-        public void setLocalLink(boolean set) {
-            this.localLink = set;
+        public int getIndex() {
+            return this.cursor;
         }
     }
 
@@ -365,10 +369,7 @@ public class ODKCsv implements Iterable<String[]> {
                     row.optString(jsonId) + "/file/" + fileName;
         }
 
-        return String.format(
-                template,
-                attachmentURL
-        );
+        return String.format(template, attachmentURL);
     }
 
     private Map<String, ACTION> buildActionMap() {

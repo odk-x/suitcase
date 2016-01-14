@@ -21,7 +21,7 @@ import static org.opendatakit.wink.client.WinkClient.*;
  * Time: 11:27 AM
  */
 public class RESTClient {
-    private JTextArea outputText;
+    private JProgressBar pb;
 
     private WinkClient odkWinkClient;
     private String csvPath;
@@ -31,11 +31,12 @@ public class RESTClient {
     private ODKCsv csv;
 
     public static final String CSV_NAME = "data.csv";
-    private static final int FETCH_LIMIT = 200;
+    private static final int FETCH_LIMIT = 1000;
 
     //!!!ATTENTION!!! One per table
     public RESTClient(AggregateTableInfo tableInfo) {
         this.tableInfo = tableInfo;
+
         tableInfo.setSchemaETag(WinkClient.getSchemaETagForTable(
                 this.tableInfo.getServerUrl(),
                 this.tableInfo.getAppId(),
@@ -48,12 +49,12 @@ public class RESTClient {
 
     public void writeCSVToFile(final boolean scanFormatting, final boolean localLink) throws IOException, JSONException, ExecutionException, InterruptedException {
         if (this.csv.getSize() == 0) {
+            //Download json if not downloaded
             retrieveRows(FETCH_LIMIT);
         }
 
-        String csvFilename =
-                (localLink ? "data" : "link") +
-                (scanFormatting ? "_formatted" : "") + ".csv";
+        this.pb.setIndeterminate(false);
+        this.pb.setString("Processing and writing data");
 
         RFC4180CsvWriter csvWriter = new RFC4180CsvWriter(new FileWriter(
                 utils.FileUtils.getCSVPath(this.tableInfo, scanFormatting, localLink).toAbsolutePath().toString()
@@ -62,6 +63,7 @@ public class RESTClient {
         ODKCsv.ODKCSVIterator csvIt = this.csv.getODKCSVIterator();
         csvWriter.writeNext(this.csv.getHeader(scanFormatting));
         while (csvIt.hasNext()) {
+            this.pb.setValue((int)((double) csvIt.getIndex() / this.csv.getSize() * this.pb.getMaximum()));
             String[] nextline = csvIt.next(scanFormatting, localLink);
 //            System.out.println("RESTClient: Index is " + i++);
 //            System.out.println("RESTClient: nextline size is " + nextline.length);
@@ -93,6 +95,8 @@ public class RESTClient {
     }
 
     private void retrieveRows(int limit) throws JSONException {
+        this.pb.setString("Retrieving rows");
+
         String cursor = null;
         JSONObject rows;
 
@@ -109,7 +113,7 @@ public class RESTClient {
         } while (rows.getBoolean("hasMoreResults"));
     }
 
-    public void setOutputText(JTextArea outputText) {
-        this.outputText = outputText;
+    public void setProgressBar(JProgressBar pb) {
+        this.pb = pb;
     }
 }

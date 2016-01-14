@@ -52,17 +52,20 @@ public class AttachmentManager {
         @Override
         public void run() {
             try {
-                while (q.isEmpty()) {
+/*                while (q.isEmpty()) {
                     //wait until DownloadProducer enqueues a file
-                    Thread.sleep(200);
+                    Thread.sleep(500);
                 }
                 while (!q.isEmpty()) {
                     String[] file = q.take();
                     downloadFile(file[0], file[1]);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
+                }*/
+
+                do {
+                    String[] file = q.take();
+                    downloadFile(file[0], file[1]);
+                } while (!q.isEmpty());
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -174,6 +177,12 @@ public class AttachmentManager {
         return Files.newInputStream(getAttachmentLocalPath(rowId, getJsonFilename(rowId)));
     }
 
+    public void waitForAttachmentDownload() throws InterruptedException {
+        while (!this.bq.isEmpty()) {
+            Thread.sleep(500);
+        }
+    }
+
     private Path getAttachmentLocalPath(String rowId, String filename) throws IOException {
         //Warning: Doesn't check if filename is valid
 
@@ -197,13 +206,14 @@ public class AttachmentManager {
 //        System.out.println("Downloading " + rowId + "'s" + filename);
 
         Path savePath = getAttachmentLocalPath(rowId, filename);
-        Files.deleteIfExists(savePath); //TODO: ask in UI
 
-        try {
-            InputStream in = getAttachmentUrl(rowId, filename, false).openStream();
-            Files.copy(in, savePath);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (Files.notExists(savePath)) {
+            try {
+                InputStream in = getAttachmentUrl(rowId, filename, false).openStream();
+                Files.copy(in, savePath);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }

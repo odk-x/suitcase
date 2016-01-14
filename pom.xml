@@ -9,14 +9,10 @@
     <version>2.0</version>
 
     <properties>
-        <org.apache.httpcomponents.version>4.3.5</org.apache.httpcomponents.version>
-        <org.slf4j.version>1.7.7</org.slf4j.version>
         <org.apache.wink.version>1.4</org.apache.wink.version>
         <maven.jar.plugin.version>2.4</maven.jar.plugin.version>
         <maven.javadoc.plugin.version>2.9.1</maven.javadoc.plugin.version>
         <maven.compiler.plugin.version>3.1</maven.compiler.plugin.version>
-        <maven.surefire.report.plugin.version>2.16</maven.surefire.report.plugin.version>
-        <maven.surefire.plugin.version>2.16</maven.surefire.plugin.version>
     </properties>
 
     <dependencies>
@@ -36,11 +32,6 @@
             <version>${org.apache.wink.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-jaxrs_1.1_spec</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.wink</groupId>
             <artifactId>wink-json4j</artifactId>
             <version>1.4</version>
@@ -48,22 +39,7 @@
         <dependency>
             <groupId>org.opendatakit</groupId>
             <artifactId>aggregate-rest-interface</artifactId>
-            <version>2014-11-24</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${org.slf4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-jcl</artifactId>
-            <version>${org.slf4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.4</version>
+            <version>2015-12-17</version>
         </dependency>
     </dependencies>
 
@@ -74,8 +50,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.3</version>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.7</source>
+                    <target>1.7</target>
                 </configuration>
             </plugin>
             <plugin>
