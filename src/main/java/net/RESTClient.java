@@ -6,6 +6,7 @@ import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.aggregate.odktables.rest.RFC4180CsvWriter;
 import org.opendatakit.wink.client.WinkClient;
+import utils.FileUtils;
 
 import javax.swing.*;
 import java.io.FileWriter;
@@ -57,7 +58,7 @@ public class RESTClient {
     this.pb.setString("Processing and writing data");
 
     RFC4180CsvWriter csvWriter = new RFC4180CsvWriter(new FileWriter(
-        utils.FileUtils.getCSVPath(this.tableInfo, scanFormatting, localLink).toAbsolutePath()
+        FileUtils.getCSVPath(this.tableInfo, scanFormatting, localLink).toAbsolutePath()
             .toString()));
 
     ODKCsv.ODKCSVIterator csvIt = this.csv.getODKCSVIterator();

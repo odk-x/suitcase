@@ -7,6 +7,7 @@ import org.apache.wink.json4j.JSONObject;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 
 import static org.opendatakit.wink.client.WinkClient.*;
@@ -367,21 +368,21 @@ public class ODKCsv implements Iterable<String[]> {
 
   private String makeLink(String fileName, JSONObject row, boolean localLink) throws IOException {
     String template = "=HYPERLINK(\"%s\", \"Ctrl + Click to view\")";
-    String attachmentURL;
+    String attachmentUrlStr;
     if (localLink) {
-      attachmentURL = this.attMngr.getAttachmentUrl(row.optString(jsonId), fileName, localLink)
-          .toString();
-      if (attachmentURL == null) {
-        return "null";
+      URL attachmentUrl = this.attMngr.getAttachmentUrl(row.optString(jsonId), fileName, localLink);
+      if (attachmentUrl == null) {
+        return "File is missing on Aggregate server.";
       }
+      attachmentUrlStr = attachmentUrl.toString();
     } else {
-      attachmentURL =
+      attachmentUrlStr =
           this.table.getServerUrl() + "/" + "tables" + "/" + this.table.getAppId() + "/" +
               this.table.getTableId() + "/ref/" + this.table.getSchemaETag() + "/attachments/" +
               row.optString(jsonId) + "/file/" + fileName;
     }
 
-    return String.format(template, attachmentURL);
+    return String.format(template, attachmentUrlStr);
   }
 
   private Map<String, ACTION> buildActionMap() {

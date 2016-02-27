@@ -8,7 +8,6 @@ import java.util.Objects;
 public class AggregateTableInfo {
   private static final String[] HTTPS_DOMAIN = new String[] { "appspot.com" };
   private static final String SERVER_URL_POSTFIX = "odktables";
-  private static final String NULL = "null";
 
   private String serverUrl;
   private String appId;
@@ -58,6 +57,10 @@ public class AggregateTableInfo {
   private String processUrl(String serverUrl) throws MalformedURLException {
     if (!serverUrl.endsWith("/")) {
       serverUrl += "/";
+    }
+
+    if (!serverUrl.startsWith("http")) {
+      serverUrl += "http://";
     }
 
     URL url = new URL(serverUrl);

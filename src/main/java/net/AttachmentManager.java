@@ -109,10 +109,13 @@ public class AttachmentManager {
             .getManifestForRow(this.table.getServerUrl(), this.table.getAppId(),
                 this.table.getTableId(), this.table.getSchemaETag(), rowId).getJSONArray("files");
 
-        for (int i = 0; i < attachments.size(); i++) {
-          JSONObject attachmentJson = attachments.getJSONObject(i);
-          attachmentsMap
-              .put(attachmentJson.optString("filename"), attachmentJson.optString("downloadUrl"));
+        if (attachments.size() < 1) {
+          this.hasManifestMap.put(rowId, false);
+        } else {
+          for (int i = 0; i < attachments.size(); i++) {
+            JSONObject attachmentJson = attachments.getJSONObject(i);
+            attachmentsMap.put(attachmentJson.optString("filename"), attachmentJson.optString("downloadUrl"));
+          }
         }
       } catch (Exception e) {
         System.out.println("Attachments Manifest Missing!");
@@ -127,13 +130,14 @@ public class AttachmentManager {
     if (!this.allAttachments.containsKey(rowId)) {
       throw new IllegalStateException("Row manifest has not been downloaded");
     }
-    if (!this.allAttachments.get(rowId).containsKey(filename)) {
-      System.out.println(filename);
-      throw new IllegalArgumentException("Filename not found");
-    }
 
     if (!this.hasManifestMap.get(rowId)) {
       return null;
+    }
+
+    if (!this.allAttachments.get(rowId).containsKey(filename)) {
+      System.out.println(filename);
+      throw new IllegalArgumentException("Filename not found");
     }
 
     if (localUrl) {

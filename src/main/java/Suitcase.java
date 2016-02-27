@@ -12,7 +12,11 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.file.Files;
 
+/**
+ * Handles UI of Suitcase
+ */
 public class Suitcase {
   // Global UI Hooks
   private final JFrame frame;
@@ -96,7 +100,7 @@ public class Suitcase {
 
   private void buildInputArea(JPanel inputPanel) {
     JLabel aggregateAddressLabel = new JLabel("Aggregate Address");
-    sAggregateAddressText.setText("https://odk-test-area.appspot.com/");
+    sAggregateAddressText.setText("http://52.32.12.103/");
     sAggregateAddressText.setBorder(BorderFactory.createLineBorder(Color.BLACK));
     inputPanel.add(aggregateAddressLabel);
     inputPanel.add(sAggregateAddressText);
@@ -108,7 +112,7 @@ public class Suitcase {
     inputPanel.add(sAppIdText);
 
     JLabel tableIdLabel = new JLabel("Table ID");
-    sTableIdText.setText("scan_MNH_Register1");
+    sTableIdText.setText("scan_TB03_Register");
     sTableIdText.setBorder(BorderFactory.createLineBorder(Color.BLACK));
     inputPanel.add(tableIdLabel);
     inputPanel.add(sTableIdText);
@@ -165,19 +169,19 @@ public class Suitcase {
               sProgressBar.setString("Done");
             } catch (MalformedURLException e) {
               e.printStackTrace();
-              errorPopup("Aggregate address is invalid.");
+              showErrPopup("Aggregate address is invalid.");
             } catch (IOException e) {
               e.printStackTrace();
-              errorPopup("Unable to write file.");
+              showErrPopup("Unable to write file.");
             } catch (ClientWebException e) {
               e.printStackTrace();
-              errorPopup("Error occurred.");
+              showErrPopup("Error occurred.");
             } catch (IllegalArgumentException e) {
               e.printStackTrace();
-              errorPopup("Aggregate address, App ID, or Table ID is invalid.");
+              showErrPopup("Aggregate address, App ID, or Table ID is invalid.");
             } catch (Exception e) {
               e.printStackTrace();
-              errorPopup("Error occurred.");
+              showErrPopup("Error occurred.");
             } finally {
               sProgressBar.setValue(sProgressBar.getMaximum());
               sProgressBar.setIndeterminate(false);
@@ -192,14 +196,24 @@ public class Suitcase {
     buttonsPanel.add(sDownloadButton);
   }
 
+  /**
+   * Checks whether table info (address, app id, table id) has changed, and update internal state
+   * if needed.
+   * Initializes internal state on the first run.
+   *
+   * @throws MalformedURLException
+   */
   private void updateAggregateTableInfo() throws MalformedURLException {
-    AggregateTableInfo table2 = new AggregateTableInfo(sAggregateAddressText.getText().trim(),
-        sAppIdText.getText().trim(), sTableIdText.getText().trim());
+    AggregateTableInfo table2 = new AggregateTableInfo(
+        sAggregateAddressText.getText().trim(),
+        sAppIdText.getText().trim(),
+        sTableIdText.getText().trim()
+    );
 
-    boolean firstRun = this.table == null;
+    boolean firstRun = (this.table == null);
 
     if (firstRun || !table.equals(table2)) {
-      if (this.table == null) {
+      if (firstRun) {
         sProgressBar.setString("Initializing");
       } else {
         sProgressBar.setString("Aggregate table info changed, initializing");
@@ -210,27 +224,46 @@ public class Suitcase {
       this.restClient.setProgressBar(this.sProgressBar);
     }
 
-    if (FileUtils.isDownloaded(table2)) {
+    if (firstRun && FileUtils.isDownloaded(table2)) {
       int delete = JOptionPane
-          .showConfirmDialog(frame, "Data from a previous session detected. Delete old files?",
-              "ODK Suitcase", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+          .showConfirmDialog(frame, "Data from a previous session detected. "
+              + "Delete existing data and download data from Aggregate server?", "ODK Suitcase",
+              JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
       if (delete == JOptionPane.YES_OPTION) {
         try {
           FileUtils.deleteTableData(table2);
-
-          if (!firstRun) {
-            this.restClient = new RESTClient(table2);
-            this.restClient.setProgressBar(this.sProgressBar);
-          }
         } catch (IOException e) {
           e.printStackTrace();
-          errorPopup("Unable to delete data.");
+          showErrPopup("Unable to delete data.");
+        }
+      }
+    }
+
+    if (FileUtils.isDownloaded(table2, sApplyScanFmt.isSelected(),
+        sDownloadAttachment.isSelected())) {
+      int delete = JOptionPane.showConfirmDialog(frame, "This CSV has been downloaded. "
+          + "Delete existing CSV and download data from Aggregate server?", "ODK Suitcase",
+          JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+
+      if (delete == JOptionPane.YES_OPTION) {
+        try {
+          Files.delete(FileUtils.getCSVPath(table2, sApplyScanFmt.isSelected(),
+              sDownloadAttachment.isSelected()));
+        } catch (IOException e) {
+          e.printStackTrace();
+          showErrPopup("Unable to delete CSV");
         }
       }
     }
   }
 
+  /**
+   * Checks if aggregate address, App ID, and Table ID supplied are empty.
+   * And displays a pop up showing the fields that are empty, if applicable.
+   *
+   * @return true when information presented has no problem
+   */
   private boolean checkState() {
     boolean state = true;
     StringBuilder errorMsgBuilder = new StringBuilder();
@@ -251,13 +284,19 @@ public class Suitcase {
     }
 
     if (!state) {
-      errorPopup(errorMsgBuilder.toString().trim());
+      showErrPopup(errorMsgBuilder.toString().trim());
     }
 
     return state;
   }
 
-  private void errorPopup(String errMsg) {
+  /**
+   * Displays a pop up with an error message.
+   * Progress bar is set to non-indeterminate and string set to "error."
+   *
+   * @param errMsg Error message to display
+   */
+  private void showErrPopup(String errMsg) {
     sProgressBar.setIndeterminate(false);
     sProgressBar.setString("error");
     JOptionPane.showConfirmDialog(frame, errMsg, "Error", JOptionPane.DEFAULT_OPTION,

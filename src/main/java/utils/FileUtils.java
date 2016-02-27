@@ -5,6 +5,8 @@ import model.AggregateTableInfo;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class FileUtils {
   public static boolean isDownloaded(AggregateTableInfo table) {
@@ -19,6 +21,14 @@ public class FileUtils {
   public static Path getCSVPath(AggregateTableInfo table, boolean scanFormatting,
       boolean localLink) {
     return Paths.get(getBasePath(table).toString(), getCSVName(scanFormatting, localLink));
+  }
+
+  public static Path getCSVPath(AggregateTableInfo table, boolean scanFormatting,
+      boolean localLink, boolean timeStamp) {
+    return Paths.get(
+        getCSVPath(table, scanFormatting, localLink).toString(),
+        new SimpleDateFormat("yyyy-MM-dd").format(new Date())
+        );
   }
 
   public static Path getBasePath(AggregateTableInfo table) {
