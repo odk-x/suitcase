@@ -226,7 +226,8 @@ public class Suitcase {
 
     if (firstRun && FileUtils.isDownloaded(table2)) {
       int delete = JOptionPane
-          .showConfirmDialog(frame, "Data from a previous session detected. "
+          .showConfirmDialog(frame,
+              "Data from a previous session detected. "
               + "Delete existing data and download data from Aggregate server?", "ODK Suitcase",
               JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
@@ -240,9 +241,10 @@ public class Suitcase {
       }
     }
 
-    if (FileUtils.isDownloaded(table2, sApplyScanFmt.isSelected(),
-        sDownloadAttachment.isSelected())) {
-      int delete = JOptionPane.showConfirmDialog(frame, "This CSV has been downloaded. "
+    if (FileUtils.isDownloaded(table2,
+        sApplyScanFmt.isSelected(), sDownloadAttachment.isSelected())) {
+      int delete = JOptionPane.showConfirmDialog(frame,
+          "This CSV has been downloaded. "
           + "Delete existing CSV and download data from Aggregate server?", "ODK Suitcase",
           JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 

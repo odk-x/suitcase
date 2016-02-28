@@ -8,7 +8,11 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-//!!!ATTENTION!!! One per row
+/**
+ * Handles Scan's raw JSON
+ *
+ * !!!ATTENTION!!! One per row
+ */
 public class ScanJson {
   Map<String, String> labelValuePair;
 
@@ -21,7 +25,7 @@ public class ScanJson {
   }
 
   private Map<String, String> buildLabelValuePair(InputStream jsonStream) throws JSONException {
-    Map<String, String> map = new HashMap<String, String>();
+    Map<String, String> map = new HashMap<>();
 
     JSONArray fields = new JSONObject(jsonStream).getJSONArray("fields");
 

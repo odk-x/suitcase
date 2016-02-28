@@ -17,12 +17,17 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
-//!!!ATTENTION!!! One AttachmentManager per table
+/**
+ * Manages downloading attachments and information about attachments
+ *
+ * !!!ATTENTION!!! One AttachmentManager per table
+ */
 public class AttachmentManager {
+  //Producer-Consumer pair with DownloadTask
   private class DownloadProducer implements Runnable {
-    private BlockingQueue<String[]> q;
-    private String rowId;
-    private Set<String> files;
+    private final BlockingQueue<String[]> q;
+    private final String rowId;
+    private final Set<String> files;
 
     DownloadProducer(BlockingQueue<String[]> queue, String rowId, Set<String> files) {
       this.q = queue;
@@ -42,8 +47,9 @@ public class AttachmentManager {
     }
   }
 
+  //Producer-Consumer pair with DownloadProducer
   private class DownloadTask implements Runnable {
-    private BlockingQueue<String[]> q;
+    private final BlockingQueue<String[]> q;
 
     DownloadTask(BlockingQueue<String[]> q) {
       this.q = q;
@@ -52,17 +58,8 @@ public class AttachmentManager {
     @Override
     public void run() {
       try {
-/*                while (q.isEmpty()) {
-                    //wait until DownloadProducer enqueues a file
-                    Thread.sleep(500);
-                }
-                while (!q.isEmpty()) {
-                    String[] file = q.take();
-                    downloadFile(file[0], file[1]);
-                }*/
-
         do {
-          String[] file = q.take();
+          String[] file = q.take(); //take blocks until q has at least 1 object
           downloadFile(file[0], file[1]);
         } while (!q.isEmpty());
       } catch (Exception e) {
@@ -87,22 +84,30 @@ public class AttachmentManager {
 
     this.table = table;
     this.wc = wc;
-    this.allAttachments = new ConcurrentHashMap<String, Map<String, String>>();
-    this.hasManifestMap = new ConcurrentHashMap<String, Boolean>();
+    this.allAttachments = new ConcurrentHashMap<>();
+    this.hasManifestMap = new ConcurrentHashMap<>();
 
-    this.bq = new LinkedBlockingQueue<String[]>(DOWNLOAD_THREADS * 3);
+    this.bq = new LinkedBlockingQueue<>(DOWNLOAD_THREADS * 3);
     for (int i = 0; i < DOWNLOAD_THREADS; i++) {
+      //start threads early, DownloadTask waits for queue to be populated
       new Thread(new DownloadTask(bq)).start();
     }
-    //TODO: implement mechanism to shutdown unused threads
+
+    //TODO: Quasar library is probably better
   }
 
-  public void getListOfRowAttachments(String rowId) throws Exception {
+  /**
+   * Retrieves attachment manifest for a row.
+   * After processing manifest, info is stored in allAttachments and hasManifestMap.
+   *
+   * @param rowId
+   */
+  public void getListOfRowAttachments(String rowId) {
     //TODO: download manifest for multiple rows in parallel
 
     if (!this.allAttachments.containsKey(rowId)) {
-      Map<String, String> attachmentsMap = new ConcurrentHashMap<String, String>();
-      this.hasManifestMap.put(rowId, true);
+      Map<String, String> attachmentsMap = new ConcurrentHashMap<>();
+      this.hasManifestMap.put(rowId, true); //assumes that row has manifest
 
       try {
         JSONArray attachments = wc
@@ -126,9 +131,22 @@ public class AttachmentManager {
     }
   }
 
+  /**
+   * Retrieves URL for attachment.
+   * If a localUrl is requested, url is inferred from filename and table info
+   * If a row lacks attachment manifest, null is returned.
+   * When allAttachment lacks record of requested rowId, IllegalStateException will be thrown.
+   * When allAttachment lacks record of requested filename, IllegalArgumentException will be thrown.
+   *
+   * @param rowId
+   * @param filename
+   * @param localUrl  True to return url to local file, aka "file:///" url
+   * @return
+   * @throws IOException
+   */
   public URL getAttachmentUrl(String rowId, String filename, boolean localUrl) throws IOException {
     if (!this.allAttachments.containsKey(rowId)) {
-      throw new IllegalStateException("Row manifest has not been downloaded");
+      throw new IllegalStateException("Row manifest has not been downloaded: " + rowId);
     }
 
     if (!this.hasManifestMap.get(rowId)) {
@@ -136,8 +154,7 @@ public class AttachmentManager {
     }
 
     if (!this.allAttachments.get(rowId).containsKey(filename)) {
-      System.out.println(filename);
-      throw new IllegalArgumentException("Filename not found");
+      throw new IllegalArgumentException("Filename not found: " + filename);
     }
 
     if (localUrl) {
@@ -147,6 +164,14 @@ public class AttachmentManager {
     }
   }
 
+  /**
+   * Downloads all attachments of a row, or just Scan's raw JSON
+   * When allAttachment lacks record of requested rowId, IllegalStateException will be thrown.
+   *
+   * @param rowId
+   * @param scanRawJsonOnly True to download only Scan's raw JSON
+   * @throws IOException
+   */
   public void downloadAttachments(String rowId, boolean scanRawJsonOnly) throws IOException {
     if (!this.allAttachments.containsKey(rowId)) {
       throw new IllegalStateException("Row manifest has not been downloaded");
@@ -158,9 +183,12 @@ public class AttachmentManager {
       } else {
         try {
           Thread t = new Thread(
-              new DownloadProducer(this.bq, rowId, this.allAttachments.get(rowId).keySet()));
+              new DownloadProducer(this.bq, rowId, this.allAttachments.get(rowId).keySet())
+          );
           t.start();
-          t.join(); //wait for all files to be enqueued
+          //wait for all files to be enqueued,
+          //so that attachment downloading doesn't lag too far behind
+          t.join();
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
@@ -168,10 +196,20 @@ public class AttachmentManager {
     }
   }
 
+  /**
+   * Gets InputStream of Scan's Raw JSON.
+   * Returns null if row lacks attachment manifest.
+   *
+   * Warning: This method doesn't check whether JSON had been downloaded.
+   *
+   * @param rowId
+   * @return
+   * @throws IOException
+   */
   public InputStream getScanRawJsonStream(String rowId) throws IOException {
-    //TODO: make sure file has been downloaded
-
     if (!this.hasManifestMap.get(rowId)) {
+      //This InputStream will only be consumed by ScanJson
+      //It is designed to handle null InputStreams
       return null;
     }
 
@@ -184,9 +222,17 @@ public class AttachmentManager {
     }
   }
 
+  /**
+   * Infers local path to attachment with rowId, filename and table info.
+   *
+   * Warning: Doesn't check if filename is valid (THIS IS INTENDED)
+   *
+   * @param rowId
+   * @param filename
+   * @return
+   * @throws IOException
+   */
   private Path getAttachmentLocalPath(String rowId, String filename) throws IOException {
-    //Warning: Doesn't check if filename is valid
-
     String sanitizedRowId = WinkClient.convertRowIdForInstances(rowId);
 
     if (Files.notExists(Paths.get(FileUtils.getInstancesPath(table).toString(), sanitizedRowId))) {
@@ -198,13 +244,17 @@ public class AttachmentManager {
         .toAbsolutePath();
   }
 
+  /**
+   * Infers Scan raw JSON's filename
+   *
+   * @param rowId
+   * @return
+   */
   private String getJsonFilename(String rowId) {
     return "raw_" + WinkClient.convertRowIdForInstances(rowId) + ".json";
   }
 
   private void downloadFile(String rowId, String filename) throws IOException {
-    //        System.out.println("Downloading " + rowId + "'s" + filename);
-
     Path savePath = getAttachmentLocalPath(rowId, filename);
 
     if (Files.notExists(savePath)) {

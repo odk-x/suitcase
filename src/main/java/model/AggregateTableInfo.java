@@ -1,11 +1,11 @@
 package model;
 
-import javax.swing.border.EtchedBorder;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Objects;
 
 public class AggregateTableInfo {
+  //These domains are only accessible through https
   private static final String[] HTTPS_DOMAIN = new String[] { "appspot.com" };
   private static final String SERVER_URL_POSTFIX = "odktables";
 
@@ -54,6 +54,13 @@ public class AggregateTableInfo {
     return this.schemaETag == null ? "" : this.schemaETag;
   }
 
+  /**
+   * Attempts to fix some problems with serverUrl
+   *
+   * @param serverUrl
+   * @return
+   * @throws MalformedURLException
+   */
   private String processUrl(String serverUrl) throws MalformedURLException {
     if (!serverUrl.endsWith("/")) {
       serverUrl += "/";

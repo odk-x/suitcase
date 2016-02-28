@@ -6,7 +6,6 @@ import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
@@ -16,13 +15,9 @@ import static org.opendatakit.wink.client.WinkClient.*;
 public class ODKCsv implements Iterable<String[]> {
   public class ODKCSVIterator implements Iterator<String[]> {
     private int cursor;
-    private boolean scanFormatting;
-    private boolean localLink;
 
     public ODKCSVIterator() {
       this.cursor = 0;
-      this.scanFormatting = false;
-      this.localLink = false;
     }
 
     @Override
@@ -32,7 +27,7 @@ public class ODKCsv implements Iterable<String[]> {
 
     @Override
     public String[] next() {
-      return next(scanFormatting, localLink);
+      return next(false, false);
     }
 
     public String[] next(boolean scanFormatting, boolean localLink) {
@@ -64,24 +59,25 @@ public class ODKCsv implements Iterable<String[]> {
     }
   }
 
-  private enum ACTION {
+  private enum Action {
     KEEP,       //No modification
     FILTER,     //Remove
     LINK,       //Convert to a hyperlink
     SCAN_RAW    //Insert Scan's raw output
   }
 
-  //Maps POSITION to metadata
-  private enum POSITION {
+  //Maps Position to metadata
+  private enum Position {
     FRONT, END
   }
 
-  private static final Map<POSITION, List<String>> METADATA_POSITION;
+  //Some metadata fields are placed before row data, some are placed after
+  private static final Map<Position, List<String>> METADATA_POSITION;
 
   static {
-    METADATA_POSITION = new HashMap<POSITION, List<String>>();
-    List<String> frontList = new ArrayList<String>();
-    List<String> endList = new ArrayList<String>();
+    METADATA_POSITION = new HashMap<>();
+    List<String> frontList = new ArrayList<>();
+    List<String> endList = new ArrayList<>();
 
     frontList.add(rowDefId);
     frontList.add(rowDefFormId);
@@ -89,19 +85,19 @@ public class ODKCsv implements Iterable<String[]> {
     frontList.add(rowDefSavepointType);
     frontList.add(rowDefSavepointTimestamp);
     frontList.add(rowDefSavepointCreator);
-    METADATA_POSITION.put(POSITION.FRONT, frontList);
+    METADATA_POSITION.put(Position.FRONT, frontList);
 
     endList.add(rowDefRowETag);
     endList.add(rowDefFilterType);
     endList.add(rowDefFilterValue);
-    METADATA_POSITION.put(POSITION.END, endList);
+    METADATA_POSITION.put(Position.END, endList);
   }
 
-  //Maps metadata to it's json identifier
+  //Maps metadata to its json identifier
   private static final Map<String, String> METADATA_JSON_NAME;
 
   static {
-    METADATA_JSON_NAME = new HashMap<String, String>();
+    METADATA_JSON_NAME = new HashMap<>();
 
     METADATA_JSON_NAME.put(rowDefId, jsonId);
     METADATA_JSON_NAME.put(rowDefFormId, jsonFormId);
@@ -123,30 +119,43 @@ public class ODKCsv implements Iterable<String[]> {
 
   private List<JSONArray> jsonRows;
   private String[] completeCSVHeader;
+  //Header of row data only
   private String[] completeDataHeader;
   private int size;
-  private Map<String, ACTION> colAction;
+  private Map<String, Action> colAction;
   private AttachmentManager attMngr;
   private AggregateTableInfo table;
 
+  /**
+   * Initialize an empty ODKCsv
+   *
+   * @param attMngr
+   * @param table
+   */
   public ODKCsv(AttachmentManager attMngr, AggregateTableInfo table) {
     this.size = 0;
     this.attMngr = attMngr;
-    this.jsonRows = new ArrayList<JSONArray>();
+    this.jsonRows = new ArrayList<>();
     this.table = table;
   }
 
+  /**
+   * Initialize ODKCsv with rows
+   *
+   * @param rows
+   * @param attMngr
+   * @param table
+   * @throws JSONException
+   */
   public ODKCsv(JSONArray rows, AttachmentManager attMngr, AggregateTableInfo table)
       throws JSONException {
     if (rows == null) {
       throw new IllegalArgumentException("invalid json");
     }
 
-    //        JSONArray allRows = rows.getJSONArray(jsonRowsString);
-
     this.size = rows.size();
 
-    this.jsonRows = new ArrayList<JSONArray>();
+    this.jsonRows = new ArrayList<>();
     this.jsonRows.add(rows);
 
     this.completeDataHeader = extractHeader(rows.getJSONObject(0));
@@ -156,6 +165,12 @@ public class ODKCsv implements Iterable<String[]> {
     this.table = table;
   }
 
+  /**
+   * Returns header of csv
+   *
+   * @param scanFormatting True to retrieve header with scan formatting
+   * @return
+   */
   public String[] getHeader(boolean scanFormatting) {
     if (this.size < 1) {
       throw new IllegalStateException();
@@ -169,11 +184,11 @@ public class ODKCsv implements Iterable<String[]> {
     int offset = 0;
     for (int i = 0; i < this.completeCSVHeader.length; i++) {
       String col = this.completeCSVHeader[i];
-      ACTION act = this.colAction.get(col);
+      Action act = this.colAction.get(col);
       switch (act) {
       case KEEP:
       case LINK:
-        //KEEP and LINK both do no change to header
+        //KEEP and LINK both don't affect header
         header[i - offset] = this.completeCSVHeader[i];
         break;
       case SCAN_RAW:
@@ -189,13 +204,20 @@ public class ODKCsv implements Iterable<String[]> {
     return header;
   }
 
+  /**
+   * Tries to merge rows into this ODKCsv instance
+   *
+   * @param rows
+   * @return True if merge is successful
+   * @throws JSONException
+   */
   public boolean tryAdd(JSONArray rows) throws JSONException {
     if (!isCompatible(rows)) {
       return false;
     }
 
     if (this.size < 1) {
-      //this instance is empty, do initialization
+      //current instance is empty, initialize with rows
       this.completeDataHeader = extractHeader(rows.getJSONObject(0));
       this.completeCSVHeader = buildCSVHeader();
       this.colAction = buildActionMap();
@@ -207,6 +229,15 @@ public class ODKCsv implements Iterable<String[]> {
     return true;
   }
 
+  /**
+   * Retrieves 1 row, including data and metadata
+   *
+   * @param rowIndex
+   * @param scanFormatting
+   * @param localLink
+   * @return
+   * @throws Exception
+   */
   public String[] get(int rowIndex, boolean scanFormatting, boolean localLink) throws Exception {
     if (rowIndex >= size) {
       throw new NoSuchElementException();
@@ -219,11 +250,11 @@ public class ODKCsv implements Iterable<String[]> {
     }
 
     JSONObject row = this.jsonRows.get(listIndex).getJSONObject(rowIndex);
-    String[] front = getMetadata(row, POSITION.FRONT);
+    String[] front = getMetadata(row, Position.FRONT);
     String[] middle = getData(row, scanFormatting, localLink);
-    String[] end = getMetadata(row, POSITION.END);
+    String[] end = getMetadata(row, Position.END);
 
-    //TODO: optimize to avoid copying arrays
+    //TODO: try to avoid copying arrays
     String[] sum = new String[front.length + middle.length + end.length];
     System.arraycopy(front, 0, sum, 0, front.length);
     System.arraycopy(middle, 0, sum, front.length, middle.length);
@@ -236,6 +267,13 @@ public class ODKCsv implements Iterable<String[]> {
     return this.size;
   }
 
+  /**
+   * Extract data header from 1 row of JSON
+   *
+   * @param oneRow
+   * @return
+   * @throws JSONException
+   */
   private String[] extractHeader(JSONObject oneRow) throws JSONException {
     JSONArray orderedColumns = oneRow.getJSONArray(orderedColumnsDef);
     String[] columns = new String[orderedColumns.size()];
@@ -247,37 +285,42 @@ public class ODKCsv implements Iterable<String[]> {
     return columns;
   }
 
-  private String[] buildCSVHeader() throws JSONException {
-/*        List<String> header = new ArrayList<String>();
-        header.addAll(METADATA_POSITION.get(POSITION.FRONT));
-        for (String s : completeDataHeader) {
-            header.add(s);
-        }
-        header.addAll(METADATA_POSITION.get(POSITION.END));
-
-        String[] headerArr = new String[header.size()];
-        headerArr = header.toArray(headerArr);*/
-
-    int frontHeaderSize = METADATA_POSITION.get(POSITION.FRONT).size();
-    int endHeaderSize = METADATA_POSITION.get(POSITION.END).size();
+  /**
+   * Builds complete CSV header
+   *
+   * @return
+   */
+  private String[] buildCSVHeader() {
+    int frontHeaderSize = METADATA_POSITION.get(Position.FRONT).size();
+    int endHeaderSize = METADATA_POSITION.get(Position.END).size();
     int headerSize = frontHeaderSize + endHeaderSize + this.completeDataHeader.length;
+
     String[] header = new String[headerSize];
     for (int i = 0; i < headerSize; i++) {
       String headerCol;
+
       if (i < frontHeaderSize) {
-        headerCol = METADATA_POSITION.get(POSITION.FRONT).get(i);
+        headerCol = METADATA_POSITION.get(Position.FRONT).get(i);
       } else if (i < frontHeaderSize + this.completeDataHeader.length) {
         headerCol = this.completeDataHeader[i - frontHeaderSize];
       } else {
-        headerCol = METADATA_POSITION.get(POSITION.END)
+        headerCol = METADATA_POSITION.get(Position.END)
             .get(i - frontHeaderSize - this.completeDataHeader.length);
       }
+
       header[i] = headerCol;
     }
 
     return header;
   }
 
+  /**
+   * Infers if rows is compatible with this ODKCsv instance
+   *
+   * @param rows
+   * @return
+   * @throws JSONException
+   */
   private boolean isCompatible(JSONArray rows) throws JSONException {
     if (this.size < 1) {
       //this instance is empty -> always compatible
@@ -291,7 +334,15 @@ public class ODKCsv implements Iterable<String[]> {
 
   }
 
-  private String[] getMetadata(JSONObject row, POSITION pos) throws JSONException {
+  /**
+   * Retrieves metadata for 1 row
+   *
+   * @param row
+   * @param pos
+   * @return
+   * @throws JSONException
+   */
+  private String[] getMetadata(JSONObject row, Position pos) throws JSONException {
     List<String> metadataList = METADATA_POSITION.get(pos);
 
     String[] metadata = new String[metadataList.size()];
@@ -310,6 +361,15 @@ public class ODKCsv implements Iterable<String[]> {
     return metadata;
   }
 
+  /**
+   * Retrieves data for 1 row
+   *
+   * @param row
+   * @param scanFormatting
+   * @param localLink
+   * @return
+   * @throws Exception
+   */
   private String[] getData(JSONObject row, boolean scanFormatting, boolean localLink)
       throws Exception {
     String rowId = row.optString(jsonId);
@@ -332,7 +392,7 @@ public class ODKCsv implements Iterable<String[]> {
     int offset = 0;
     for (int i = 0; i < this.completeDataHeader.length; i++) {
       String colName = this.completeDataHeader[i];
-      ACTION act = this.colAction.get(colName);
+      Action act = this.colAction.get(colName);
       String value = columns.getJSONObject(i).optString("value", NULL);
 
       switch (act) {
@@ -366,11 +426,20 @@ public class ODKCsv implements Iterable<String[]> {
     return data;
   }
 
+  /**
+   * Builds "Excel compatible" hyperlink using inferred path
+   *
+   * @param fileName
+   * @param row
+   * @param localLink
+   * @return
+   * @throws IOException
+   */
   private String makeLink(String fileName, JSONObject row, boolean localLink) throws IOException {
     String template = "=HYPERLINK(\"%s\", \"Ctrl + Click to view\")";
     String attachmentUrlStr;
     if (localLink) {
-      URL attachmentUrl = this.attMngr.getAttachmentUrl(row.optString(jsonId), fileName, localLink);
+      URL attachmentUrl = this.attMngr.getAttachmentUrl(row.optString(jsonId), fileName, true);
       if (attachmentUrl == null) {
         return "File is missing on Aggregate server.";
       }
@@ -385,20 +454,25 @@ public class ODKCsv implements Iterable<String[]> {
     return String.format(template, attachmentUrlStr);
   }
 
-  private Map<String, ACTION> buildActionMap() {
-    Map<String, ACTION> actionMap = new HashMap<String, ACTION>();
+  /**
+   * Associates column name to its Action
+   *
+   * @return
+   */
+  private Map<String, Action> buildActionMap() {
+    Map<String, Action> actionMap = new HashMap<>();
 
     for (String s : this.completeCSVHeader) {
       if (s.endsWith(CONTENT_TYPE_ELEMENT_NAME)) {
         if (s.equals("raw_contentType")) {
-          actionMap.put(s, ACTION.FILTER); //TODO: handle this better
+          actionMap.put(s, Action.FILTER); //TODO: handle this better
         } else {
-          actionMap.put(s, ACTION.SCAN_RAW);
+          actionMap.put(s, Action.SCAN_RAW);
         }
       } else if (s.endsWith(URI_FRAG_ELEMENT_NAME)) {
-        actionMap.put(s, ACTION.LINK);
+        actionMap.put(s, Action.LINK);
       } else {
-        actionMap.put(s, ACTION.KEEP);
+        actionMap.put(s, Action.KEEP);
       }
     }
 
