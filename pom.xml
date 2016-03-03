@@ -13,13 +13,14 @@
         <maven.jar.plugin.version>2.4</maven.jar.plugin.version>
         <maven.javadoc.plugin.version>2.9.1</maven.javadoc.plugin.version>
         <maven.compiler.plugin.version>3.1</maven.compiler.plugin.version>
+		<org.apache.httpcomponents.version>4.3.5</org.apache.httpcomponents.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.opendatakit</groupId>
             <artifactId>wink</artifactId>
-            <version>0.3-SNAPSHOT</version>
+            <version>0.01-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.wink</groupId>
@@ -35,6 +36,11 @@
             <groupId>org.apache.wink</groupId>
             <artifactId>wink-json4j</artifactId>
             <version>1.4</version>
+        </dependency>
+		<dependency>
+		    <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${org.apache.httpcomponents.version}</version>
         </dependency>
         <dependency>
             <groupId>org.opendatakit</groupId>

@@ -13,8 +13,10 @@ public class AggregateTableInfo {
   private String appId;
   private String tableId;
   private String schemaETag;
-
-  public AggregateTableInfo(String serverUrl, String appId, String tableId)
+  private String userName;
+  private String password;
+  
+  public AggregateTableInfo(String serverUrl, String appId, String tableId, String userName, String password)
       throws MalformedURLException {
     if (serverUrl == null || serverUrl.isEmpty())
       throw new IllegalArgumentException("Invalid server URL");
@@ -28,6 +30,8 @@ public class AggregateTableInfo {
     this.serverUrl = processUrl(serverUrl);
     this.appId = appId;
     this.tableId = tableId;
+    this.userName = userName;
+    this.password = password;
     this.schemaETag = null;
   }
 
@@ -41,6 +45,14 @@ public class AggregateTableInfo {
 
   public String getTableId() {
     return tableId;
+  }
+  
+  public String getUserName() {
+    return userName;
+  }
+  
+  public String getPassword() {
+    return password;
   }
 
   public void setSchemaETag(String ETag) {

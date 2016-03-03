@@ -36,12 +36,16 @@ public class RESTClient {
   //!!!ATTENTION!!! One per table
   public RESTClient(AggregateTableInfo tableInfo) {
     this.tableInfo = tableInfo;
-
-    tableInfo.setSchemaETag(WinkClient
+    WinkClient client = new WinkClient();
+    /*tableInfo.setSchemaETag(WinkClient
         .getSchemaETagForTable(this.tableInfo.getServerUrl(), this.tableInfo.getAppId(),
-            this.tableInfo.getTableId()));
+            this.tableInfo.getTableId()));*/
 
     this.odkWinkClient = new WinkClient();
+    this.odkWinkClient.init(this.tableInfo.getServerUrl(), this.tableInfo.getUserName(), this.tableInfo.getPassword());
+    tableInfo.setSchemaETag(this.odkWinkClient
+            .getSchemaETagForTable(this.tableInfo.getServerUrl(), this.tableInfo.getAppId(),
+                this.tableInfo.getTableId()));
     AttachmentManager attMngr = new AttachmentManager(this.tableInfo, this.odkWinkClient);
     this.csv = new ODKCsv(attMngr, this.tableInfo);
   }
