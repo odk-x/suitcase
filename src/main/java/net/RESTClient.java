@@ -11,6 +11,7 @@ import utils.FileUtils;
 import javax.swing.*;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.util.concurrent.ExecutionException;
 
 import static org.opendatakit.wink.client.WinkClient.*;
@@ -36,17 +37,32 @@ public class RESTClient {
   //!!!ATTENTION!!! One per table
   public RESTClient(AggregateTableInfo tableInfo) {
     this.tableInfo = tableInfo;
-    WinkClient client = new WinkClient();
     /*tableInfo.setSchemaETag(WinkClient
         .getSchemaETagForTable(this.tableInfo.getServerUrl(), this.tableInfo.getAppId(),
             this.tableInfo.getTableId()));*/
 
     this.odkWinkClient = new WinkClient();
-    this.odkWinkClient.init(this.tableInfo.getServerUrl(), this.tableInfo.getUserName(), this.tableInfo.getPassword());
+    
+    // Debugging stuff
+    System.out.println("REST Client: username " + this.tableInfo.getUserName() + " password " + this.tableInfo.getPassword());
+    System.out.println("server url " + this.tableInfo.getServerUrl());
+    System.out.println("app id " + this.tableInfo.getAppId());
+    System.out.println("table id " + this.tableInfo.getTableId());
+    String host = "";
+    try {
+        URL url = new URL(this.tableInfo.getServerUrl());
+        host = url.getHost();
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    System.out.println("Host = " + host);
+    
+    this.odkWinkClient.init(host, this.tableInfo.getUserName(), this.tableInfo.getPassword());
     tableInfo.setSchemaETag(this.odkWinkClient
             .getSchemaETagForTable(this.tableInfo.getServerUrl(), this.tableInfo.getAppId(),
                 this.tableInfo.getTableId()));
-    AttachmentManager attMngr = new AttachmentManager(this.tableInfo, this.odkWinkClient);
+    
+    AttachmentManager attMngr = new AttachmentManager(this.tableInfo, this.odkWinkClient, this.tableInfo.getUserName(), this.tableInfo.getPassword());
     this.csv = new ODKCsv(attMngr, this.tableInfo);
   }
 

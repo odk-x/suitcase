@@ -113,7 +113,9 @@ public class AggregateTableInfo {
     AggregateTableInfo that = (AggregateTableInfo) o;
     return Objects.equals(getServerUrl(), that.getServerUrl()) &&
         Objects.equals(getAppId(), that.getAppId()) &&
-        Objects.equals(getTableId(), that.getTableId());
+        Objects.equals(getTableId(), that.getTableId()) &&
+        Objects.equals(getUserName(), that.getUserName()) &&
+        Objects.equals(getPassword(), that.getPassword());
   }
 
   @Override
