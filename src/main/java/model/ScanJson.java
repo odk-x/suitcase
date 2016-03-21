@@ -31,7 +31,7 @@ public class ScanJson {
 
     for (int i = 0; i < fields.size(); i++) {
       JSONObject field = fields.getJSONObject(i);
-      map.put(field.optString("label"), field.has("value") ? field.optString("value") : "null");
+      map.put(field.optString("name"), field.has("value") ? field.optString("value") : "null");
     }
 
     return map;
