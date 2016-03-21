@@ -1,5 +1,6 @@
 import model.AggregateTableInfo;
 import net.RESTClient;
+import org.apache.commons.cli.*;
 import org.apache.wink.client.ClientWebException;
 import utils.FileUtils;
 
@@ -13,11 +14,14 @@ import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
+import java.util.Scanner;
 
 /**
  * Handles UI of Suitcase
  */
 public class Suitcase {
+  private static final String APP_NAME = "ODK Suitcase";
+
   // Global UI Hooks
   private final JFrame frame;
   private JTextField sAggregateAddressText;
@@ -29,21 +33,25 @@ public class Suitcase {
   private JCheckBox sDownloadAttachment;
   private JCheckBox sApplyScanFmt;
   private JButton sDownloadButton;
+  private boolean isGUI;
 
   // Server data
   private AggregateTableInfo table;
   private RESTClient restClient;
 
+  private boolean force;
+  private Scanner console;
+
   public static void main(String[] args) {
     Suitcase rs = new Suitcase();
-    rs.start();
+    rs.start(args);
   }
 
   private Suitcase() {
-    this.frame = new JFrame("ODK Suitcase");
+    this.frame = new JFrame(APP_NAME);
   }
 
-  private void start() {
+  private void start(String[] args) {
     this.sAggregateAddressText = new JTextField();
     this.sAppIdText = new JTextField();
     this.sTableIdText = new JTextField();
@@ -54,7 +62,63 @@ public class Suitcase {
     this.sApplyScanFmt = new JCheckBox();
     this.sDownloadButton = new JButton();
 
-    buildJFrame();
+    if (args.length == 0) {
+      //start GUI when no argument is passed
+      isGUI = true;
+      buildJFrame();
+    } else {
+      isGUI = false;
+      CommandLineParser parser = new DefaultParser();
+
+      Options options = new Options();
+      //aggregate related
+      options.addOption("aggregate_url", true, "url to Aggregate server");
+      options.addOption("app_id", true, "app id");
+      options.addOption("table_id", true, "table id");
+      options.addOption("username", true, "user name");
+      options.addOption("password", true, "password");
+
+      //flags
+      options.addOption("a", "attachment", false, "download attachments");
+      options.addOption("s", "scan", false, "apply Scan formatting");
+      options.addOption("f", "force", false, "do not prompt, overwrite existing files");
+
+      //misc
+      options.addOption("h", "help", false, "print this message");
+      options.addOption("v", "version", false, "prints version information");
+
+      try {
+        CommandLine line = parser.parse(options, args);
+
+        if (line.hasOption('h')) {
+          HelpFormatter hf = new HelpFormatter();
+          hf.printHelp("suitcase", options);
+          return;
+        }
+
+        if (line.hasOption('v')) {
+          System.out.println("ODK Suitcase 2.0");
+          return;
+        }
+
+        sAggregateAddressText.setText(line.getOptionValue("aggregate_url"));
+        sAppIdText.setText(line.getOptionValue("app_id"));
+        sTableIdText.setText(line.getOptionValue("table_id"));
+        sUserNameText.setText(line.getOptionValue("username"));
+        sPasswordText.setText(line.getOptionValue("password"));
+        sDownloadAttachment.setSelected(line.hasOption("a"));
+        sApplyScanFmt.setSelected(line.hasOption("s"));
+
+        this.force = line.hasOption("f");
+      } catch (ParseException e) {
+        e.printStackTrace();
+      }
+
+      console = new Scanner(System.in);
+      if (checkState()) {
+        download();
+      }
+    }
   }
 
   private void buildJFrame() {
@@ -167,46 +231,7 @@ public class Suitcase {
         new Thread(new Runnable() {
           @Override
           public void run() {
-            try {
-              updateAggregateTableInfo();
-              if (table.getSchemaETag() == null || table.getSchemaETag().isEmpty()) {
-                throw new IllegalArgumentException(
-                    "Unable to retrieve SchemaETag with given table info");
-              }
-
-              if (sDownloadAttachment.isSelected()) {
-                FileUtils.createInstancesDirectory(table);
-              } else {
-                FileUtils.createBaseDirectory(table);
-              }
-
-              restClient
-                  .writeCSVToFile(sApplyScanFmt.isSelected(), sDownloadAttachment.isSelected());
-              sProgressBar.setString("Done");
-            } catch (MalformedURLException e) {
-              e.printStackTrace();
-              showErrPopup("Aggregate address is invalid.");
-            } catch (IOException e) {
-              e.printStackTrace();
-              showErrPopup("Unable to write file.");
-            } catch (ClientWebException e) {
-              e.printStackTrace();
-              showErrPopup("Error occurred.");
-            } catch (IllegalArgumentException e) {
-              // Note: authentication error is also caught here
-              e.printStackTrace();
-              showErrPopup("Aggregate address, App ID, Table ID, user name, or password is invalid. Please check your credentials.");
-            } // Add authentication error
-            catch (Exception e) {
-              e.printStackTrace();
-              showErrPopup("Error occurred.");
-            }
-            finally {
-              sProgressBar.setValue(sProgressBar.getMaximum());
-              sProgressBar.setIndeterminate(false);
-              sDownloadButton.setEnabled(true);
-              sDownloadButton.setText("Download");
-            }
+            download();
           }
         }).start();
       }
@@ -246,37 +271,83 @@ public class Suitcase {
     }
 
     if (firstRun && FileUtils.isDownloaded(table2)) {
-      int delete = JOptionPane
-          .showConfirmDialog(frame,
-              "Data from a previous session detected. "
-              + "Delete existing data and download data from Aggregate server?", "ODK Suitcase",
-              JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+      boolean delete = promptConfirm("Data from a previous session detected. "
+          + "Delete existing data and download data from Aggregate server?");
 
-      if (delete == JOptionPane.YES_OPTION) {
+      if (delete) {
         try {
           FileUtils.deleteTableData(table2);
         } catch (IOException e) {
           e.printStackTrace();
-          showErrPopup("Unable to delete data.");
+          showError("Unable to delete data.");
         }
       }
     }
 
     if (FileUtils.isDownloaded(table2,
         sApplyScanFmt.isSelected(), sDownloadAttachment.isSelected())) {
-      int delete = JOptionPane.showConfirmDialog(frame,
-          "This CSV has been downloaded. "
-          + "Delete existing CSV and download data from Aggregate server?", "ODK Suitcase",
-          JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+      boolean delete = promptConfirm("This CSV has been downloaded. "
+          + "Delete existing CSV and download data from Aggregate server?");
 
-      if (delete == JOptionPane.YES_OPTION) {
+      if (delete) {
         try {
           Files.delete(FileUtils.getCSVPath(table2, sApplyScanFmt.isSelected(),
               sDownloadAttachment.isSelected()));
         } catch (IOException e) {
           e.printStackTrace();
-          showErrPopup("Unable to delete CSV");
+          showError("Unable to delete CSV");
         }
+      }
+    }
+  }
+
+  private void download() {
+    try {
+      updateAggregateTableInfo();
+
+      if (table.getSchemaETag() == null || table.getSchemaETag().isEmpty()) {
+        throw new IllegalArgumentException(
+            "Unable to retrieve SchemaETag with given table info");
+      }
+
+      if (sDownloadAttachment.isSelected()) {
+        FileUtils.createInstancesDirectory(table);
+      } else {
+        FileUtils.createBaseDirectory(table);
+      }
+
+      restClient
+          .writeCSVToFile(sApplyScanFmt.isSelected(), sDownloadAttachment.isSelected());
+
+      if (isGUI)
+        sProgressBar.setString("Done!");
+      else
+        System.out.println("Done!");
+    } catch (MalformedURLException e) {
+      e.printStackTrace();
+      showError("Aggregate address is invalid.");
+    } catch (IOException e) {
+      e.printStackTrace();
+      showError("Unable to write file.");
+    } catch (ClientWebException e) {
+      e.printStackTrace();
+      showError("Error occurred.");
+    } catch (IllegalArgumentException e) {
+      // Note: authentication error is also caught here
+      e.printStackTrace();
+      showError("Aggregate address, App ID, Table ID, user name, or password is invalid. "
+          + "Please check your credentials.");
+    } // Add authentication error
+    catch (Exception e) {
+      e.printStackTrace();
+      showError("Error occurred.");
+    }
+    finally {
+      if (isGUI) {
+        sProgressBar.setValue(sProgressBar.getMaximum());
+        sProgressBar.setIndeterminate(false);
+        sDownloadButton.setEnabled(true);
+        sDownloadButton.setText("Download");
       }
     }
   }
@@ -307,22 +378,46 @@ public class Suitcase {
     }
 
     if (!state) {
-      showErrPopup(errorMsgBuilder.toString().trim());
+      showError(errorMsgBuilder.toString().trim());
     }
 
     return state;
   }
 
   /**
-   * Displays a pop up with an error message.
+   * Displays error message.
+   *
+   * When ran as GUI,
+   * displays a pop up with an error message.
    * Progress bar is set to non-indeterminate and string set to "error."
    *
    * @param errMsg Error message to display
    */
-  private void showErrPopup(String errMsg) {
+  private void showError(String errMsg) {
+    if (isGUI)
+      showErrorPopup(errMsg);
+    else
+      System.out.println("Error: " + errMsg);
+  }
+
+  private void showErrorPopup(String errMsg) {
     sProgressBar.setIndeterminate(false);
     sProgressBar.setString("error");
     JOptionPane.showConfirmDialog(frame, errMsg, "Error", JOptionPane.DEFAULT_OPTION,
         JOptionPane.ERROR_MESSAGE);
+  }
+
+  private boolean promptConfirm(String msg) {
+    if (force)
+      return true;
+
+    if (isGUI) {
+      return JOptionPane.YES_OPTION ==
+          JOptionPane.showConfirmDialog(frame, msg, APP_NAME, JOptionPane.YES_NO_OPTION,
+          JOptionPane.QUESTION_MESSAGE);
+    } else {
+      System.out.print(msg + " yes / no ");
+      return console.nextLine().toLowerCase().startsWith("y");
+    }
   }
 }
