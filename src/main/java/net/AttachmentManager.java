@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.*;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -158,7 +159,8 @@ public class AttachmentManager {
     }
 
     if (!this.allAttachments.get(rowId).containsKey(filename)) {
-      throw new IllegalArgumentException("Filename not found: " + filename);
+      System.out.println(filename + ": File missing or invalid filename");
+      return null;
     }
 
     if (localUrl) {
@@ -217,7 +219,11 @@ public class AttachmentManager {
       return null;
     }
 
-    return Files.newInputStream(getAttachmentLocalPath(rowId, getJsonFilename(rowId)));
+    try {
+      return Files.newInputStream(getAttachmentLocalPath(rowId, getJsonFilename(rowId)));
+    } catch (NoSuchFileException e) {
+      return null;
+    }
   }
 
   public void waitForAttachmentDownload() throws InterruptedException {
@@ -270,8 +276,11 @@ public class AttachmentManager {
         }  
         AttachmentAuthenticator authenticator = new AttachmentAuthenticator();
         Authenticator.setDefault(authenticator);
-        InputStream in = getAttachmentUrl(rowId, filename, false).openStream();
-        Files.copy(in, savePath);
+        URL attachmentUrl = getAttachmentUrl(rowId, filename, false);
+        if (attachmentUrl != null) {
+          InputStream in = attachmentUrl.openStream();
+          Files.copy(in, savePath);
+        }
       } catch (Exception e) {
         e.printStackTrace();
       }
