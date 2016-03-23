@@ -23,6 +23,8 @@ public class Suitcase {
   private JTextField sAggregateAddressText;
   private JTextField sAppIdText;
   private JTextField sTableIdText;
+  private JTextField sUserNameText;
+  private JPasswordField sPasswordText;
   private JProgressBar sProgressBar;
   private JCheckBox sDownloadAttachment;
   private JCheckBox sApplyScanFmt;
@@ -45,6 +47,8 @@ public class Suitcase {
     this.sAggregateAddressText = new JTextField();
     this.sAppIdText = new JTextField();
     this.sTableIdText = new JTextField();
+    this.sUserNameText = new JTextField();
+    this.sPasswordText = new JPasswordField();
     this.sProgressBar = new JProgressBar();
     this.sDownloadAttachment = new JCheckBox();
     this.sApplyScanFmt = new JCheckBox();
@@ -116,6 +120,18 @@ public class Suitcase {
     sTableIdText.setBorder(BorderFactory.createLineBorder(Color.BLACK));
     inputPanel.add(tableIdLabel);
     inputPanel.add(sTableIdText);
+    
+    // Username and password input
+    JLabel userNameLabel = new JLabel("User name:");
+    inputPanel.add(userNameLabel);
+    sUserNameText.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+    inputPanel.add(sUserNameText);
+    
+    JLabel passwordLabel = new JLabel("Password:");
+    sPasswordText.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+    inputPanel.add(passwordLabel);
+    inputPanel.add(sPasswordText);
+    
   }
 
   private void buildCheckboxArea(JPanel checkboxPanel) {
@@ -177,12 +193,15 @@ public class Suitcase {
               e.printStackTrace();
               showErrPopup("Error occurred.");
             } catch (IllegalArgumentException e) {
+              // Note: authentication error is also caught here
               e.printStackTrace();
-              showErrPopup("Aggregate address, App ID, or Table ID is invalid.");
-            } catch (Exception e) {
+              showErrPopup("Aggregate address, App ID, Table ID, user name, or password is invalid. Please check your credentials.");
+            } // Add authentication error
+            catch (Exception e) {
               e.printStackTrace();
               showErrPopup("Error occurred.");
-            } finally {
+            }
+            finally {
               sProgressBar.setValue(sProgressBar.getMaximum());
               sProgressBar.setIndeterminate(false);
               sDownloadButton.setEnabled(true);
@@ -207,7 +226,9 @@ public class Suitcase {
     AggregateTableInfo table2 = new AggregateTableInfo(
         sAggregateAddressText.getText().trim(),
         sAppIdText.getText().trim(),
-        sTableIdText.getText().trim()
+        sTableIdText.getText().trim(),
+        sUserNameText.getText().trim(),
+        String.valueOf(sPasswordText.getPassword()).trim()
     );
 
     boolean firstRun = (this.table == null);

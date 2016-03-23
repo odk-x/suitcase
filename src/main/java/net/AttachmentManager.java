@@ -8,7 +8,7 @@ import utils.FileUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,7 +28,7 @@ public class AttachmentManager {
     private final BlockingQueue<String[]> q;
     private final String rowId;
     private final Set<String> files;
-
+    
     DownloadProducer(BlockingQueue<String[]> queue, String rowId, Set<String> files) {
       this.q = queue;
       this.rowId = rowId;
@@ -76,14 +76,18 @@ public class AttachmentManager {
   private Map<String, Boolean> hasManifestMap;
   private WinkClient wc;
   private BlockingQueue<String[]> bq;
-
-  public AttachmentManager(AggregateTableInfo table, WinkClient wc) {
+  private String userName;
+  private String password;
+  
+  public AttachmentManager(AggregateTableInfo table, WinkClient wc, String userName, String password) {
     if (table.getSchemaETag() == null) {
       throw new IllegalStateException("SchemaETag has not been set!");
     }
 
     this.table = table;
     this.wc = wc;
+    this.userName = userName;
+    this.password = password;
     this.allAttachments = new ConcurrentHashMap<>();
     this.hasManifestMap = new ConcurrentHashMap<>();
 
@@ -259,6 +263,13 @@ public class AttachmentManager {
 
     if (Files.notExists(savePath)) {
       try {
+        class AttachmentAuthenticator extends Authenticator {
+          public PasswordAuthentication getPasswordAuthentication () {
+            return new PasswordAuthentication (userName, password.toCharArray());
+          }
+        }  
+        AttachmentAuthenticator authenticator = new AttachmentAuthenticator();
+        Authenticator.setDefault(authenticator);
         InputStream in = getAttachmentUrl(rowId, filename, false).openStream();
         Files.copy(in, savePath);
       } catch (Exception e) {
