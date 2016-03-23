@@ -71,10 +71,11 @@ public class RESTClient {
    *
    * @param scanFormatting  True to apply scan formatting
    * @param localLink       True to hyperlink to local files
+   * @param extraMeta       True to include extra metadata
    * @throws IOException
    * @throws JSONException
    */
-  public void writeCSVToFile(final boolean scanFormatting, final boolean localLink)
+  public void writeCSVToFile(boolean scanFormatting, boolean localLink, boolean extraMeta)
       throws IOException, JSONException {
     if (this.csv.getSize() == 0) {
       //Download json if not downloaded
@@ -88,7 +89,7 @@ public class RESTClient {
         new RFC4180CsvWriter(
             new FileWriter(
                 FileUtils.getCSVPath(
-                    this.tableInfo, scanFormatting, localLink
+                    this.tableInfo, scanFormatting, localLink, extraMeta
                 ).toAbsolutePath().toString()
             )
         );
@@ -96,9 +97,9 @@ public class RESTClient {
     ODKCsv.ODKCSVIterator csvIt = this.csv.getODKCSVIterator();
 
     //Write header and rows
-    csvWriter.writeNext(this.csv.getHeader(scanFormatting));
+    csvWriter.writeNext(this.csv.getHeader(scanFormatting, extraMeta));
     while (csvIt.hasNext()) {
-      csvWriter.writeNext(csvIt.next(scanFormatting, localLink));
+      csvWriter.writeNext(csvIt.next(scanFormatting, localLink, extraMeta));
 
       //Set value of progress bar with number of rows done
       this.pb.setValue(
