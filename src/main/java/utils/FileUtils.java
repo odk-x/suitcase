@@ -14,21 +14,13 @@ public class FileUtils {
   }
 
   public static boolean isDownloaded(AggregateTableInfo table, boolean scanFormatting,
-      boolean localLink) {
-    return Files.exists(getCSVPath(table, scanFormatting, localLink));
+      boolean localLink, boolean extraMeta) {
+    return Files.exists(getCSVPath(table, scanFormatting, localLink, extraMeta));
   }
 
   public static Path getCSVPath(AggregateTableInfo table, boolean scanFormatting,
-      boolean localLink) {
-    return Paths.get(getBasePath(table).toString(), getCSVName(scanFormatting, localLink));
-  }
-
-  public static Path getCSVPath(AggregateTableInfo table, boolean scanFormatting,
-      boolean localLink, boolean timeStamp) {
-    return Paths.get(
-        getCSVPath(table, scanFormatting, localLink).toString(),
-        new SimpleDateFormat("yyyy-MM-dd").format(new Date())
-        );
+      boolean localLink, boolean extraMeta) {
+    return Paths.get(getBasePath(table).toString(), getCSVName(scanFormatting, localLink, extraMeta));
   }
 
   public static Path getBasePath(AggregateTableInfo table) {
@@ -39,9 +31,9 @@ public class FileUtils {
     return Paths.get(getBasePath(table).toString(), "instances");
   }
 
-  public static String getCSVName(boolean scanFormatting, boolean localLink) {
+  public static String getCSVName(boolean scanFormatting, boolean localLink, boolean extraMeta) {
     return (localLink ? "data" : "link") + (scanFormatting ? "_formatted" : "_unformatted")
-        + ".csv";
+        + (extraMeta ? "_extra" : "") + ".csv";
   }
 
   public static void createBaseDirectory(AggregateTableInfo table) throws IOException {

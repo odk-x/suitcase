@@ -16,7 +16,7 @@ public class ODKCsv implements Iterable<String[]> {
   public class ODKCSVIterator implements Iterator<String[]> {
     private int cursor;
 
-    public ODKCSVIterator() {
+    ODKCSVIterator() {
       this.cursor = 0;
     }
 
@@ -27,7 +27,7 @@ public class ODKCsv implements Iterable<String[]> {
 
     @Override
     public String[] next() {
-      return next(false, false);
+      return next(false, false, false);
     }
 
     @Override
@@ -35,7 +35,7 @@ public class ODKCsv implements Iterable<String[]> {
       throw new UnsupportedOperationException();
     }
 
-    public String[] next(boolean scanFormatting, boolean localLink) {
+    public String[] next(boolean scanFormatting, boolean localLink, boolean extraMeta) {
       if (!hasNext()) {
         throw new NoSuchElementException();
       }
@@ -43,7 +43,7 @@ public class ODKCsv implements Iterable<String[]> {
       String[] nextLine = null;
 
       try {
-        nextLine = get(cursor++, scanFormatting, localLink);
+        nextLine = get(cursor++, scanFormatting, localLink, extraMeta);
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -68,7 +68,8 @@ public class ODKCsv implements Iterable<String[]> {
     KEEP,       //No modification
     FILTER,     //Remove
     LINK,       //Convert to a hyperlink
-    SCAN_RAW    //Insert Scan's raw output
+    SCAN_RAW,   //Insert Scan's raw output
+    EXTRA       //Extra metadata columns
   }
 
   //Maps Position to metadata
@@ -90,6 +91,8 @@ public class ODKCsv implements Iterable<String[]> {
     frontList.add(rowDefSavepointType);
     frontList.add(rowDefSavepointTimestamp);
     frontList.add(rowDefSavepointCreator);
+    frontList.add("_create_user");
+    frontList.add("_last_update_user");
     METADATA_POSITION.put(Position.FRONT, frontList);
 
     endList.add(rowDefRowETag);
@@ -113,6 +116,8 @@ public class ODKCsv implements Iterable<String[]> {
     METADATA_JSON_NAME.put(rowDefRowETag, jsonRowETag);
     METADATA_JSON_NAME.put(rowDefFilterType, jsonFilterScope + ": type");
     METADATA_JSON_NAME.put(rowDefFilterValue, jsonFilterScope + ": value");
+    METADATA_JSON_NAME.put("_create_user", "createUser");
+    METADATA_JSON_NAME.put("_last_update_user", "lastUpdateUser");
   }
 
   private static final String NULL = "null";
@@ -163,7 +168,7 @@ public class ODKCsv implements Iterable<String[]> {
     this.jsonRows = new ArrayList<>();
     this.jsonRows.add(rows);
 
-    this.completeDataHeader = extractHeader(rows.getJSONObject(0));
+    this.completeDataHeader = extractDataHeader(rows.getJSONObject(0));
     this.completeCSVHeader = buildCSVHeader();
     this.colAction = buildActionMap();
     this.attMngr = attMngr;
@@ -173,40 +178,51 @@ public class ODKCsv implements Iterable<String[]> {
   /**
    * Returns header of csv
    *
-   * @param scanFormatting True to retrieve header with scan formatting
+   * @param scanFormatting True to retrieve header with Scan formatting
+   * @param extraMeta True to retrieve header with extra metadata
    * @return
    */
-  public String[] getHeader(boolean scanFormatting) {
+  public String[] getHeader(boolean scanFormatting, boolean extraMeta) {
     if (this.size < 1) {
       throw new IllegalStateException();
     }
 
-    if (!scanFormatting) {
+    if (!scanFormatting && extraMeta) {
       return this.completeCSVHeader;
     }
 
-    String[] header = new String[this.completeCSVHeader.length - NUM_FILTERED];
-    int offset = 0;
+    List<String> header = new ArrayList<>();
     for (int i = 0; i < this.completeCSVHeader.length; i++) {
       String col = this.completeCSVHeader[i];
       Action act = this.colAction.get(col);
+
       switch (act) {
       case KEEP:
       case LINK:
         //KEEP and LINK both don't affect header
-        header[i - offset] = this.completeCSVHeader[i];
+        header.add(this.completeCSVHeader[i]);
         break;
       case SCAN_RAW:
-        header[i - offset] = SCAN_RAW_PREFIX + header[i - offset - 1];
-        break;
+        if (scanFormatting) {
+          header.add(SCAN_RAW_PREFIX + header.get(header.size() - 1));
+        }
+        //falls through
       case FILTER:
-        //remove col from list of header
-        offset++;
+        if (!scanFormatting) {
+          header.add(this.completeCSVHeader[i]);
+        }
         break;
+      case EXTRA:
+        if (extraMeta) {
+          header.add(this.completeCSVHeader[i]);
+        }
+        break;
+      default:
+        throw new IllegalStateException("This should not happen");
       }
     }
 
-    return header;
+    return header.toArray(new String[] {});
   }
 
   /**
@@ -223,7 +239,7 @@ public class ODKCsv implements Iterable<String[]> {
 
     if (this.size < 1) {
       //current instance is empty, initialize with rows
-      this.completeDataHeader = extractHeader(rows.getJSONObject(0));
+      this.completeDataHeader = extractDataHeader(rows.getJSONObject(0));
       this.completeCSVHeader = buildCSVHeader();
       this.colAction = buildActionMap();
     }
@@ -243,11 +259,13 @@ public class ODKCsv implements Iterable<String[]> {
    * @return
    * @throws Exception
    */
-  public String[] get(int rowIndex, boolean scanFormatting, boolean localLink) throws Exception {
+  public String[] get(int rowIndex, boolean scanFormatting, boolean localLink, boolean extraMeta)
+      throws Exception {
     if (rowIndex >= size) {
       throw new NoSuchElementException();
     }
 
+    //converts rowIndex to listIndex-rowIndex form
     int listIndex = 0;
     while (rowIndex >= this.jsonRows.get(listIndex).size()) {
       rowIndex -= this.jsonRows.get(listIndex).size();
@@ -255,9 +273,9 @@ public class ODKCsv implements Iterable<String[]> {
     }
 
     JSONObject row = this.jsonRows.get(listIndex).getJSONObject(rowIndex);
-    String[] front = getMetadata(row, Position.FRONT);
+    String[] front = getMetadata(row, Position.FRONT, extraMeta);
     String[] middle = getData(row, scanFormatting, localLink);
-    String[] end = getMetadata(row, Position.END);
+    String[] end = getMetadata(row, Position.END, extraMeta);
 
     //TODO: try to avoid copying arrays
     String[] sum = new String[front.length + middle.length + end.length];
@@ -279,7 +297,7 @@ public class ODKCsv implements Iterable<String[]> {
    * @return
    * @throws JSONException
    */
-  private String[] extractHeader(JSONObject oneRow) throws JSONException {
+  private String[] extractDataHeader(JSONObject oneRow) throws JSONException {
     JSONArray orderedColumns = oneRow.getJSONArray(orderedColumnsDef);
     String[] columns = new String[orderedColumns.size()];
 
@@ -332,7 +350,7 @@ public class ODKCsv implements Iterable<String[]> {
       return true;
     }
 
-    String[] newDataHeader = extractHeader(rows.getJSONObject(0));
+    String[] newDataHeader = extractDataHeader(rows.getJSONObject(0));
 
     return newDataHeader.length == this.completeDataHeader.length && Arrays
         .deepEquals(newDataHeader, this.completeDataHeader);
@@ -344,26 +362,29 @@ public class ODKCsv implements Iterable<String[]> {
    *
    * @param row
    * @param pos
+   * @param extraMeta
    * @return
    * @throws JSONException
    */
-  private String[] getMetadata(JSONObject row, Position pos) throws JSONException {
+  private String[] getMetadata(JSONObject row, Position pos, boolean extraMeta) throws
+      JSONException {
     List<String> metadataList = METADATA_POSITION.get(pos);
 
-    String[] metadata = new String[metadataList.size()];
+    List<String> metadata = new ArrayList<>();
 
-    for (int i = 0; i < metadata.length; i++) {
-      String jsonName = METADATA_JSON_NAME.get(metadataList.get(i));
+    for (String colName : metadataList) {
+      String jsonName = METADATA_JSON_NAME.get(colName);
 
       if (jsonName.startsWith(jsonFilterScope)) {
-        metadata[i] = row.getJSONObject(jsonFilterScope)
-            .optString(jsonName.split(":")[1].trim(), NULL);
-      } else {
-        metadata[i] = row.optString(jsonName, NULL);
+        metadata
+            .add(row.getJSONObject(jsonFilterScope).optString(jsonName.split(":")[1].trim(), NULL));
+      } else if (extraMeta || (this.colAction.get(colName) != Action.EXTRA)) {
+        metadata.add(row.optString(jsonName, NULL));
       }
+      //everything else ignored
     }
 
-    return metadata;
+    return metadata.toArray(new String[] {});
   }
 
   /**
@@ -476,6 +497,8 @@ public class ODKCsv implements Iterable<String[]> {
         }
       } else if (s.endsWith(URI_FRAG_ELEMENT_NAME)) {
         actionMap.put(s, Action.LINK);
+      } else if (s.equals("_create_user") || s.equals("_last_update_user")) {
+        actionMap.put(s, Action.EXTRA);
       } else {
         actionMap.put(s, Action.KEEP);
       }

@@ -28,6 +28,7 @@ public class Suitcase {
   private JProgressBar sProgressBar;
   private JCheckBox sDownloadAttachment;
   private JCheckBox sApplyScanFmt;
+  private JCheckBox sExtraMetadata;
   private JButton sDownloadButton;
 
   // Server data
@@ -52,6 +53,7 @@ public class Suitcase {
     this.sProgressBar = new JProgressBar();
     this.sDownloadAttachment = new JCheckBox();
     this.sApplyScanFmt = new JCheckBox();
+    this.sExtraMetadata = new JCheckBox();
     this.sDownloadButton = new JButton();
 
     buildJFrame();
@@ -70,7 +72,7 @@ public class Suitcase {
     buildButtonArea(buttonPanel);
     contentPanel.add(buttonPanel);
 
-    JPanel checkboxesPanel = new JPanel(new GridLayout(1, 2));
+    JPanel checkboxesPanel = new JPanel(new GridLayout(1, 3));
     buildCheckboxArea(checkboxesPanel);
     contentPanel.add(checkboxesPanel);
 
@@ -80,7 +82,7 @@ public class Suitcase {
 
     // Finish building the frame
     frame.add(contentPanel);
-    frame.setSize(600, 450);
+    frame.setSize(700, 450);
     frame.setLocationRelativeTo(null);
     frame.addWindowListener(new WindowAdapter() {
       @Override
@@ -144,6 +146,10 @@ public class Suitcase {
     sApplyScanFmt.setText("Apply Scan formatting?");
     sApplyScanFmt.setHorizontalAlignment(JCheckBox.CENTER);
     checkboxPanel.add(sApplyScanFmt);
+
+    sExtraMetadata.setText("Extra metadata columns?");
+    sExtraMetadata.setHorizontalAlignment(JCheckBox.CENTER);
+    checkboxPanel.add(sExtraMetadata);
   }
 
   private void buildButtonArea(JPanel buttonsPanel) {
@@ -181,7 +187,8 @@ public class Suitcase {
               }
 
               restClient
-                  .writeCSVToFile(sApplyScanFmt.isSelected(), sDownloadAttachment.isSelected());
+                  .writeCSVToFile(sApplyScanFmt.isSelected(), sDownloadAttachment.isSelected(),
+                      sExtraMetadata.isSelected());
               sProgressBar.setString("Done");
             } catch (MalformedURLException e) {
               e.printStackTrace();
@@ -263,7 +270,7 @@ public class Suitcase {
     }
 
     if (FileUtils.isDownloaded(table2,
-        sApplyScanFmt.isSelected(), sDownloadAttachment.isSelected())) {
+        sApplyScanFmt.isSelected(), sDownloadAttachment.isSelected(), sExtraMetadata.isSelected())) {
       int delete = JOptionPane.showConfirmDialog(frame,
           "This CSV has been downloaded. "
           + "Delete existing CSV and download data from Aggregate server?", "ODK Suitcase",
@@ -272,7 +279,7 @@ public class Suitcase {
       if (delete == JOptionPane.YES_OPTION) {
         try {
           Files.delete(FileUtils.getCSVPath(table2, sApplyScanFmt.isSelected(),
-              sDownloadAttachment.isSelected()));
+              sDownloadAttachment.isSelected(), sExtraMetadata.isSelected()));
         } catch (IOException e) {
           e.printStackTrace();
           showErrPopup("Unable to delete CSV");
