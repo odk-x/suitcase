@@ -61,9 +61,13 @@ public class Suitcase {
 
   private void buildJFrame() {
     // UI Container Panel
-    JPanel contentPanel = new JPanel(new GridLayout(4, 1));
+    JPanel contentPanel = new JPanel(new GridLayout(5, 1));
 
     // Build the UI segments
+    JPanel authPanel = new JPanel(new GridLayout(2, 1));
+    buildAuthArea(authPanel);
+    contentPanel.add(authPanel);
+
     JPanel inputPanel = new JPanel(new GridLayout(3, 1));
     buildInputArea(inputPanel);
     contentPanel.add(inputPanel);
@@ -122,19 +126,20 @@ public class Suitcase {
     sTableIdText.setBorder(BorderFactory.createLineBorder(Color.BLACK));
     inputPanel.add(tableIdLabel);
     inputPanel.add(sTableIdText);
-    
-    // Username and password input
+  }
+
+  private void buildAuthArea(JPanel authPanel) {
     JLabel userNameLabel = new JLabel("User name:");
-    inputPanel.add(userNameLabel);
     sUserNameText.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-    inputPanel.add(sUserNameText);
-    
+    authPanel.add(userNameLabel);
+    authPanel.add(sUserNameText);
+
     JLabel passwordLabel = new JLabel("Password:");
     sPasswordText.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-    inputPanel.add(passwordLabel);
-    inputPanel.add(sPasswordText);
-    
+    authPanel.add(passwordLabel);
+    authPanel.add(sPasswordText);
   }
+
 
   private void buildCheckboxArea(JPanel checkboxPanel) {
     checkboxPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
