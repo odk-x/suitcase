@@ -118,7 +118,7 @@ public class Suitcase {
     inputPanel.add(sAppIdText);
 
     JLabel tableIdLabel = new JLabel("Table ID");
-    sTableIdText.setText("scan_TB03_Register");
+    sTableIdText.setText("scan_TB03_Register1");
     sTableIdText.setBorder(BorderFactory.createLineBorder(Color.BLACK));
     inputPanel.add(tableIdLabel);
     inputPanel.add(sTableIdText);
