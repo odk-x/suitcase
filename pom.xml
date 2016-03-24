@@ -9,18 +9,25 @@
     <version>2.0</version>
 
     <properties>
+        <org.opendatakit.wink.version>0.01-SNAPSHOT</org.opendatakit.wink.version>
+        <org.opendatakit.aggregate.rest.interface>2015-12-17</org.opendatakit.aggregate.rest.interface>
         <org.apache.wink.version>1.4</org.apache.wink.version>
-        <maven.jar.plugin.version>2.4</maven.jar.plugin.version>
-        <maven.javadoc.plugin.version>2.9.1</maven.javadoc.plugin.version>
-        <maven.compiler.plugin.version>3.1</maven.compiler.plugin.version>
-		<org.apache.httpcomponents.version>4.3.5</org.apache.httpcomponents.version>
+        <maven.jar.plugin.version>2.6</maven.jar.plugin.version>
+        <maven.javadoc.plugin.version>2.10.3</maven.javadoc.plugin.version>
+        <maven.compiler.plugin.version>3.5.1</maven.compiler.plugin.version>
+        <maven.assembly.plugin.version>2.6</maven.assembly.plugin.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.opendatakit</groupId>
             <artifactId>wink</artifactId>
-            <version>0.01-SNAPSHOT</version>
+            <version>${org.opendatakit.wink.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opendatakit</groupId>
+            <artifactId>aggregate-rest-interface</artifactId>
+            <version>${org.opendatakit.aggregate.rest.interface}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.wink</groupId>
@@ -35,17 +42,7 @@
         <dependency>
             <groupId>org.apache.wink</groupId>
             <artifactId>wink-json4j</artifactId>
-            <version>1.4</version>
-        </dependency>
-		<dependency>
-		    <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>${org.apache.httpcomponents.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.opendatakit</groupId>
-            <artifactId>aggregate-rest-interface</artifactId>
-            <version>2015-12-17</version>
+            <version>${org.apache.wink.version}</version>
         </dependency>
     </dependencies>
 
@@ -54,7 +51,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.3</version>
+                <version>${maven.compiler.plugin.version}</version>
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
@@ -62,6 +59,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>${maven.assembly.plugin.version}</version>
                 <configuration>
                     <archive>
                         <manifest>
