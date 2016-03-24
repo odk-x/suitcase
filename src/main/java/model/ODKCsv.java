@@ -30,6 +30,11 @@ public class ODKCsv implements Iterable<String[]> {
       return next(false, false);
     }
 
+    @Override
+    public void remove() {
+      throw new UnsupportedOperationException();
+    }
+
     public String[] next(boolean scanFormatting, boolean localLink) {
       if (!hasNext()) {
         throw new NoSuchElementException();
