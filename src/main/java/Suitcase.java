@@ -28,6 +28,7 @@ public class Suitcase {
   private JProgressBar sProgressBar;
   private JCheckBox sDownloadAttachment;
   private JCheckBox sApplyScanFmt;
+  private JCheckBox sExtraMetadata;
   private JButton sDownloadButton;
 
   // Server data
@@ -52,6 +53,7 @@ public class Suitcase {
     this.sProgressBar = new JProgressBar();
     this.sDownloadAttachment = new JCheckBox();
     this.sApplyScanFmt = new JCheckBox();
+    this.sExtraMetadata = new JCheckBox();
     this.sDownloadButton = new JButton();
 
     buildJFrame();
@@ -59,9 +61,13 @@ public class Suitcase {
 
   private void buildJFrame() {
     // UI Container Panel
-    JPanel contentPanel = new JPanel(new GridLayout(4, 1));
+    JPanel contentPanel = new JPanel(new GridLayout(5, 1));
 
     // Build the UI segments
+    JPanel authPanel = new JPanel(new GridLayout(2, 1));
+    buildAuthArea(authPanel);
+    contentPanel.add(authPanel);
+
     JPanel inputPanel = new JPanel(new GridLayout(3, 1));
     buildInputArea(inputPanel);
     contentPanel.add(inputPanel);
@@ -70,7 +76,7 @@ public class Suitcase {
     buildButtonArea(buttonPanel);
     contentPanel.add(buttonPanel);
 
-    JPanel checkboxesPanel = new JPanel(new GridLayout(1, 2));
+    JPanel checkboxesPanel = new JPanel(new GridLayout(1, 3));
     buildCheckboxArea(checkboxesPanel);
     contentPanel.add(checkboxesPanel);
 
@@ -80,7 +86,7 @@ public class Suitcase {
 
     // Finish building the frame
     frame.add(contentPanel);
-    frame.setSize(600, 450);
+    frame.setSize(700, 450);
     frame.setLocationRelativeTo(null);
     frame.addWindowListener(new WindowAdapter() {
       @Override
@@ -116,23 +122,24 @@ public class Suitcase {
     inputPanel.add(sAppIdText);
 
     JLabel tableIdLabel = new JLabel("Table ID");
-    sTableIdText.setText("scan_TB03_Register");
+    sTableIdText.setText("scan_TB03_Register1");
     sTableIdText.setBorder(BorderFactory.createLineBorder(Color.BLACK));
     inputPanel.add(tableIdLabel);
     inputPanel.add(sTableIdText);
-    
-    // Username and password input
+  }
+
+  private void buildAuthArea(JPanel authPanel) {
     JLabel userNameLabel = new JLabel("User name:");
-    inputPanel.add(userNameLabel);
     sUserNameText.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-    inputPanel.add(sUserNameText);
-    
+    authPanel.add(userNameLabel);
+    authPanel.add(sUserNameText);
+
     JLabel passwordLabel = new JLabel("Password:");
     sPasswordText.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-    inputPanel.add(passwordLabel);
-    inputPanel.add(sPasswordText);
-    
+    authPanel.add(passwordLabel);
+    authPanel.add(sPasswordText);
   }
+
 
   private void buildCheckboxArea(JPanel checkboxPanel) {
     checkboxPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
@@ -144,6 +151,10 @@ public class Suitcase {
     sApplyScanFmt.setText("Apply Scan formatting?");
     sApplyScanFmt.setHorizontalAlignment(JCheckBox.CENTER);
     checkboxPanel.add(sApplyScanFmt);
+
+    sExtraMetadata.setText("Extra metadata columns?");
+    sExtraMetadata.setHorizontalAlignment(JCheckBox.CENTER);
+    checkboxPanel.add(sExtraMetadata);
   }
 
   private void buildButtonArea(JPanel buttonsPanel) {
@@ -181,7 +192,8 @@ public class Suitcase {
               }
 
               restClient
-                  .writeCSVToFile(sApplyScanFmt.isSelected(), sDownloadAttachment.isSelected());
+                  .writeCSVToFile(sApplyScanFmt.isSelected(), sDownloadAttachment.isSelected(),
+                      sExtraMetadata.isSelected());
               sProgressBar.setString("Done");
             } catch (MalformedURLException e) {
               e.printStackTrace();
@@ -263,7 +275,7 @@ public class Suitcase {
     }
 
     if (FileUtils.isDownloaded(table2,
-        sApplyScanFmt.isSelected(), sDownloadAttachment.isSelected())) {
+        sApplyScanFmt.isSelected(), sDownloadAttachment.isSelected(), sExtraMetadata.isSelected())) {
       int delete = JOptionPane.showConfirmDialog(frame,
           "This CSV has been downloaded. "
           + "Delete existing CSV and download data from Aggregate server?", "ODK Suitcase",
@@ -272,7 +284,7 @@ public class Suitcase {
       if (delete == JOptionPane.YES_OPTION) {
         try {
           Files.delete(FileUtils.getCSVPath(table2, sApplyScanFmt.isSelected(),
-              sDownloadAttachment.isSelected()));
+              sDownloadAttachment.isSelected(), sExtraMetadata.isSelected()));
         } catch (IOException e) {
           e.printStackTrace();
           showErrPopup("Unable to delete CSV");
