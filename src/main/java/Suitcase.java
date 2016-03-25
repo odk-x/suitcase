@@ -77,13 +77,14 @@ public class Suitcase {
       options.addOption("aggregate_url", true, "url to Aggregate server");
       options.addOption("app_id", true, "app id");
       options.addOption("table_id", true, "table id");
-      options.addOption("username", true, "user name");
+      options.addOption("username", true, "username");
       options.addOption("password", true, "password");
 
       //flags
       options.addOption("a", "attachment", false, "download attachments");
       options.addOption("s", "scan", false, "apply Scan formatting");
       options.addOption("f", "force", false, "do not prompt, overwrite existing files");
+      options.addOption("e", "extra", false, "add extra metadata columns");
 
       //misc
       options.addOption("h", "help", false, "print this message");
@@ -103,13 +104,17 @@ public class Suitcase {
           return;
         }
 
+        //Aggregate related
         sAggregateAddressText.setText(line.getOptionValue("aggregate_url"));
         sAppIdText.setText(line.getOptionValue("app_id"));
         sTableIdText.setText(line.getOptionValue("table_id"));
         sUserNameText.setText(line.getOptionValue("username"));
         sPasswordText.setText(line.getOptionValue("password"));
+
+        //CSV options
         sDownloadAttachment.setSelected(line.hasOption("a"));
         sApplyScanFmt.setSelected(line.hasOption("s"));
+        sExtraMetadata.setSelected(line.hasOption("e"));
 
         this.force = line.hasOption("f");
       } catch (ParseException e) {
