@@ -14,7 +14,7 @@ import java.util.Map;
  * !!!ATTENTION!!! One per row
  */
 public class ScanJson {
-  Map<String, String> labelValuePair;
+  private Map<String, String> labelValuePair;
 
   public ScanJson(InputStream jsonStream) throws JSONException {
     this.labelValuePair = null;
