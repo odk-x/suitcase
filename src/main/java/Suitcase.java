@@ -116,6 +116,7 @@ public class Suitcase {
         sApplyScanFmt.setSelected(line.hasOption("s"));
         sExtraMetadata.setSelected(line.hasOption("e"));
 
+        //Misc
         this.force = line.hasOption("f");
       } catch (ParseException e) {
         e.printStackTrace();
