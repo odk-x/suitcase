@@ -12,7 +12,6 @@ import javax.swing.*;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
-import java.util.concurrent.ExecutionException;
 
 import static org.opendatakit.wink.client.WinkClient.*;
 
@@ -42,6 +41,7 @@ public class RESTClient {
             this.tableInfo.getTableId()));*/
 
     this.odkWinkClient = new WinkClient();
+    this.pb = null;
     
     // Debugging stuff
     System.out.println("REST Client: username " + this.tableInfo.getUserName() + " password " + this.tableInfo.getPassword());
@@ -82,8 +82,7 @@ public class RESTClient {
       retrieveRows();
     }
 
-    this.pb.setIndeterminate(false);
-    this.pb.setString("Processing and writing data");
+    pbSetValue(null, "Processing and writing data", false);
 
     RFC4180CsvWriter csvWriter =
         new RFC4180CsvWriter(
@@ -101,13 +100,21 @@ public class RESTClient {
     while (csvIt.hasNext()) {
       csvWriter.writeNext(csvIt.next(scanFormatting, localLink, extraMeta));
 
-      //Set value of progress bar with number of rows done
-      this.pb.setValue(
-          (int) ((double) csvIt.getIndex() / this.csv.getSize() * this.pb.getMaximum())
-      );
+      //Set value of progress bar with percentage of rows done
+      pbSetValue((int) ((double) csvIt.getIndex() / this.csv.getSize() * this.pb.getMaximum()),
+          null, null);
     }
 
     csvWriter.close();
+  }
+
+  /**
+   * Set a JProgressBar
+   *
+   * @param pb JProgressBar
+   */
+  public void setProgressBar(JProgressBar pb) {
+    this.pb = pb;
   }
 
   /**
@@ -132,11 +139,24 @@ public class RESTClient {
   }
 
   /**
-   * Set a JProgressBar
+   * Wrapper for some JProgressBar setters to better handle GUI/CLI hybrid
    *
-   * @param pb JProgressBar
+   * @param value
+   * @param status
+   * @param isIndeterminate
    */
-  public void setProgressBar(JProgressBar pb) {
-    this.pb = pb;
+  private void pbSetValue(Integer value, String status, Boolean isIndeterminate) {
+    if (this.pb == null)
+      return;
+
+    if (value != null) {
+      this.pb.setValue(value);
+    }
+    if (status != null) {
+      this.pb.setString(status);
+    }
+    if (isIndeterminate != null) {
+      this.pb.setIndeterminate(isIndeterminate);
+    }
   }
 }

@@ -9,10 +9,25 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class FileUtils {
+  /**
+   * Checks whether a table is downloaded
+   *
+   * @param table
+   * @return
+   */
   public static boolean isDownloaded(AggregateTableInfo table) {
     return Files.exists(getBasePath(table));
   }
 
+  /**
+   * Checks whether a CSV of a table is downloaded
+   *
+   * @param table
+   * @param scanFormatting
+   * @param localLink
+   * @param extraMeta
+   * @return
+   */
   public static boolean isDownloaded(AggregateTableInfo table, boolean scanFormatting,
       boolean localLink, boolean extraMeta) {
     return Files.exists(getCSVPath(table, scanFormatting, localLink, extraMeta));
