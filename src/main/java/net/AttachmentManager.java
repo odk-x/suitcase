@@ -6,6 +6,7 @@ import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.wink.client.WinkClient;
 import utils.FileUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.*;
@@ -79,8 +80,10 @@ public class AttachmentManager {
   private BlockingQueue<String[]> bq;
   private String userName;
   private String password;
+  private String savePath;
   
-  public AttachmentManager(AggregateTableInfo table, WinkClient wc, String userName, String password) {
+  public AttachmentManager(
+      AggregateTableInfo table, WinkClient wc, String userName, String password, String savePath) {
     if (table.getSchemaETag() == null) {
       throw new IllegalStateException("SchemaETag has not been set!");
     }
@@ -89,6 +92,7 @@ public class AttachmentManager {
     this.wc = wc;
     this.userName = userName;
     this.password = password;
+    this.savePath = savePath;
     this.allAttachments = new ConcurrentHashMap<>();
     this.hasManifestMap = new ConcurrentHashMap<>();
 
@@ -244,14 +248,13 @@ public class AttachmentManager {
    */
   private Path getAttachmentLocalPath(String rowId, String filename) throws IOException {
     String sanitizedRowId = WinkClient.convertRowIdForInstances(rowId);
+    String insPath = FileUtils.getInstancesPath(table, savePath).toString();
 
-    if (Files.notExists(Paths.get(FileUtils.getInstancesPath(table).toString(), sanitizedRowId))) {
-      Files.createDirectories(
-          Paths.get(FileUtils.getInstancesPath(table).toString(), sanitizedRowId));
+    if (Files.notExists(Paths.get(insPath, sanitizedRowId))) {
+      Files.createDirectories(Paths.get(insPath, sanitizedRowId));
     }
 
-    return Paths.get(FileUtils.getInstancesPath(this.table).toString(), sanitizedRowId, filename)
-        .toAbsolutePath();
+    return Paths.get(insPath, sanitizedRowId, filename).toAbsolutePath();
   }
 
   /**

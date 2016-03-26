@@ -30,6 +30,7 @@ public class RESTClient {
 
   private final AggregateTableInfo tableInfo;
   private final ODKCsv csv;
+  private String savePath;
 
   private static final int FETCH_LIMIT = 1000;
 
@@ -42,6 +43,7 @@ public class RESTClient {
 
     this.odkWinkClient = new WinkClient();
     this.pb = null;
+    this.savePath = FileUtils.getDefaultSavePath().toAbsolutePath().toString();
     
     // Debugging stuff
     System.out.println("REST Client: username " + this.tableInfo.getUserName() + " password " + this.tableInfo.getPassword());
@@ -62,7 +64,10 @@ public class RESTClient {
             .getSchemaETagForTable(this.tableInfo.getServerUrl(), this.tableInfo.getAppId(),
                 this.tableInfo.getTableId()));
     
-    AttachmentManager attMngr = new AttachmentManager(this.tableInfo, this.odkWinkClient, this.tableInfo.getUserName(), this.tableInfo.getPassword());
+    AttachmentManager attMngr = new AttachmentManager(
+        this.tableInfo, this.odkWinkClient,
+        this.tableInfo.getUserName(), this.tableInfo.getPassword(), this.savePath
+    );
     this.csv = new ODKCsv(attMngr, this.tableInfo);
   }
 
@@ -88,7 +93,7 @@ public class RESTClient {
         new RFC4180CsvWriter(
             new FileWriter(
                 FileUtils.getCSVPath(
-                    this.tableInfo, scanFormatting, localLink, extraMeta
+                    this.tableInfo, scanFormatting, localLink, extraMeta, savePath
                 ).toAbsolutePath().toString()
             )
         );
@@ -101,11 +106,17 @@ public class RESTClient {
       csvWriter.writeNext(csvIt.next(scanFormatting, localLink, extraMeta));
 
       //Set value of progress bar with percentage of rows done
-      pbSetValue((int) ((double) csvIt.getIndex() / this.csv.getSize() * this.pb.getMaximum()),
-          null, null);
+      pbSetValue(
+          (int) ((double) csvIt.getIndex() / this.csv.getSize() * this.pb.getMaximum()),
+          null, null
+      );
     }
 
     csvWriter.close();
+  }
+
+  public void setSavePath(String path) {
+    this.savePath = path;
   }
 
   /**
