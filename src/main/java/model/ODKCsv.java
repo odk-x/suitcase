@@ -192,15 +192,14 @@ public class ODKCsv implements Iterable<String[]> {
     }
 
     List<String> header = new ArrayList<>();
-    for (int i = 0; i < this.completeCSVHeader.length; i++) {
-      String col = this.completeCSVHeader[i];
+    for (String col : this.completeCSVHeader) {
       Action act = this.colAction.get(col);
 
       switch (act) {
       case KEEP:
       case LINK:
         //KEEP and LINK both don't affect header
-        header.add(this.completeCSVHeader[i]);
+        header.add(col);
         break;
       case SCAN_RAW:
         if (scanFormatting) {
@@ -209,12 +208,12 @@ public class ODKCsv implements Iterable<String[]> {
         //falls through
       case FILTER:
         if (!scanFormatting) {
-          header.add(this.completeCSVHeader[i]);
+          header.add(col);
         }
         break;
       case EXTRA:
         if (extraMeta) {
-          header.add(this.completeCSVHeader[i]);
+          header.add(col);
         }
         break;
       default:

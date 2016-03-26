@@ -5,8 +5,6 @@ import model.AggregateTableInfo;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class FileUtils {
   /**
