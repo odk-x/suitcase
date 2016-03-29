@@ -362,6 +362,11 @@ public class Suitcase {
       this.restClient.setSavePath(this.sSavePathText.getText());
     }
 
+    if (table.getSchemaETag() == null || table.getSchemaETag().isEmpty()) {
+      throw new IllegalArgumentException(
+          "Unable to retrieve SchemaETag with given table info or credentials");
+    }
+
     if (firstRun && FileUtils.isDownloaded(table2, sSavePathText.getText())) {
       boolean delete = promptConfirm("Data from a previous session detected. "
           + "Delete existing data and download data from Aggregate server?");
@@ -404,11 +409,6 @@ public class Suitcase {
 
       updateAggregateTableInfo();
 
-      if (table.getSchemaETag() == null || table.getSchemaETag().isEmpty()) {
-        throw new IllegalArgumentException(
-            "Unable to retrieve SchemaETag with given table info or credentials");
-      }
-
       if (sDownloadAttachment.isSelected() || sApplyScanFmt.isSelected()) {
         FileUtils.createInstancesDirectory(table, sSavePathText.getText());
       } else {
@@ -435,7 +435,7 @@ public class Suitcase {
     } catch (IllegalArgumentException e) {
       // Note: authentication error is also caught here
       e.printStackTrace();
-      showError("Aggregate address, App ID, Table ID, user name, or password is invalid. "
+      showError("Aggregate address, App ID, Table ID, username, or password is invalid. "
           + "Please check your credentials.");
     } // Add authentication error
     catch (Exception e) {
