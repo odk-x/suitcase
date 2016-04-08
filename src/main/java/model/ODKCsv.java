@@ -48,14 +48,6 @@ public class ODKCsv implements Iterable<String[]> {
         e.printStackTrace();
       }
 
-      if (!hasNext()) {
-        try {
-          attMngr.waitForAttachmentDownload();
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-      }
-
       return nextLine;
     }
 

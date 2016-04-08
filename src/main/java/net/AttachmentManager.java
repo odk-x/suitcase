@@ -6,7 +6,6 @@ import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.wink.client.WinkClient;
 import utils.FileUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.*;
@@ -15,9 +14,6 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Manages downloading attachments and information about attachments
@@ -25,84 +21,23 @@ import java.util.concurrent.LinkedBlockingQueue;
  * !!!ATTENTION!!! One AttachmentManager per table
  */
 public class AttachmentManager {
-  //Producer-Consumer pair with DownloadTask
-  private class DownloadProducer implements Runnable {
-    private final BlockingQueue<String[]> q;
-    private final String rowId;
-    private final Set<String> files;
-    
-    DownloadProducer(BlockingQueue<String[]> queue, String rowId, Set<String> files) {
-      this.q = queue;
-      this.rowId = rowId;
-      this.files = files;
-    }
-
-    @Override
-    public void run() {
-      try {
-        for (String filename : files) {
-          q.put(new String[] { rowId, filename });
-        }
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-    }
-  }
-
-  //Producer-Consumer pair with DownloadProducer
-  private class DownloadTask implements Runnable {
-    private final BlockingQueue<String[]> q;
-
-    DownloadTask(BlockingQueue<String[]> q) {
-      this.q = q;
-    }
-
-    @Override
-    public void run() {
-      try {
-        do {
-          String[] file = q.take(); //take blocks until q has at least 1 object
-          downloadFile(file[0], file[1]);
-        } while (!q.isEmpty());
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    }
-  }
-
-  private static final int DOWNLOAD_THREADS = 20;
-
   private AggregateTableInfo table;
+  private Map<String, JSONObject> attachmentManifests;
   private Map<String, Map<String, String>> allAttachments;
-  //some rows lack attachment manifest, this map keeps track of that
-  private Map<String, Boolean> hasManifestMap;
   private WinkClient wc;
-  private BlockingQueue<String[]> bq;
-  private String userName;
-  private String password;
   private String savePath;
   
   public AttachmentManager(
-      AggregateTableInfo table, WinkClient wc, String userName, String password, String savePath) {
+      AggregateTableInfo table, WinkClient wc, String savePath) {
     if (table.getSchemaETag() == null) {
       throw new IllegalStateException("SchemaETag has not been set!");
     }
 
     this.table = table;
     this.wc = wc;
-    this.userName = userName;
-    this.password = password;
     this.savePath = savePath;
-    this.allAttachments = new ConcurrentHashMap<>();
-    this.hasManifestMap = new ConcurrentHashMap<>();
-
-    this.bq = new LinkedBlockingQueue<>(DOWNLOAD_THREADS * 3);
-    for (int i = 0; i < DOWNLOAD_THREADS; i++) {
-      //start threads early, DownloadTask waits for queue to be populated
-      new Thread(new DownloadTask(bq)).start();
-    }
-
-    //TODO: Quasar library is probably better
+    this.attachmentManifests = new HashMap<>();
+    this.allAttachments = new HashMap<>();
   }
 
   /**
@@ -115,25 +50,28 @@ public class AttachmentManager {
     //TODO: download manifest for multiple rows in parallel
 
     if (!this.allAttachments.containsKey(rowId)) {
-      Map<String, String> attachmentsMap = new ConcurrentHashMap<>();
-      this.hasManifestMap.put(rowId, true); //assumes that row has manifest
+      Map<String, String> attachmentsMap = new HashMap<>();
 
       try {
-        JSONArray attachments = wc
-            .getManifestForRow(this.table.getServerUrl(), this.table.getAppId(),
-                this.table.getTableId(), this.table.getSchemaETag(), rowId).getJSONArray("files");
+        JSONObject manifest =
+            wc.getManifestForRow(this.table.getServerUrl(), this.table.getAppId(),
+                this.table.getTableId(), this.table.getSchemaETag(), rowId
+            );
+        JSONArray attachments = manifest.getJSONArray("files");
+        this.attachmentManifests.put(rowId, manifest);
 
         if (attachments.size() < 1) {
-          this.hasManifestMap.put(rowId, false);
+          this.attachmentManifests.put(rowId, null);
         } else {
           for (int i = 0; i < attachments.size(); i++) {
             JSONObject attachmentJson = attachments.getJSONObject(i);
-            attachmentsMap.put(attachmentJson.optString("filename"), attachmentJson.optString("downloadUrl"));
+            attachmentsMap.put
+                (attachmentJson.optString("filename"), attachmentJson.optString("downloadUrl"));
           }
         }
       } catch (Exception e) {
         System.out.println("Attachments Manifest Missing!");
-        this.hasManifestMap.put(rowId, false);
+        this.attachmentManifests.put(rowId, null);
       }
 
       this.allAttachments.put(rowId, attachmentsMap);
@@ -158,7 +96,7 @@ public class AttachmentManager {
       throw new IllegalStateException("Row manifest has not been downloaded: " + rowId);
     }
 
-    if (!this.hasManifestMap.get(rowId)) {
+    if (!this.attachmentManifests.containsKey(rowId)) {
       return null;
     }
 
@@ -187,21 +125,24 @@ public class AttachmentManager {
       throw new IllegalStateException("Row manifest has not been downloaded");
     }
 
-    if (this.hasManifestMap.get(rowId)) {
-      if (scanRawJsonOnly) {
-        downloadFile(rowId, getJsonFilename(rowId));
-      } else {
-        try {
-          Thread t = new Thread(
-              new DownloadProducer(this.bq, rowId, this.allAttachments.get(rowId).keySet())
+    if (this.attachmentManifests.containsKey(rowId)) {
+      try {
+        if (scanRawJsonOnly) {
+          wc.getFileForRow(
+              table.getServerUrl(), table.getAppId(), table.getTableId(), table.getSchemaETag(),
+              rowId, false,
+              getAttachmentLocalPath(rowId, getJsonFilename(rowId)).toAbsolutePath().toString(),
+              getJsonFilename(rowId)
           );
-          t.start();
-          //wait for all files to be enqueued,
-          //so that attachment downloading doesn't lag too far behind
-          t.join();
-        } catch (InterruptedException e) {
-          e.printStackTrace();
+        } else {
+          wc.batchGetFilesForRow(
+              table.getServerUrl(), table.getAppId(), table.getTableId(), table.getSchemaETag(),
+              rowId, getAttachmentLocalDir(rowId).toString(), attachmentManifests.get(rowId), -1
+          );
         }
+      }
+      catch (Exception e) {
+        e.printStackTrace();
       }
     }
   }
@@ -217,7 +158,7 @@ public class AttachmentManager {
    * @throws IOException
    */
   public InputStream getScanRawJsonStream(String rowId) throws IOException {
-    if (!this.hasManifestMap.get(rowId)) {
+    if (!this.attachmentManifests.containsKey(rowId)) {
       //This InputStream will only be consumed by ScanJson
       //It is designed to handle null InputStreams
       return null;
@@ -230,10 +171,21 @@ public class AttachmentManager {
     }
   }
 
-  public void waitForAttachmentDownload() throws InterruptedException {
-    while (!this.bq.isEmpty()) {
-      Thread.sleep(500);
+  /**
+   * Infers local path to attachment directory with rowId and table info.
+   *
+   * @param rowId
+   * @return
+   */
+  private Path getAttachmentLocalDir(String rowId) throws IOException {
+    String sanitizedRowId = WinkClient.convertRowIdForInstances(rowId);
+    String insPath = FileUtils.getInstancesPath(table, savePath).toString();
+
+    if (Files.notExists(Paths.get(insPath, sanitizedRowId))) {
+      Files.createDirectories(Paths.get(insPath, sanitizedRowId));
     }
+
+    return Paths.get(insPath, sanitizedRowId).toAbsolutePath();
   }
 
   /**
@@ -247,14 +199,7 @@ public class AttachmentManager {
    * @throws IOException
    */
   private Path getAttachmentLocalPath(String rowId, String filename) throws IOException {
-    String sanitizedRowId = WinkClient.convertRowIdForInstances(rowId);
-    String insPath = FileUtils.getInstancesPath(table, savePath).toString();
-
-    if (Files.notExists(Paths.get(insPath, sanitizedRowId))) {
-      Files.createDirectories(Paths.get(insPath, sanitizedRowId));
-    }
-
-    return Paths.get(insPath, sanitizedRowId, filename).toAbsolutePath();
+    return Paths.get(getAttachmentLocalDir(rowId).toString(), filename).toAbsolutePath();
   }
 
   /**
@@ -265,28 +210,5 @@ public class AttachmentManager {
    */
   private String getJsonFilename(String rowId) {
     return "raw_" + WinkClient.convertRowIdForInstances(rowId) + ".json";
-  }
-
-  private void downloadFile(String rowId, String filename) throws IOException {
-    Path savePath = getAttachmentLocalPath(rowId, filename);
-
-    if (Files.notExists(savePath)) {
-      try {
-        class AttachmentAuthenticator extends Authenticator {
-          public PasswordAuthentication getPasswordAuthentication () {
-            return new PasswordAuthentication (userName, password.toCharArray());
-          }
-        }  
-        AttachmentAuthenticator authenticator = new AttachmentAuthenticator();
-        Authenticator.setDefault(authenticator);
-        URL attachmentUrl = getAttachmentUrl(rowId, filename, false);
-        if (attachmentUrl != null) {
-          InputStream in = attachmentUrl.openStream();
-          Files.copy(in, savePath);
-        }
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    }
   }
 }

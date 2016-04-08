@@ -60,13 +60,14 @@ public class RESTClient {
     System.out.println("Host = " + host);
     
     this.odkWinkClient.init(host, this.tableInfo.getUserName(), this.tableInfo.getPassword());
-    tableInfo.setSchemaETag(this.odkWinkClient
-            .getSchemaETagForTable(this.tableInfo.getServerUrl(), this.tableInfo.getAppId(),
-                this.tableInfo.getTableId()));
+    tableInfo.setSchemaETag(
+        this.odkWinkClient.getSchemaETagForTable(
+            this.tableInfo.getServerUrl(), this.tableInfo.getAppId(), this.tableInfo.getTableId()
+        )
+    );
     
     AttachmentManager attMngr = new AttachmentManager(
-        this.tableInfo, this.odkWinkClient,
-        this.tableInfo.getUserName(), this.tableInfo.getPassword(), this.savePath
+        this.tableInfo, this.odkWinkClient, this.savePath
     );
     this.csv = new ODKCsv(attMngr, this.tableInfo);
   }
