@@ -78,9 +78,7 @@ public class Suitcase {
   }
 
   private void startCLI(String[] args) {
-    Options options = buildOptions();
-
-    if (parseArgs(args, options) && checkState()) {
+    if (parseArgs(args, buildOptions()) && checkState()) {
       download();
     }
   }
@@ -112,6 +110,13 @@ public class Suitcase {
     return opt;
   }
 
+  /**
+   * Parses user arguments from pre-specified Options.
+   *
+   * @param args Arguments passed to by user
+   * @param options Options to parse from
+   * @return false when either "-h" or "-v" is passed, otherwise true
+   */
   private boolean parseArgs(String[] args, Options options) {
     try {
       CommandLineParser parser = new DefaultParser();
