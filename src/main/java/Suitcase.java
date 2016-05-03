@@ -24,7 +24,7 @@ public class Suitcase {
   private static final String APP_NAME = "ODK Suitcase";
 
   // Global UI Hooks
-  private final JFrame frame;
+  private JFrame frame;
   private JTextField sAggregateAddressText;
   private JTextField sAppIdText;
   private JTextField sTableIdText;
@@ -51,19 +51,6 @@ public class Suitcase {
   }
 
   private Suitcase() {
-    this.frame = new JFrame(APP_NAME);
-    frame.setSize(700, 500);
-    frame.setLocationRelativeTo(null);
-    frame.addWindowListener(new WindowAdapter() {
-      @Override
-      public void windowClosing(WindowEvent e) {
-        System.exit(0);
-        super.windowClosing(e);
-      }
-    });
-  }
-
-  private void start(String[] args) {
     this.sAggregateAddressText = new JTextField();
     this.sAppIdText = new JTextField();
     this.sTableIdText = new JTextField();
@@ -76,74 +63,108 @@ public class Suitcase {
     this.sExtraMetadata = new JCheckBox();
     this.sDownloadButton = new JButton();
 
+    this.isGUI = true;
+    this.console = new Scanner(System.in);
+  }
+
+  private void start(String[] args) {
     if (args.length == 0) {
       //start GUI when no argument is passed
-      isGUI = true;
-      buildJFrame();
+      startGUI();
     } else {
       isGUI = false;
-      CommandLineParser parser = new DefaultParser();
-
-      Options options = new Options();
-      //aggregate related
-      options.addOption("aggregate_url", true, "url to Aggregate server");
-      options.addOption("app_id", true, "app id");
-      options.addOption("table_id", true, "table id");
-      options.addOption("username", true, "username");
-      options.addOption("password", true, "password");
-
-      //csv
-      options.addOption("a", "attachment", false, "download attachments");
-      options.addOption("s", "scan", false, "apply Scan formatting");
-      options.addOption("e", "extra", false, "add extra metadata columns");
-      options.addOption
-          ("o", "output", true, "specify a custom output directory, default is ./Download/");
-
-      //UI
-      options.addOption("f", "force", false, "do not prompt, overwrite existing files");
-
-      //misc
-      options.addOption("h", "help", false, "print this message");
-      options.addOption("v", "version", false, "prints version information");
-
-      try {
-        CommandLine line = parser.parse(options, args);
-
-        if (line.hasOption('h')) {
-          HelpFormatter hf = new HelpFormatter();
-          hf.printHelp("suitcase", options);
-          return;
-        }
-
-        if (line.hasOption('v')) {
-          System.out.println("ODK Suitcase 2.0");
-          return;
-        }
-
-        //Aggregate related
-        sAggregateAddressText.setText(line.getOptionValue("aggregate_url"));
-        sAppIdText.setText(line.getOptionValue("app_id"));
-        sTableIdText.setText(line.getOptionValue("table_id"));
-        sUserNameText.setText(line.getOptionValue("username"));
-        sPasswordText.setText(line.getOptionValue("password"));
-        sSavePathText.setText(line.getOptionValue("o"));
-
-        //CSV options
-        sDownloadAttachment.setSelected(line.hasOption("a"));
-        sApplyScanFmt.setSelected(line.hasOption("s"));
-        sExtraMetadata.setSelected(line.hasOption("e"));
-
-        //Misc
-        this.force = line.hasOption("f");
-      } catch (ParseException e) {
-        e.printStackTrace();
-      }
-
-      console = new Scanner(System.in);
-      if (checkState()) {
-        download();
-      }
+      startCLI(args);
     }
+  }
+
+  private void startCLI(String[] args) {
+    Options options = buildOptions();
+
+    if (parseArgs(args, options) && checkState()) {
+      download();
+    }
+  }
+
+  private Options buildOptions() {
+    Options opt = new Options();
+    //aggregate related
+    opt.addOption("aggregate_url", true, "url to Aggregate server");
+    opt.addOption("app_id", true, "app id");
+    opt.addOption("table_id", true, "table id");
+    opt.addOption("username", true, "username");
+    opt.addOption("password", true, "password");
+    opt.addOption("odkVersion", true, "ODK version of data, usually 1 or 2");
+
+    //csv
+    opt.addOption("a", "attachment", false, "download attachments");
+    opt.addOption("s", "scan", false, "apply Scan formatting");
+    opt.addOption("e", "extra", false, "add extra metadata columns");
+    opt.addOption
+        ("o", "output", true, "specify a custom output directory, default is ./Download/");
+
+    //UI
+    opt.addOption("f", "force", false, "do not prompt, overwrite existing files");
+
+    //misc
+    opt.addOption("h", "help", false, "print this message");
+    opt.addOption("v", "version", false, "prints version information");
+
+    return opt;
+  }
+
+  private boolean parseArgs(String[] args, Options options) {
+    try {
+      CommandLineParser parser = new DefaultParser();
+      CommandLine line = parser.parse(options, args);
+
+      //handle -h and --help
+      if (line.hasOption('h')) {
+        HelpFormatter hf = new HelpFormatter();
+        hf.printHelp("suitcase", options);
+        return false;
+      }
+
+      //handle -v
+      if (line.hasOption('v')) {
+        System.out.println("ODK Suitcase 2.0");
+        return false;
+      }
+
+      //Aggregate related
+      sAggregateAddressText.setText(line.getOptionValue("aggregate_url"));
+      sAppIdText.setText(line.getOptionValue("app_id"));
+      sTableIdText.setText(line.getOptionValue("table_id"));
+      sUserNameText.setText(line.getOptionValue("username"));
+      sPasswordText.setText(line.getOptionValue("password"));
+
+      //CSV options
+      sDownloadAttachment.setSelected(line.hasOption("a"));
+      sApplyScanFmt.setSelected(line.hasOption("s"));
+      sExtraMetadata.setSelected(line.hasOption("e"));
+      this.force = line.hasOption("f");
+
+      //Misc
+      sSavePathText.setText(line.getOptionValue("o"));
+    } catch (ParseException e) {
+      e.printStackTrace();
+    }
+
+    return true;
+  }
+
+  private void startGUI() {
+    this.frame = new JFrame(APP_NAME);
+    frame.setSize(700, 500);
+    frame.setLocationRelativeTo(null);
+    frame.addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+        System.exit(0);
+        super.windowClosing(e);
+      }
+    });
+
+    buildJFrame();
   }
 
   private void buildJFrame() {
