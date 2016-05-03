@@ -2,6 +2,7 @@ package net;
 
 import model.AggregateTableInfo;
 import model.ODKCsv;
+import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.aggregate.odktables.rest.RFC4180CsvWriter;
@@ -11,7 +12,6 @@ import utils.FileUtils;
 import javax.swing.*;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.URL;
 
 import static org.opendatakit.wink.client.WinkClient.*;
 
@@ -30,12 +30,12 @@ public class RESTClient {
 
   private final AggregateTableInfo tableInfo;
   private final ODKCsv csv;
-  private String savePath;
+  private String dataPath;
 
   private static final int FETCH_LIMIT = 1000;
 
   //!!!ATTENTION!!! One per table
-  public RESTClient(AggregateTableInfo tableInfo) {
+  public RESTClient(AggregateTableInfo tableInfo, String dataPath) {
     this.tableInfo = tableInfo;
     /*tableInfo.setSchemaETag(WinkClient
         .getSchemaETagForTable(this.tableInfo.getServerUrl(), this.tableInfo.getAppId(),
@@ -43,7 +43,8 @@ public class RESTClient {
 
     this.odkWinkClient = new WinkClient();
     this.pb = null;
-    this.savePath = FileUtils.getDefaultSavePath().toAbsolutePath().toString();
+    this.dataPath =
+        dataPath == null ? FileUtils.getDefaultSavePath().toAbsolutePath().toString() : dataPath;
     
     // Debugging stuff
 //    System.out.println("REST Client: username " + this.tableInfo.getUserName() + " password " + this.tableInfo.getPassword());
@@ -62,7 +63,7 @@ public class RESTClient {
     );
     
     AttachmentManager attMngr = new AttachmentManager(
-        this.tableInfo, this.odkWinkClient, this.savePath
+        this.tableInfo, this.odkWinkClient, this.dataPath
     );
     this.csv = new ODKCsv(attMngr, this.tableInfo);
   }
@@ -89,7 +90,7 @@ public class RESTClient {
         new RFC4180CsvWriter(
             new FileWriter(
                 FileUtils.getCSVPath(
-                    this.tableInfo, scanFormatting, localLink, extraMeta, savePath
+                    this.tableInfo, scanFormatting, localLink, extraMeta, dataPath
                 ).toAbsolutePath().toString()
             )
         );
@@ -111,10 +112,45 @@ public class RESTClient {
     csvWriter.close();
   }
 
+  public void pushAllData() {
+    try {
+      odkWinkClient.pushAllDataToUri(tableInfo.getServerUrl(), tableInfo.getAppId(), dataPath);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
 
+  public void deleteAllRemote() {
+    try {
+      // Delete all files on the server
+      JSONObject appFiles =
+          odkWinkClient.getManifestForAppLevelFiles(tableInfo.getServerUrl(), tableInfo.getAppId());
+      JSONArray files = appFiles.getJSONArray("files");
 
-  public void setSavePath(String path) {
-    this.savePath = path;
+      for (int j = 0; j < files.size(); j++) {
+        odkWinkClient.deleteFile(
+            tableInfo.getServerUrl(), tableInfo.getAppId(),
+            files.getJSONObject(j).getString("filename")
+        );
+      }
+
+      // Delete all tables
+      JSONObject tablesObj =
+          odkWinkClient.getTables(tableInfo.getServerUrl(), tableInfo.getAppId());
+      JSONArray tables = tablesObj.getJSONArray("tables");
+
+      for (int i = 0; i < tables.size(); i++) {
+        odkWinkClient.deleteTableDefinition(
+            tableInfo.getServerUrl(), tableInfo.getAppId(),
+            tables.getJSONObject(i).getString("tableId"),
+            tables.getJSONObject(i).getString("schemaETag")
+        );
+        Thread.sleep(10000);
+      }
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   /**

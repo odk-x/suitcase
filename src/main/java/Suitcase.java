@@ -347,19 +347,22 @@ public class Suitcase {
         String.valueOf(sPasswordText.getPassword())
     );
 
-    boolean firstRun = (this.table == null);
+    final boolean firstRun = (this.table == null);
 
-    if (firstRun || !table.equals(table2)) {
+    if (isGUI) {
       if (firstRun) {
         sProgressBar.setString("Initializing");
       } else {
         sProgressBar.setString("Aggregate table info changed, initializing");
       }
+    }
 
+    if (firstRun || !table.equals(table2)) {
       this.table = table2;
-      this.restClient = new RESTClient(table);
-      this.restClient.setProgressBar(this.sProgressBar);
-      this.restClient.setSavePath(this.sSavePathText.getText());
+      this.restClient = new RESTClient(table, this.sSavePathText.getText());
+      if (isGUI) {
+        this.restClient.setProgressBar(this.sProgressBar);
+      }
     }
 
     if (table.getSchemaETag() == null || table.getSchemaETag().isEmpty()) {
