@@ -46,20 +46,15 @@ public class RESTClient {
     this.savePath = FileUtils.getDefaultSavePath().toAbsolutePath().toString();
     
     // Debugging stuff
-    System.out.println("REST Client: username " + this.tableInfo.getUserName() + " password " + this.tableInfo.getPassword());
-    System.out.println("server url " + this.tableInfo.getServerUrl());
-    System.out.println("app id " + this.tableInfo.getAppId());
-    System.out.println("table id " + this.tableInfo.getTableId());
-    String host = "";
-    try {
-        URL url = new URL(this.tableInfo.getServerUrl());
-        host = url.getHost();
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-    System.out.println("Host = " + host);
+//    System.out.println("REST Client: username " + this.tableInfo.getUserName() + " password " + this.tableInfo.getPassword());
+//    System.out.println("server url " + this.tableInfo.getServerUrl());
+//    System.out.println("app id " + this.tableInfo.getAppId());
+//    System.out.println("table id " + this.tableInfo.getTableId());
+//    System.out.println("Host = " + this.tableInfo.getHostUrl());
     
-    this.odkWinkClient.init(host, this.tableInfo.getUserName(), this.tableInfo.getPassword());
+    this.odkWinkClient.init(
+        this.tableInfo.getHostUrl(), this.tableInfo.getUserName(), this.tableInfo.getPassword()
+    );
     tableInfo.setSchemaETag(
         this.odkWinkClient.getSchemaETagForTable(
             this.tableInfo.getServerUrl(), this.tableInfo.getAppId(), this.tableInfo.getTableId()
@@ -115,6 +110,8 @@ public class RESTClient {
 
     csvWriter.close();
   }
+
+
 
   public void setSavePath(String path) {
     this.savePath = path;

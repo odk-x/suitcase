@@ -39,6 +39,10 @@ public class AggregateTableInfo {
     return serverUrl + SERVER_URL_POSTFIX;
   }
 
+  public String getHostUrl() {
+    return serverUrl;
+  }
+
   public String getAppId() {
     return appId;
   }
