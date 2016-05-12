@@ -25,6 +25,25 @@ import static ui.MessageString.*;
 public class Suitcase {
   private static final String APP_NAME = "ODK Suitcase";
 
+  // button labels
+  private static final String LOGIN_LABEL = "Login";
+  private static final String LOGIN_ANON_LABEL = "Anonymous Login";
+  private static final String LOGIN_LOADING_LABEL = "Loading";
+  private static final String DOWNLOAD_LABEL = "Download";
+  private static final String DOWNLOADING_LABEL = "Downloading";
+  private static final String UPLOAD_LABEL = "Upload";
+  private static final String UPLOADING_LABEL = "Uploading";
+  private static final String RESET_LABEL = "Reset";
+  private static final String RESETTING_LABEL = "Resetting";
+
+  // progress bar strings
+  private static final String PB_ERROR = "Error";
+  private static final String PB_DONE = "Done!";
+  private static final String PB_IDLE = "Idle";
+  private static final String PB_DOWNLOAD = "Downloading";
+  private static final String PB_UPLOAD = "Uploading";
+  private static final String PB_RESET = "Resetting";
+
   private static final int WIDTH = 1000;
   private static final int HEIGHT = 400;
   private static final int PUSH_PULL_H_MARGIN = 10;
@@ -59,7 +78,7 @@ public class Suitcase {
   private boolean force;
   private Scanner console;
 
-  private enum OPERATION {
+  private enum Operation {
     DOWNLOAD, UPLOAD, RESET, INFO
   }
 
@@ -163,7 +182,7 @@ public class Suitcase {
    * @param options Options to parse from
    * @return false when either "-h" or "-v" is passed, otherwise true
    */
-  private OPERATION parseArgs(String[] args, Options options) {
+  private Operation parseArgs(String[] args, Options options) {
     try {
       CommandLineParser parser = new DefaultParser();
       CommandLine line = parser.parse(options, args);
@@ -172,13 +191,13 @@ public class Suitcase {
       if (line.hasOption('h')) {
         HelpFormatter hf = new HelpFormatter();
         hf.printHelp("suitcase", options);
-        return OPERATION.INFO;
+        return Operation.INFO;
       }
 
       //handle -v
       if (line.hasOption('v')) {
         System.out.println("ODK Suitcase 2.0");
-        return OPERATION.INFO;
+        return Operation.INFO;
       }
 
       //Aggregate related
@@ -200,7 +219,7 @@ public class Suitcase {
       e.printStackTrace();
     }
 
-    return OPERATION.DOWNLOAD;
+    return Operation.DOWNLOAD;
   }
 
   private void startGUI() {
@@ -387,13 +406,13 @@ public class Suitcase {
 
   private void buildLoginButtonArea(JPanel buttonsPanel) {
     // Define buttons
-    sLoginButton.setText("Login");
+    sLoginButton.setText(LOGIN_LABEL);
     sLoginButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         if (checkLoginFields(false)) {
           sLoginButton.setEnabled(false);
-          sLoginButton.setText("Loading...");
+          sLoginButton.setText(LOGIN_LOADING_LABEL);
 
           sAnonLoginButton.setEnabled(false);
 
@@ -409,13 +428,13 @@ public class Suitcase {
       }
     });
 
-    sAnonLoginButton.setText("Anonymous Login");
+    sAnonLoginButton.setText(LOGIN_ANON_LABEL);
     sAnonLoginButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         if (checkLoginFields(true)) {
           sAnonLoginButton.setEnabled(false);
-          sAnonLoginButton.setText("Loading...");
+          sAnonLoginButton.setText(LOGIN_LOADING_LABEL);
 
           sLoginButton.setEnabled(false);
 
@@ -439,13 +458,13 @@ public class Suitcase {
   }
 
   private void buildPullButtonArea(JPanel pullButtonPanel) {
-    sPullButton.setText("Download");
+    sPullButton.setText(DOWNLOAD_LABEL);
     sPullButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         if (checkDownloadFields()) {
-          setPushPullBtnState(false);
-          sPullButton.setText("Downloading...");
+          setPushPullAreaState(false, Operation.DOWNLOAD);
+          sPullButton.setText(DOWNLOADING_LABEL);
           sProgressBar.setIndeterminate(true);
 
           new Thread(new Runnable() {
@@ -466,13 +485,13 @@ public class Suitcase {
     gbc.gridx = GridBagConstraints.RELATIVE;
     gbc.gridy = 0;
 
-    sPushButton.setText("Upload");
+    sPushButton.setText(UPLOAD_LABEL);
     sPushButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         if (checkUploadFields()) {
-          setPushPullBtnState(false);
-          sPushButton.setText("Uploading...");
+          setPushPullAreaState(false, Operation.UPLOAD);
+          sPushButton.setText(UPLOADING_LABEL);
           sProgressBar.setIndeterminate(true);
 
           new Thread(new Runnable() {
@@ -485,13 +504,13 @@ public class Suitcase {
       }
     });
 
-    sResetButton.setText("Reset");
+    sResetButton.setText(RESET_LABEL);
     sResetButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         if (checkResetFields()) {
-          setPushPullBtnState(false);
-          sResetButton.setText("Resetting...");
+          setPushPullAreaState(false, Operation.RESET);
+          sResetButton.setText(RESETTING_LABEL);
           sProgressBar.setIndeterminate(true);
 
           new Thread(new Runnable() {
@@ -568,7 +587,7 @@ public class Suitcase {
     sProgressBar.setMinimum(0);
     sProgressBar.setMaximum(100);
     sProgressBar.setValue(100);
-    sProgressBar.setString("Idle");
+    sProgressBar.setString(PB_IDLE);
     sProgressBar.setStringPainted(true);
 
     pbPanel.add(sProgressBar);
@@ -600,10 +619,10 @@ public class Suitcase {
         sLoginButton.setEnabled(true);
         sAnonLoginButton.setEnabled(true);
 
-        sLoginButton.setText("Login");
-        sAnonLoginButton.setText("Anonymous Login");
+        sLoginButton.setText(LOGIN_LABEL);
+        sAnonLoginButton.setText(LOGIN_ANON_LABEL);
 
-        sProgressBar.setString("Idle");
+        sProgressBar.setString(PB_IDLE);
       }
     }
 
@@ -656,7 +675,7 @@ public class Suitcase {
       restClient.writeCSVToFile(csvConfig);
 
       if (isGUI)
-        sProgressBar.setString("Done!");
+        sProgressBar.setString(PB_DONE);
       else
         System.out.println("Done!");
     } catch (IOException e) {
@@ -667,10 +686,7 @@ public class Suitcase {
       showError(GENERIC_ERR);
     } finally {
       if (isGUI) {
-        sProgressBar.setValue(sProgressBar.getMaximum());
-        sProgressBar.setIndeterminate(false);
-        sPullButton.setText("Download");
-        setPushPullBtnState(true);
+        setPushPullAreaState(true, Operation.DOWNLOAD);
       }
     }
   }
@@ -683,7 +699,7 @@ public class Suitcase {
       restClient.pushAllData();
 
       if (isGUI)
-        sProgressBar.setString("Done!");
+        sProgressBar.setString(PB_DONE);
       else
         System.out.println("Done!");
     } catch (Exception e) {
@@ -697,10 +713,7 @@ public class Suitcase {
       }
 
       if (isGUI) {
-        sProgressBar.setValue(sProgressBar.getMaximum());
-        sProgressBar.setIndeterminate(false);
-        sPushButton.setText("Upload");
-        setPushPullBtnState(true);
+        setPushPullAreaState(true, Operation.UPLOAD);
       }
     }
   }
@@ -712,7 +725,7 @@ public class Suitcase {
       restClient.deleteAllRemote();
 
       if (isGUI)
-        sProgressBar.setString("Done!");
+        sProgressBar.setString(PB_DONE);
       else
         System.out.println("Done!");
     } catch (Exception e) {
@@ -726,10 +739,7 @@ public class Suitcase {
       }
 
       if (isGUI) {
-        sProgressBar.setValue(sProgressBar.getMaximum());
-        sProgressBar.setIndeterminate(false);
-        sResetButton.setText("Reset");
-        setPushPullBtnState(true);
+        setPushPullAreaState(true, Operation.RESET);
       }
     }
   }
@@ -873,7 +883,7 @@ public class Suitcase {
   private void showError(String errMsg) {
     if (isGUI) {
       sProgressBar.setIndeterminate(false);
-      sProgressBar.setString("error");
+      sProgressBar.setString(PB_ERROR);
       JOptionPane.showConfirmDialog(frame, errMsg, "Error", JOptionPane.DEFAULT_OPTION,
           JOptionPane.ERROR_MESSAGE);
     }
@@ -906,9 +916,34 @@ public class Suitcase {
     return gbc;
   }
 
-  private void setPushPullBtnState(boolean state) {
+  private void setPushPullAreaState(boolean state, Operation trigger) {
+    sProgressBar.setIndeterminate(!state);
+
+    // this is effective only when pb is determinate
+    sProgressBar.setValue(sProgressBar.getMaximum());
+
     sPullButton.setEnabled(state);
     sPushButton.setEnabled(state);
     sResetButton.setEnabled(state);
+
+    if (state) {
+      sPullButton.setText(DOWNLOAD_LABEL);
+      sPushButton.setText(UPLOAD_LABEL);
+      sResetButton.setText(RESET_LABEL);
+    } else {
+      switch (trigger) {
+      case DOWNLOAD:
+        sPullButton.setText(DOWNLOADING_LABEL);
+        break;
+      case UPLOAD:
+        sPushButton.setText(UPLOADING_LABEL);
+        break;
+      case RESET:
+        sResetButton.setText(RESETTING_LABEL);
+        break;
+      default:
+        throw new IllegalArgumentException("Invalid operation");
+      }
+    }
   }
 }
