@@ -9,14 +9,14 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Scanner;
+
+import static ui.MessageString.*;
 
 /**
  * Handles UI of Suitcase
@@ -206,13 +206,7 @@ public class Suitcase {
     this.frame = new JFrame(APP_NAME);
     frame.setSize(WIDTH, HEIGHT);
     frame.setLocationRelativeTo(null);
-    frame.addWindowListener(new WindowAdapter() {
-      @Override
-      public void windowClosing(WindowEvent e) {
-        System.exit(0);
-        super.windowClosing(e);
-      }
-    });
+    frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
     buildJFrame();
   }
@@ -225,7 +219,7 @@ public class Suitcase {
     JPanel pushPullCard = new JPanel(new GridBagLayout());
     buildPushPullCard(pushPullCard);
 
-    contentPanel.add(loginCard);
+//    contentPanel.add(loginCard);
     contentPanel.add(pushPullCard);
 
     // Finish building the frame
@@ -317,6 +311,7 @@ public class Suitcase {
     JPanel pullButtonPanel = new JPanel(new GridLayout(1, 1));
     buildPullButtonArea(pullButtonPanel);
     gbc.weighty = 2;
+    gbc.insets = new Insets(10, 0, 0, 0);
     pullPanel.add(pullButtonPanel, gbc);
   }
 
@@ -353,7 +348,7 @@ public class Suitcase {
 
     JPanel pushButtonPanel = new JPanel(new GridBagLayout());
     buildPushButtonArea(pushButtonPanel);
-    gbc.insets = new Insets(0, -100, 0, 0);
+    gbc.insets = new Insets(10, -100, 0, 0);
     gbc.weighty = 2;
     pushPanel.add(pushButtonPanel, gbc);
   }
@@ -361,7 +356,7 @@ public class Suitcase {
   private void buildInputArea(JPanel parentPanel, String[] labelArr, JTextField[] fields,
       String[] defaultText) {
     if ((labelArr.length != fields.length) || (fields.length != defaultText.length)) {
-      throw new IllegalArgumentException("Arrays have unequal length");
+      throw new IllegalArgumentException("Arrays have unequal length!");
     }
 
     GridBagConstraints gbc = getDefaultGbc();
@@ -592,14 +587,13 @@ public class Suitcase {
       return true;
     } catch (MalformedURLException e) {
       e.printStackTrace();
-      showError("Aggregate address is invalid.");
+      showError(BAD_URL);
     } catch (JSONException e) {
       e.printStackTrace();
-      showError("Aggregate address, App ID, username, or password is invalid. "
-          + "Please check your credentials.");
+      showError(BAD_CRED);
     } catch (Exception e) {
       e.printStackTrace();
-      showError("Error occurred");
+      showError(GENERIC_ERR);
     } finally {
       if (isGUI) {
         sLoginButton.setEnabled(true);
@@ -607,6 +601,8 @@ public class Suitcase {
 
         sLoginButton.setText("Login");
         sAnonLoginButton.setText("Anonymous Login");
+
+        sProgressBar.setString("Idle");
       }
     }
 
@@ -620,23 +616,21 @@ public class Suitcase {
     restClient.setFilePath(sSavePathText.getText());
 
     if (firstRun && FileUtils.isDownloaded(table, sSavePathText.getText())) {
-      boolean delete = promptConfirm("Data from a previous session detected. "
-          + "Delete existing data and download data from Aggregate server?");
+      boolean delete = promptConfirm(OVERWRITE_DATA);
 
       if (delete) {
         try {
           FileUtils.deleteTableData(table, sSavePathText.getText());
         } catch (IOException e) {
           e.printStackTrace();
-          showError("Unable to delete data.");
+          showError(IO_DELETE_ERR);
         }
       }
     }
 
     if (FileUtils.isDownloaded(table, sApplyScanFmt.isSelected(), sDownloadAttachment.isSelected(),
         sExtraMetadata.isSelected(), sSavePathText.getText())) {
-      boolean delete = promptConfirm("This CSV has been downloaded. "
-          + "Delete existing CSV and download data from Aggregate server?");
+      boolean delete = promptConfirm(OVERWRITE_CSV);
 
       if (delete) {
         try {
@@ -644,7 +638,7 @@ public class Suitcase {
               sDownloadAttachment.isSelected(), sExtraMetadata.isSelected(), sSavePathText.getText()));
         } catch (IOException e) {
           e.printStackTrace();
-          showError("Unable to delete CSV");
+          showError(IO_DELETE_ERR);
         }
       }
     }
@@ -666,10 +660,10 @@ public class Suitcase {
         System.out.println("Done!");
     } catch (IOException e) {
       e.printStackTrace();
-      showError("Unable to write file.");
+      showError(IO_WRITE_ERR);
     } catch (JSONException e) {
       e.printStackTrace();
-      showError("Error occurred.");
+      showError(GENERIC_ERR);
     } finally {
       if (isGUI) {
         sProgressBar.setValue(sProgressBar.getMaximum());
@@ -693,7 +687,7 @@ public class Suitcase {
         System.out.println("Done!");
     } catch (Exception e) {
       e.printStackTrace();
-      showError("Error occurred");
+      showError(GENERIC_ERR);
     } finally {
       try {
         restClient.updateTableList();
@@ -722,7 +716,7 @@ public class Suitcase {
         System.out.println("Done!");
     } catch (Exception e) {
       e.printStackTrace();
-      showError("Error occurred.");
+      showError(GENERIC_ERR);
     } finally {
       try {
         restClient.updateTableList();
@@ -754,23 +748,23 @@ public class Suitcase {
     StringBuilder errorMsgBuilder = new StringBuilder();
 
     if (sAggregateAddressText.getText().isEmpty()) {
-      errorMsgBuilder.append("Aggregate address cannot be empty.\n");
+      errorMsgBuilder.append(AGG_EMPTY).append(NEW_LINE);
       state = false;
     }
 
     if (sAppIdText.getText().isEmpty()) {
-      errorMsgBuilder.append("App ID cannot be empty.\n");
+      errorMsgBuilder.append(APP_ID_EMPTY).append(NEW_LINE);
       state = false;
     }
 
     if (!anonymous) {
       if (sUserNameText.getText().isEmpty()) {
-        errorMsgBuilder.append("Username cannot be empty.\n");
+        errorMsgBuilder.append(USERNAME_EMPTY).append(NEW_LINE);
         state = false;
       }
 
       if (String.valueOf(sPasswordText.getPassword()).isEmpty()) {
-        errorMsgBuilder.append("Password cannot be empty.\n");
+        errorMsgBuilder.append(PASSWORD_EMPTY).append(NEW_LINE);
         state = false;
       }
     }
@@ -791,12 +785,12 @@ public class Suitcase {
     StringBuilder errorMsgBuilder = new StringBuilder();
 
     if (sTableIdText.getText().isEmpty()) {
-      errorMsgBuilder.append("Table ID cannot be empty.\n");
+      errorMsgBuilder.append(TABLE_ID_EMPTY).append(NEW_LINE);
       state = false;
     }
 
     if (!sTableIdText.getText().isEmpty() && !table.tableIdExists(sTableIdText.getText())) {
-      errorMsgBuilder.append("Table ID does not exist.\n");
+      errorMsgBuilder.append(BAD_TABLE_ID).append(NEW_LINE);
       state = false;
     }
 
@@ -822,21 +816,20 @@ public class Suitcase {
     StringBuilder errorMsgBuilder = new StringBuilder();
 
     if (sVersionPushText.getText().isEmpty()) {
-      errorMsgBuilder.append("Version cannot be empty.\n");
+      errorMsgBuilder.append(VERSION_EMPTY).append(NEW_LINE);
       state = false;
     }
 
     if (sDataPathText.getText().isEmpty()) {
-      errorMsgBuilder.append("Data path cannot be empty.\n");
+      errorMsgBuilder.append(DATA_PATH_EMPTY).append(NEW_LINE);
       state = false;
     } else {
       if (Files.notExists(Paths.get(sDataPathText.getText()))) {
-        errorMsgBuilder.append("Data directory does not exist.\n");
+        errorMsgBuilder.append(DATA_DIR_NOT_EXIST).append(NEW_LINE);
         state = false;
       } else {
         if (!FileUtils.checkUploadDir(sDataPathText.getText())) {
-          errorMsgBuilder.append(
-              "Data directory does not contain \"assets\" directory or \"tables\" directory");
+          errorMsgBuilder.append(DATA_DIR_INVALID).append(NEW_LINE);
           state = false;
         }
       }
@@ -856,7 +849,7 @@ public class Suitcase {
     StringBuilder errorMsgBuilder = new StringBuilder();
 
     if (sVersionPushText.getText().isEmpty()) {
-      errorMsgBuilder.append("Version cannot be empty.\n");
+      errorMsgBuilder.append(VERSION_EMPTY).append(NEW_LINE);
       state = false;
     }
 
