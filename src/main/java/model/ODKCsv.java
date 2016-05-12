@@ -126,7 +126,7 @@ public class ODKCsv implements Iterable<String[]> {
   private int size;
   private Map<String, Action> colAction;
   private AttachmentManager attMngr;
-  private AggregateTableInfo table;
+  private AggregateInfo table;
 
   /**
    * Initialize an empty ODKCsv
@@ -134,7 +134,7 @@ public class ODKCsv implements Iterable<String[]> {
    * @param attMngr
    * @param table
    */
-  public ODKCsv(AttachmentManager attMngr, AggregateTableInfo table) {
+  public ODKCsv(AttachmentManager attMngr, AggregateInfo table) {
     this.size = 0;
     this.attMngr = attMngr;
     this.jsonRows = new ArrayList<>();
@@ -149,7 +149,7 @@ public class ODKCsv implements Iterable<String[]> {
    * @param table
    * @throws JSONException
    */
-  public ODKCsv(JSONArray rows, AttachmentManager attMngr, AggregateTableInfo table)
+  public ODKCsv(JSONArray rows, AttachmentManager attMngr, AggregateInfo table)
       throws JSONException {
     if (rows == null) {
       throw new IllegalArgumentException("invalid json");
@@ -464,7 +464,8 @@ public class ODKCsv implements Iterable<String[]> {
     } else {
       attachmentUrlStr =
           this.table.getServerUrl() + "/" + "tables" + "/" + this.table.getAppId() + "/" +
-              this.table.getTableId() + "/ref/" + this.table.getSchemaETag() + "/attachments/" +
+              this.table.getCurrentTableId() + "/ref/" +
+              this.table.getSchemaETag(this.table.getCurrentTableId()) + "/attachments/" +
               row.optString(jsonId) + "/file/" + fileName;
     }
 

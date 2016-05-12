@@ -9,7 +9,7 @@
     <version>2.0</version>
 
     <properties>
-        <org.opendatakit.wink.version>0.01-SNAPSHOT</org.opendatakit.wink.version>
+        <org.opendatakit.wink.version>1.0-SNAPSHOT</org.opendatakit.wink.version>
         <org.opendatakit.aggregate.rest.interface>2015-12-17</org.opendatakit.aggregate.rest.interface>
         <org.apache.wink.version>1.4</org.apache.wink.version>
         <org.apache.commons.cli.version>1.3.1</org.apache.commons.cli.version>

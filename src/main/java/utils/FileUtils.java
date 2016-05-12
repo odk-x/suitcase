@@ -1,6 +1,6 @@
 package utils;
 
-import model.AggregateTableInfo;
+import model.AggregateInfo;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -14,7 +14,7 @@ public class FileUtils {
    * @param savePath
    * @return
    */
-  public static boolean isDownloaded(AggregateTableInfo table, String savePath) {
+  public static boolean isDownloaded(AggregateInfo table, String savePath) {
     return Files.exists(getBasePath(table, savePath));
   }
 
@@ -29,7 +29,7 @@ public class FileUtils {
    * @return
    */
   public static boolean isDownloaded(
-      AggregateTableInfo table,
+      AggregateInfo table,
       boolean scanFormatting, boolean localLink, boolean extraMeta,
       String savePath
   ) {
@@ -37,7 +37,7 @@ public class FileUtils {
   }
 
   public static Path getCSVPath(
-      AggregateTableInfo table,
+      AggregateInfo table,
       boolean scanFormatting, boolean localLink, boolean extraMeta,
       String savePath
   ) {
@@ -49,11 +49,11 @@ public class FileUtils {
     return Paths.get("Download");
   }
 
-  public static Path getBasePath(AggregateTableInfo table, String savePath) {
-    return Paths.get(savePath, table.getAppId(), table.getTableId());
+  public static Path getBasePath(AggregateInfo table, String savePath) {
+    return Paths.get(savePath, table.getAppId(), table.getCurrentTableId());
   }
 
-  public static Path getInstancesPath(AggregateTableInfo table, String savePath) {
+  public static Path getInstancesPath(AggregateInfo table, String savePath) {
     return Paths.get(getBasePath(table, savePath).toString(), "instances");
   }
 
@@ -63,7 +63,7 @@ public class FileUtils {
         (extraMeta ? "_extra" : "") + ".csv";
   }
 
-  public static void createBaseDirectory(AggregateTableInfo table, String savePath)
+  public static void createBaseDirectory(AggregateInfo table, String savePath)
       throws IOException {
     Path basePath = getBasePath(table, savePath);
 
@@ -72,7 +72,7 @@ public class FileUtils {
     }
   }
 
-  public static void createInstancesDirectory(AggregateTableInfo table, String savePath)
+  public static void createInstancesDirectory(AggregateInfo table, String savePath)
       throws IOException {
     Path insPath = getInstancesPath(table, savePath);
 
@@ -81,7 +81,7 @@ public class FileUtils {
     }
   }
 
-  public static void deleteTableData(AggregateTableInfo table, String savePath) throws IOException {
+  public static void deleteTableData(AggregateInfo table, String savePath) throws IOException {
     Files.walkFileTree(getBasePath(table, savePath), new SimpleFileVisitor<Path>() {
       @Override
       public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -100,5 +100,9 @@ public class FileUtils {
         }
       }
     });
+  }
+
+  public static boolean checkUploadDir(String path) {
+    return Files.exists(Paths.get(path, "assets")) || Files.exists(Paths.get(path, "tables"));
   }
 }

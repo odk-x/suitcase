@@ -1,6 +1,6 @@
 package net;
 
-import model.AggregateTableInfo;
+import model.AggregateInfo;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.wink.client.WinkClient;
@@ -21,21 +21,17 @@ import java.util.*;
  * !!!ATTENTION!!! One AttachmentManager per table
  */
 public class AttachmentManager {
-  private AggregateTableInfo table;
+  private AggregateInfo table;
   private Map<String, JSONObject> attachmentManifests;
   private Map<String, Map<String, String>> allAttachments;
   private WinkClient wc;
   private String savePath;
   
-  public AttachmentManager(
-      AggregateTableInfo table, WinkClient wc, String savePath) {
-    if (table.getSchemaETag() == null) {
-      throw new IllegalStateException("SchemaETag has not been set!");
-    }
-
+  public AttachmentManager(AggregateInfo table, WinkClient wc, String savePath) {
     this.table = table;
     this.wc = wc;
     this.savePath = savePath;
+
     this.attachmentManifests = new HashMap<>();
     this.allAttachments = new HashMap<>();
   }
@@ -47,34 +43,29 @@ public class AttachmentManager {
    * @param rowId
    */
   public void getListOfRowAttachments(String rowId) {
-    //TODO: download manifest for multiple rows in parallel
-
     if (!this.allAttachments.containsKey(rowId)) {
-      Map<String, String> attachmentsMap = new HashMap<>();
-
       try {
         JSONObject manifest =
             wc.getManifestForRow(this.table.getServerUrl(), this.table.getAppId(),
-                this.table.getTableId(), this.table.getSchemaETag(), rowId
+                this.table.getCurrentTableId(),
+                this.table.getSchemaETag(this.table.getCurrentTableId()), rowId
             );
         JSONArray attachments = manifest.getJSONArray("files");
-        this.attachmentManifests.put(rowId, manifest);
 
-        if (attachments.size() < 1) {
-          this.attachmentManifests.put(rowId, null);
-        } else {
+        if (attachments.size() > 0) {
+          attachmentManifests.put(rowId, manifest);
+
+          Map<String, String> attachmentsMap = new HashMap<>();
           for (int i = 0; i < attachments.size(); i++) {
             JSONObject attachmentJson = attachments.getJSONObject(i);
             attachmentsMap.put
                 (attachmentJson.optString("filename"), attachmentJson.optString("downloadUrl"));
           }
+          allAttachments.put(rowId, attachmentsMap);
         }
       } catch (Exception e) {
         System.out.println("Attachments Manifest Missing!");
-        this.attachmentManifests.put(rowId, null);
       }
-
-      this.allAttachments.put(rowId, attachmentsMap);
     }
   }
 
@@ -129,14 +120,15 @@ public class AttachmentManager {
       try {
         if (scanRawJsonOnly) {
           wc.getFileForRow(
-              table.getServerUrl(), table.getAppId(), table.getTableId(), table.getSchemaETag(),
-              rowId, false,
+              table.getServerUrl(), table.getAppId(), table.getCurrentTableId(),
+              table.getSchemaETag(table.getCurrentTableId()), rowId, false,
               getAttachmentLocalPath(rowId, getJsonFilename(rowId)).toAbsolutePath().toString(),
               getJsonFilename(rowId)
           );
         } else {
           wc.batchGetFilesForRow(
-              table.getServerUrl(), table.getAppId(), table.getTableId(), table.getSchemaETag(),
+              table.getServerUrl(), table.getAppId(), table.getCurrentTableId(),
+              table.getSchemaETag(table.getCurrentTableId()),
               rowId, getAttachmentLocalDir(rowId).toString(), attachmentManifests.get(rowId), -1
           );
         }
