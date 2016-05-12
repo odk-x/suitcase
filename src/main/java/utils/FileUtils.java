@@ -1,6 +1,7 @@
 package utils;
 
 import model.AggregateInfo;
+import model.CsvConfig;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -22,27 +23,16 @@ public class FileUtils {
    * Checks whether a CSV of a table is downloaded
    *
    * @param table
-   * @param scanFormatting
-   * @param localLink
-   * @param extraMeta
    * @param savePath
    * @return
    */
-  public static boolean isDownloaded(
-      AggregateInfo table,
-      boolean scanFormatting, boolean localLink, boolean extraMeta,
-      String savePath
-  ) {
-    return Files.exists(getCSVPath(table, scanFormatting, localLink, extraMeta, savePath));
+  public static boolean isDownloaded(AggregateInfo table, CsvConfig config, String savePath) {
+    return Files.exists(getCSVPath(table, config, savePath));
   }
 
-  public static Path getCSVPath(
-      AggregateInfo table,
-      boolean scanFormatting, boolean localLink, boolean extraMeta,
-      String savePath
-  ) {
+  public static Path getCSVPath(AggregateInfo table, CsvConfig config, String savePath) {
     return Paths.get(
-        getBasePath(table, savePath).toString(), getCSVName(scanFormatting, localLink, extraMeta));
+        getBasePath(table, savePath).toString(), getCSVName(config));
   }
 
   public static Path getDefaultSavePath() {
@@ -57,10 +47,10 @@ public class FileUtils {
     return Paths.get(getBasePath(table, savePath).toString(), "instances");
   }
 
-  public static String getCSVName(boolean scanFormatting, boolean localLink, boolean extraMeta) {
-    return (localLink ? "data" : "link") +
-        (scanFormatting ? "_formatted" : "_unformatted") +
-        (extraMeta ? "_extra" : "") + ".csv";
+  public static String getCSVName(CsvConfig config) {
+    return (config.isDownloadAttachment() ? "data" : "link") +
+        (config.isScanFormatting() ? "_formatted" : "_unformatted") +
+        (config.isExtraMetadata() ? "_extra" : "") + ".csv";
   }
 
   public static void createBaseDirectory(AggregateInfo table, String savePath)

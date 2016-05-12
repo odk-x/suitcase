@@ -1,4 +1,5 @@
 import model.AggregateInfo;
+import model.CsvConfig;
 import net.RESTClient;
 import org.apache.commons.cli.*;
 import org.apache.wink.json4j.JSONException;
@@ -219,7 +220,7 @@ public class Suitcase {
     JPanel pushPullCard = new JPanel(new GridBagLayout());
     buildPushPullCard(pushPullCard);
 
-//    contentPanel.add(loginCard);
+    contentPanel.add(loginCard);
     contentPanel.add(pushPullCard);
 
     // Finish building the frame
@@ -612,6 +613,10 @@ public class Suitcase {
   private void download() {
     boolean firstRun = table.getCurrentTableId() == null;
 
+    CsvConfig csvConfig = new CsvConfig(
+        sDownloadAttachment.isSelected(), sApplyScanFmt.isSelected(), sExtraMetadata.isSelected()
+    );
+
     table.setCurrentTableId(sTableIdText.getText());
     restClient.setFilePath(sSavePathText.getText());
 
@@ -628,14 +633,12 @@ public class Suitcase {
       }
     }
 
-    if (FileUtils.isDownloaded(table, sApplyScanFmt.isSelected(), sDownloadAttachment.isSelected(),
-        sExtraMetadata.isSelected(), sSavePathText.getText())) {
+    if (FileUtils.isDownloaded(table, csvConfig, sSavePathText.getText())) {
       boolean delete = promptConfirm(OVERWRITE_CSV);
 
       if (delete) {
         try {
-          Files.delete(FileUtils.getCSVPath(table, sApplyScanFmt.isSelected(),
-              sDownloadAttachment.isSelected(), sExtraMetadata.isSelected(), sSavePathText.getText()));
+          Files.delete(FileUtils.getCSVPath(table, csvConfig, sSavePathText.getText()));
         } catch (IOException e) {
           e.printStackTrace();
           showError(IO_DELETE_ERR);
@@ -644,15 +647,13 @@ public class Suitcase {
     }
 
     try {
-      if (sDownloadAttachment.isSelected() || sApplyScanFmt.isSelected()) {
+      if (csvConfig.isDownloadAttachment() || csvConfig.isScanFormatting()) {
         FileUtils.createInstancesDirectory(table, sSavePathText.getText());
       } else {
         FileUtils.createBaseDirectory(table, sSavePathText.getText());
       }
 
-      restClient.writeCSVToFile(
-          sApplyScanFmt.isSelected(), sDownloadAttachment.isSelected(), sExtraMetadata.isSelected()
-      );
+      restClient.writeCSVToFile(csvConfig);
 
       if (isGUI)
         sProgressBar.setString("Done!");

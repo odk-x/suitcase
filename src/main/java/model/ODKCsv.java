@@ -27,7 +27,7 @@ public class ODKCsv implements Iterable<String[]> {
 
     @Override
     public String[] next() {
-      return next(false, false, false);
+      return next(new CsvConfig());
     }
 
     @Override
@@ -35,7 +35,7 @@ public class ODKCsv implements Iterable<String[]> {
       throw new UnsupportedOperationException();
     }
 
-    public String[] next(boolean scanFormatting, boolean localLink, boolean extraMeta) {
+    public String[] next(CsvConfig config) {
       if (!hasNext()) {
         throw new NoSuchElementException();
       }
@@ -43,7 +43,7 @@ public class ODKCsv implements Iterable<String[]> {
       String[] nextLine = null;
 
       try {
-        nextLine = get(cursor++, scanFormatting, localLink, extraMeta);
+        nextLine = get(cursor++, config);
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -170,16 +170,15 @@ public class ODKCsv implements Iterable<String[]> {
   /**
    * Returns header of csv
    *
-   * @param scanFormatting True to retrieve header with Scan formatting
-   * @param extraMeta True to retrieve header with extra metadata
+   * @param config
    * @return
    */
-  public String[] getHeader(boolean scanFormatting, boolean extraMeta) {
+  public String[] getHeader(CsvConfig config) {
     if (this.size < 1) {
       throw new IllegalStateException();
     }
 
-    if (!scanFormatting && extraMeta) {
+    if (!config.isScanFormatting() && config.isExtraMetadata()) {
       return this.completeCSVHeader;
     }
 
@@ -194,17 +193,17 @@ public class ODKCsv implements Iterable<String[]> {
         header.add(col);
         break;
       case SCAN_RAW:
-        if (scanFormatting) {
+        if (config.isScanFormatting()) {
           header.add(SCAN_RAW_PREFIX + header.get(header.size() - 1));
         }
         //falls through
       case FILTER:
-        if (!scanFormatting) {
+        if (!config.isScanFormatting()) {
           header.add(col);
         }
         break;
       case EXTRA:
-        if (extraMeta) {
+        if (config.isExtraMetadata()) {
           header.add(col);
         }
         break;
@@ -245,12 +244,11 @@ public class ODKCsv implements Iterable<String[]> {
    * Retrieves 1 row, including data and metadata
    *
    * @param rowIndex
-   * @param scanFormatting
-   * @param localLink
+   * @param config
    * @return
    * @throws Exception
    */
-  public String[] get(int rowIndex, boolean scanFormatting, boolean localLink, boolean extraMeta)
+  public String[] get(int rowIndex, CsvConfig config)
       throws Exception {
     if (rowIndex >= size) {
       throw new NoSuchElementException();
@@ -264,9 +262,9 @@ public class ODKCsv implements Iterable<String[]> {
     }
 
     JSONObject row = this.jsonRows.get(listIndex).getJSONObject(rowIndex);
-    String[] front = getMetadata(row, Position.FRONT, extraMeta);
-    String[] middle = getData(row, scanFormatting, localLink);
-    String[] end = getMetadata(row, Position.END, extraMeta);
+    String[] front = getMetadata(row, Position.FRONT, config);
+    String[] middle = getData(row, config);
+    String[] end = getMetadata(row, Position.END, config);
 
     //TODO: try to avoid copying arrays
     String[] sum = new String[front.length + middle.length + end.length];
@@ -353,11 +351,11 @@ public class ODKCsv implements Iterable<String[]> {
    *
    * @param row
    * @param pos
-   * @param extraMeta
+   * @param config
    * @return
    * @throws JSONException
    */
-  private String[] getMetadata(JSONObject row, Position pos, boolean extraMeta) throws
+  private String[] getMetadata(JSONObject row, Position pos, CsvConfig config) throws
       JSONException {
     List<String> metadataList = METADATA_POSITION.get(pos);
 
@@ -369,7 +367,7 @@ public class ODKCsv implements Iterable<String[]> {
       if (jsonName.startsWith(jsonFilterScope)) {
         metadata
             .add(row.getJSONObject(jsonFilterScope).optString(jsonName.split(":")[1].trim(), NULL));
-      } else if (extraMeta || (this.colAction.get(colName) != Action.EXTRA)) {
+      } else if (config.isExtraMetadata() || (this.colAction.get(colName) != Action.EXTRA)) {
         metadata.add(row.optString(jsonName, NULL));
       }
       //everything else ignored
@@ -382,27 +380,28 @@ public class ODKCsv implements Iterable<String[]> {
    * Retrieves data for 1 row
    *
    * @param row
-   * @param scanFormatting
-   * @param localLink
+   * @param config
    * @return
    * @throws Exception
    */
-  private String[] getData(JSONObject row, boolean scanFormatting, boolean localLink)
+  private String[] getData(JSONObject row, CsvConfig config)
       throws Exception {
     String rowId = row.optString(jsonId);
 
     ScanJson scanRaw = null;
-    if (scanFormatting || localLink) {
+    if (config.isScanFormatting() || config.isDownloadAttachment()) {
       this.attMngr.getListOfRowAttachments(rowId);
-      if (scanFormatting) {
+
+      if (config.isScanFormatting()) {
         this.attMngr.downloadAttachments(rowId, true);
         scanRaw = new ScanJson(this.attMngr.getScanRawJsonStream(rowId));
       }
     }
 
     int dataLength = this.completeDataHeader.length;
-    if (scanFormatting)
+    if (config.isScanFormatting()) {
       dataLength -= NUM_FILTERED;
+    }
     String[] data = new String[dataLength];
 
     JSONArray columns = row.getJSONArray(orderedColumnsDef);
@@ -417,7 +416,7 @@ public class ODKCsv implements Iterable<String[]> {
         data[i - offset] = value;
         break;
       case FILTER:
-        if (!scanFormatting) {
+        if (!config.isScanFormatting()) {
           data[i - offset] = value;
         } else {
           offset++;
@@ -425,10 +424,10 @@ public class ODKCsv implements Iterable<String[]> {
         }
         break;
       case LINK:
-        data[i - offset] = makeLink(value, row, localLink);
+        data[i - offset] = makeLink(value, row, config.isDownloadAttachment());
         break;
       case SCAN_RAW:
-        if (scanFormatting) {
+        if (config.isScanFormatting()) {
           value = scanRaw.getValue(this.completeDataHeader[i - 1]);
         }
         data[i - offset] = value;
@@ -436,7 +435,7 @@ public class ODKCsv implements Iterable<String[]> {
       }
     }
 
-    if (localLink) {
+    if (config.isDownloadAttachment()) {
       this.attMngr.downloadAttachments(rowId, false);
     }
 

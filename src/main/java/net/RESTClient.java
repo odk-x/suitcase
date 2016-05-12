@@ -1,6 +1,7 @@
 package net;
 
 import model.AggregateInfo;
+import model.CsvConfig;
 import model.ODKCsv;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
@@ -50,13 +51,10 @@ public class RESTClient {
   /**
    * Retrieve formatted rows from ODKCsv and write to file
    *
-   * @param scanFormatting True to apply scan formatting
-   * @param localLink      True to hyperlink to local files
-   * @param extraMeta      True to include extra metadata
    * @throws IOException
    * @throws JSONException
    */
-  public void writeCSVToFile(boolean scanFormatting, boolean localLink, boolean extraMeta)
+  public void writeCSVToFile(CsvConfig config)
       throws IOException, JSONException {
     AttachmentManager attMngr = new AttachmentManager(aggregateInfo, odkWinkClient, filePath);
     ODKCsv Csv = new ODKCsv(attMngr, this.aggregateInfo);
@@ -69,15 +67,15 @@ public class RESTClient {
     pbSetValue(null, "Processing and writing data", false);
 
     RFC4180CsvWriter csvWriter = new RFC4180CsvWriter(new FileWriter(
-        FileUtils.getCSVPath(aggregateInfo, scanFormatting, localLink, extraMeta, filePath)
+        FileUtils.getCSVPath(aggregateInfo, config, filePath)
             .toAbsolutePath().toString()));
 
     ODKCsv.ODKCSVIterator csvIt = Csv.getODKCSVIterator();
 
     //Write header and rows
-    csvWriter.writeNext(Csv.getHeader(scanFormatting, extraMeta));
+    csvWriter.writeNext(Csv.getHeader(config));
     while (csvIt.hasNext()) {
-      csvWriter.writeNext(csvIt.next(scanFormatting, localLink, extraMeta));
+      csvWriter.writeNext(csvIt.next(config));
 
       //Set value of progress bar with percentage of rows done
       pbSetValue((int) ((double) csvIt.getIndex() / Csv.getSize() * this.pb.getMaximum()),
