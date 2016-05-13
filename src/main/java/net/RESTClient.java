@@ -25,6 +25,9 @@ import static org.opendatakit.wink.client.WinkClient.*;
  * Time: 11:27 AM
  */
 public class RESTClient {
+  private static final int DELTE_TABLE_DEF_WAIT = 1000;
+  private static final int PUSH_DONE_WAIT = 5000;
+
   private JProgressBar pb;
 
   private final WinkClient odkWinkClient;
@@ -89,6 +92,7 @@ public class RESTClient {
     pbSetValue(null, "Uploading...", null);
 
     odkWinkClient.pushAllDataToUri(aggregateInfo.getServerUrl(), aggregateInfo.getAppId(), filePath, version);
+    Thread.sleep(PUSH_DONE_WAIT);
   }
 
   public void deleteAllRemote() throws Exception {
@@ -110,9 +114,11 @@ public class RESTClient {
     for (String id : aggregateInfo.getAllTableId()) {
       odkWinkClient.deleteTableDefinition(aggregateInfo.getServerUrl(), aggregateInfo.getAppId(), id,
           aggregateInfo.getSchemaETag(id));
-      Thread.sleep(1000);
+      Thread.sleep(DELTE_TABLE_DEF_WAIT);
       //TODO: try until succeed
     }
+
+    Thread.sleep(PUSH_DONE_WAIT);
   }
 
   public void updateTableList() throws Exception {
