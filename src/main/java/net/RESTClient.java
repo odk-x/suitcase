@@ -25,25 +25,19 @@ import static org.opendatakit.wink.client.WinkClient.*;
  * Time: 11:27 AM
  */
 public class RESTClient {
-  private static final int DELTE_TABLE_DEF_WAIT = 1000;
+  private static final int FETCH_LIMIT = 1000;
+  private static final int DELETE_TABLE_DEF_WAIT = 1000;
   private static final int PUSH_DONE_WAIT = 5000;
 
   private JProgressBar pb;
-
   private final WinkClient odkWinkClient;
-
   private final AggregateInfo aggregateInfo;
-  private String filePath;
-  private String version;
-
-  private static final int FETCH_LIMIT = 1000;
 
   //!!!ATTENTION!!! One per table
   public RESTClient(AggregateInfo aggregateInfo) throws Exception {
     this.aggregateInfo = aggregateInfo;
     this.odkWinkClient = new WinkClient();
     this.pb = null;
-    this.filePath = FileUtils.getDefaultSavePath().toAbsolutePath().toString();
 
     odkWinkClient.init(this.aggregateInfo.getHostUrl(), this.aggregateInfo.getUserName(),
         this.aggregateInfo.getPassword());
@@ -57,9 +51,9 @@ public class RESTClient {
    * @throws IOException
    * @throws JSONException
    */
-  public void writeCSVToFile(CsvConfig config)
+  public void writeCSVToFile(CsvConfig config, String dirPath)
       throws IOException, JSONException {
-    AttachmentManager attMngr = new AttachmentManager(aggregateInfo, odkWinkClient, filePath);
+    AttachmentManager attMngr = new AttachmentManager(aggregateInfo, odkWinkClient, dirPath);
     ODKCsv Csv = new ODKCsv(attMngr, this.aggregateInfo);
 
     if (Csv.getSize() == 0) {
@@ -70,7 +64,7 @@ public class RESTClient {
     pbSetValue(null, "Processing and writing data", false);
 
     RFC4180CsvWriter csvWriter = new RFC4180CsvWriter(new FileWriter(
-        FileUtils.getCSVPath(aggregateInfo, config, filePath)
+        FileUtils.getCSVPath(aggregateInfo, config, dirPath)
             .toAbsolutePath().toString()));
 
     ODKCsv.ODKCSVIterator csvIt = Csv.getODKCSVIterator();
@@ -88,14 +82,15 @@ public class RESTClient {
     csvWriter.close();
   }
 
-  public void pushAllData() throws Exception {
+  public void pushAllData(String dataPath, String version) throws Exception {
     pbSetValue(null, "Uploading...", null);
 
-    odkWinkClient.pushAllDataToUri(aggregateInfo.getServerUrl(), aggregateInfo.getAppId(), filePath, version);
+    odkWinkClient.pushAllDataToUri(
+        aggregateInfo.getServerUrl(), aggregateInfo.getAppId(), dataPath, version);
     Thread.sleep(PUSH_DONE_WAIT);
   }
 
-  public void deleteAllRemote() throws Exception {
+  public void deleteAllRemote(String version) throws Exception {
     pbSetValue(null, "Deleting...", null);
 
     // Delete all files on the server
@@ -114,7 +109,7 @@ public class RESTClient {
     for (String id : aggregateInfo.getAllTableId()) {
       odkWinkClient.deleteTableDefinition(aggregateInfo.getServerUrl(), aggregateInfo.getAppId(), id,
           aggregateInfo.getSchemaETag(id));
-      Thread.sleep(DELTE_TABLE_DEF_WAIT);
+      Thread.sleep(DELETE_TABLE_DEF_WAIT);
       //TODO: try until succeed
     }
 
@@ -130,14 +125,6 @@ public class RESTClient {
       String eTag = tables.getJSONObject(i).getString(jsonSchemaETag);
       aggregateInfo.addTableId(tableId, eTag);
     }
-  }
-
-  public void setFilePath(String path) {
-    this.filePath = path;
-  }
-
-  public void setVersion(String version) {
-    this.version = version;
   }
 
   /**

@@ -637,7 +637,6 @@ public class Suitcase {
     );
 
     table.setCurrentTableId(sTableIdText.getText());
-    restClient.setFilePath(sSavePathText.getText());
 
     if (firstRun && FileUtils.isDownloaded(table, sSavePathText.getText())) {
       boolean delete = promptConfirm(OVERWRITE_DATA);
@@ -672,7 +671,7 @@ public class Suitcase {
         FileUtils.createBaseDirectory(table, sSavePathText.getText());
       }
 
-      restClient.writeCSVToFile(csvConfig);
+      restClient.writeCSVToFile(csvConfig, sSavePathText.getText());
 
       if (isGUI)
         sProgressBar.setString(PB_DONE);
@@ -692,11 +691,8 @@ public class Suitcase {
   }
 
   private void upload() {
-    restClient.setFilePath(sDataPathText.getText());
-    restClient.setVersion(sVersionPushText.getText());
-
     try {
-      restClient.pushAllData();
+      restClient.pushAllData(sDataPathText.getText(), sVersionPushText.getText());
 
       if (isGUI)
         sProgressBar.setString(PB_DONE);
@@ -719,10 +715,8 @@ public class Suitcase {
   }
 
   private void reset() {
-    restClient.setVersion(sVersionPushText.getText());
-
     try {
-      restClient.deleteAllRemote();
+      restClient.deleteAllRemote(sVersionPushText.getText());
 
       if (isGUI)
         sProgressBar.setString(PB_DONE);
