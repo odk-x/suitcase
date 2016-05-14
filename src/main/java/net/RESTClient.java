@@ -107,10 +107,14 @@ public class RESTClient {
 
     // delete table definitions
     for (String id : aggregateInfo.getAllTableId()) {
-      odkWinkClient.deleteTableDefinition(aggregateInfo.getServerUrl(), aggregateInfo.getAppId(), id,
-          aggregateInfo.getSchemaETag(id));
-      Thread.sleep(DELETE_TABLE_DEF_WAIT);
-      //TODO: try until succeed
+      int counter = 0; //TODO: remove
+      while (
+          odkWinkClient.deleteTableDefinition(aggregateInfo.getServerUrl(), aggregateInfo.getAppId()
+          , id, aggregateInfo.getSchemaETag(id)) == 500) {
+        counter++;
+        Thread.sleep(DELETE_TABLE_DEF_WAIT);
+      }
+      System.out.println("retry count " + counter); //TODO: remove
     }
 
     Thread.sleep(PUSH_DONE_WAIT);
@@ -155,9 +159,9 @@ public class RESTClient {
           Integer.toString(RESTClient.FETCH_LIMIT)
       );
 
-      cursor = rows.optString("webSafeResumeCursor");
+      cursor = rows.optString(jsonWebSafeResumeCursor);
       Csv.tryAdd(rows.getJSONArray(jsonRowsString));
-    } while (rows.getBoolean("hasMoreResults"));
+    } while (rows.getBoolean(jsonHasMoreResults));
   }
 
   /**
