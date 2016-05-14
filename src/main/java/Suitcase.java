@@ -3,6 +3,8 @@ import model.CsvConfig;
 import net.RESTClient;
 import org.apache.commons.cli.*;
 import org.apache.wink.json4j.JSONException;
+import ui.LayoutDefault;
+import ui.PathChooserPanel;
 import utils.FileUtils;
 
 import javax.swing.*;
@@ -10,7 +12,6 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
@@ -36,6 +37,10 @@ public class Suitcase {
   private static final String RESET_LABEL = "Reset";
   private static final String RESETTING_LABEL = "Resetting";
 
+  // other labels
+  private static final String SAVE_PATH_LABEL = "Save to";
+  private static final String DATA_PATH_LABEL = "Upload";
+
   // progress bar strings
   private static final String PB_ERROR = "Error";
   private static final String PB_DONE = "Done!";
@@ -54,8 +59,8 @@ public class Suitcase {
   private JTextField sAppIdText;
   private JTextField sTableIdText;
   private JTextField sVersionPushText;
-  private JTextField sSavePathText;
-  private JTextField sDataPathText;
+  private PathChooserPanel savePathChooser;
+  private PathChooserPanel dataPathChooser;
   private JTextField sUserNameText;
   private JPasswordField sPasswordText;
   private JProgressBar sProgressBar;
@@ -92,8 +97,12 @@ public class Suitcase {
     this.sAppIdText = new JTextField(1);
     this.sTableIdText = new JTextField(1);
     this.sVersionPushText = new JTextField(1);
-    this.sSavePathText = new JTextField(1);
-    this.sDataPathText = new JTextField(1);
+    this.savePathChooser = new PathChooserPanel(
+        SAVE_PATH_LABEL, FileUtils.getDefaultSavePath().toAbsolutePath().toString()
+    );
+    this.dataPathChooser = new PathChooserPanel(
+        DATA_PATH_LABEL, FileUtils.getDefaultSavePath().toAbsolutePath().toString()
+    );
     this.sUserNameText = new JTextField();
     this.sPasswordText = new JPasswordField();
     this.sProgressBar = new JProgressBar();
@@ -214,7 +223,8 @@ public class Suitcase {
       this.force = line.hasOption("f");
 
       //Misc
-      sSavePathText.setText(line.getOptionValue("o"));
+      //TODO: fix CLI
+//      sSavePathText.setText(line.getOptionValue("o"));
     } catch (ParseException e) {
       e.printStackTrace();
     }
@@ -248,7 +258,7 @@ public class Suitcase {
   }
 
   private void buildLoginCard(JPanel loginCard) {
-    GridBagConstraints gbc = getDefaultGbc();
+    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
     gbc.gridx = 0;
     gbc.gridy = GridBagConstraints.RELATIVE;
 
@@ -271,7 +281,7 @@ public class Suitcase {
   }
 
   private void buildPushPullCard(JPanel pushPullCard) {
-    GridBagConstraints gbc = getDefaultGbc();
+    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
 
     JPanel pullPanel = new JPanel(new GridBagLayout());
     pullPanel.setBorder(new EmptyBorder(10, PUSH_PULL_H_MARGIN, 0, PUSH_PULL_H_MARGIN));
@@ -299,7 +309,7 @@ public class Suitcase {
   }
 
   private void buildPullArea(JPanel pullPanel) {
-    GridBagConstraints gbc = getDefaultGbc();
+    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
     gbc.gridx = 0;
     gbc.gridy = GridBagConstraints.RELATIVE;
 
@@ -320,13 +330,8 @@ public class Suitcase {
     gbc.weighty = 5;
     pullPanel.add(pullPrefPanel, gbc);
 
-    JPanel savePathPanel = new JPanel(new GridBagLayout());
-    buildDirChooserArea(
-        savePathPanel, sSavePathText, "Save to",
-        FileUtils.getDefaultSavePath().toAbsolutePath().toString()
-    );
     gbc.weighty = 1;
-    pullPanel.add(savePathPanel, gbc);
+    pullPanel.add(this.savePathChooser, gbc);
 
     JPanel pullButtonPanel = new JPanel(new GridLayout(1, 1));
     buildPullButtonArea(pullButtonPanel);
@@ -336,7 +341,7 @@ public class Suitcase {
   }
 
   private void buildPushArea(JPanel pushPanel) {
-    GridBagConstraints gbc = getDefaultGbc();
+    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
     gbc.gridx = 0;
     gbc.gridy = GridBagConstraints.RELATIVE;
 
@@ -358,13 +363,8 @@ public class Suitcase {
     gbc.weighty = 5;
     pushPanel.add(pushPrefPanel, gbc);
 
-    JPanel dataPathPanel = new JPanel(new GridBagLayout());
-    buildDirChooserArea(
-        dataPathPanel, sDataPathText, "Upload",
-        FileUtils.getDefaultSavePath().toAbsolutePath().toString()
-    );
     gbc.weighty = 1;
-    pushPanel.add(dataPathPanel, gbc);
+    pushPanel.add(dataPathChooser, gbc);
 
     JPanel pushButtonPanel = new JPanel(new GridBagLayout());
     buildPushButtonArea(pushButtonPanel);
@@ -379,7 +379,7 @@ public class Suitcase {
       throw new IllegalArgumentException("Arrays have unequal length!");
     }
 
-    GridBagConstraints gbc = getDefaultGbc();
+    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
     gbc.gridx = GridBagConstraints.RELATIVE;
     gbc.gridy = 0;
 
@@ -481,7 +481,7 @@ public class Suitcase {
   }
 
   private void buildPushButtonArea(JPanel pushButtonPanel) {
-    GridBagConstraints gbc = getDefaultGbc();
+    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
     gbc.gridx = GridBagConstraints.RELATIVE;
     gbc.gridy = 0;
 
@@ -525,46 +525,6 @@ public class Suitcase {
 
     pushButtonPanel.add(sResetButton, gbc);
     pushButtonPanel.add(sPushButton, gbc);
-  }
-
-  private void buildDirChooserArea(JPanel parentPanel, final JTextField pathText, String label,
-      final String defaultPath) {
-    GridBagConstraints gbc = getDefaultGbc();
-    gbc.gridx = GridBagConstraints.RELATIVE;
-    gbc.gridy = 0;
-
-    //label
-    JLabel savePathLabel = new JLabel(label);
-    savePathLabel.setHorizontalAlignment(JLabel.CENTER);
-    gbc.weightx = 5;
-    parentPanel.add(savePathLabel, gbc);
-
-    //text field
-    pathText.setText(defaultPath);
-    pathText.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-    gbc.weightx = 90;
-    parentPanel.add(pathText, gbc);
-
-    //button
-    JButton dirButton = new JButton();
-    dirButton.setText("...");
-    dirButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setAcceptAllFileFilterUsed(false);
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setCurrentDirectory(new File(defaultPath));
-
-        int result = chooser.showSaveDialog(null);
-        if (result == JFileChooser.APPROVE_OPTION) {
-          pathText.setText(chooser.getSelectedFile().toString());
-        }
-      }
-    });
-    gbc.weightx = 5;
-
-    parentPanel.add(dirButton, gbc);
   }
 
   private void buildCheckboxArea(JPanel parentPanel, String[] labels, JCheckBox[] checkBoxes) {
@@ -638,12 +598,12 @@ public class Suitcase {
 
     table.setCurrentTableId(sTableIdText.getText());
 
-    if (firstRun && FileUtils.isDownloaded(table, sSavePathText.getText())) {
+    if (firstRun && FileUtils.isDownloaded(table, savePathChooser.getPath())) {
       boolean delete = promptConfirm(OVERWRITE_DATA);
 
       if (delete) {
         try {
-          FileUtils.deleteTableData(table, sSavePathText.getText());
+          FileUtils.deleteTableData(table, savePathChooser.getPath());
         } catch (IOException e) {
           e.printStackTrace();
           showError(IO_DELETE_ERR);
@@ -651,12 +611,12 @@ public class Suitcase {
       }
     }
 
-    if (FileUtils.isDownloaded(table, csvConfig, sSavePathText.getText())) {
+    if (FileUtils.isDownloaded(table, csvConfig, savePathChooser.getPath())) {
       boolean delete = promptConfirm(OVERWRITE_CSV);
 
       if (delete) {
         try {
-          Files.delete(FileUtils.getCSVPath(table, csvConfig, sSavePathText.getText()));
+          Files.delete(FileUtils.getCSVPath(table, csvConfig, savePathChooser.getPath()));
         } catch (IOException e) {
           e.printStackTrace();
           showError(IO_DELETE_ERR);
@@ -666,12 +626,12 @@ public class Suitcase {
 
     try {
       if (csvConfig.isDownloadAttachment() || csvConfig.isScanFormatting()) {
-        FileUtils.createInstancesDirectory(table, sSavePathText.getText());
+        FileUtils.createInstancesDirectory(table, savePathChooser.getPath());
       } else {
-        FileUtils.createBaseDirectory(table, sSavePathText.getText());
+        FileUtils.createBaseDirectory(table, savePathChooser.getPath());
       }
 
-      restClient.writeCSVToFile(csvConfig, sSavePathText.getText());
+      restClient.writeCSVToFile(csvConfig, savePathChooser.getPath());
 
       if (isGUI)
         sProgressBar.setString(PB_DONE);
@@ -692,7 +652,7 @@ public class Suitcase {
 
   private void upload() {
     try {
-      restClient.pushAllData(sDataPathText.getText(), sVersionPushText.getText());
+      restClient.pushAllData(dataPathChooser.getPath(), sVersionPushText.getText());
 
       if (isGUI)
         sProgressBar.setString(PB_DONE);
@@ -783,8 +743,6 @@ public class Suitcase {
 
   private boolean checkDownloadFields() {
     sTableIdText.setText(sTableIdText.getText().trim());
-    //trim only leading spaces for save path
-    sSavePathText.setText(sSavePathText.getText().replaceAll("^\\s+", ""));
 
     boolean state = true;
     StringBuilder errorMsgBuilder = new StringBuilder();
@@ -799,10 +757,9 @@ public class Suitcase {
       state = false;
     }
 
-    if (sSavePathText.getText().isEmpty()) {
-      System.out.println("sSavePathText is empty, using the default path.\n");
-      sSavePathText.setText(FileUtils.getDefaultSavePath().toAbsolutePath().toString());
-      // does not flip state to false
+    if (savePathChooser.getPath().isEmpty()) {
+      errorMsgBuilder.append(SAVE_PATH_EMPTY).append(NEW_LINE);
+      state = false;
     }
 
     if (!state) {
@@ -814,8 +771,6 @@ public class Suitcase {
 
   private boolean checkUploadFields() {
     sVersionPushText.setText(sVersionPushText.getText().trim());
-    //trim only leading spaces for data path
-    sDataPathText.setText(sDataPathText.getText().replaceAll("^\\s+", ""));
 
     boolean state = true;
     StringBuilder errorMsgBuilder = new StringBuilder();
@@ -825,15 +780,15 @@ public class Suitcase {
       state = false;
     }
 
-    if (sDataPathText.getText().isEmpty()) {
+    if (dataPathChooser.getPath().isEmpty()) {
       errorMsgBuilder.append(DATA_PATH_EMPTY).append(NEW_LINE);
       state = false;
     } else {
-      if (Files.notExists(Paths.get(sDataPathText.getText()))) {
+      if (Files.notExists(Paths.get(dataPathChooser.getPath()))) {
         errorMsgBuilder.append(DATA_DIR_NOT_EXIST).append(NEW_LINE);
         state = false;
       } else {
-        if (!FileUtils.checkUploadDir(sDataPathText.getText())) {
+        if (!FileUtils.checkUploadDir(dataPathChooser.getPath())) {
           errorMsgBuilder.append(DATA_DIR_INVALID).append(NEW_LINE);
           state = false;
         }
@@ -897,17 +852,6 @@ public class Suitcase {
       System.out.print(msg + " yes / no ");
       return console.nextLine().toLowerCase().startsWith("y");
     }
-  }
-
-  private GridBagConstraints getDefaultGbc() {
-    GridBagConstraints gbc = new GridBagConstraints();
-    gbc.fill = GridBagConstraints.BOTH;
-    gbc.weightx = 1;
-    gbc.weighty = 1;
-    gbc.ipadx = 0;
-    gbc.ipady = 0;
-
-    return gbc;
   }
 
   private void setPushPullAreaState(boolean state, Operation trigger) {
