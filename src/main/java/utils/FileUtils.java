@@ -8,6 +8,21 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 
 public class FileUtils {
+  // paths
+  private static final String DEFAULT_SAVE_PATH = "Download";
+  private static final String INSTANCES_PATH = "instances";
+  private static final String ASSETS_PATH = "assets";
+  private static final String TABLES_PATH = "tables";
+
+  // csv names
+  private static final String CSV_EXTENSION = ".csv";
+  private static final String CSV_MODIFIER_SEPARATOR = "_";
+  private static final String DATA_CSV_MODIFIER = "data";
+  private static final String LINK_CSV_MODIFIER = "link";
+  private static final String FORMATTED_CSV_MODIFIER = "formatted";
+  private static final String UNFORMATTED_CSV_MODIFIER = "unformatted";
+  private static final String EXTRA_DATA_CSV_MODIFIER = "extra";
+
   /**
    * Checks whether a table is downloaded
    *
@@ -36,7 +51,7 @@ public class FileUtils {
   }
 
   public static Path getDefaultSavePath() {
-    return Paths.get("Download");
+    return Paths.get(DEFAULT_SAVE_PATH);
   }
 
   public static Path getBasePath(AggregateInfo table, String savePath) {
@@ -44,13 +59,26 @@ public class FileUtils {
   }
 
   public static Path getInstancesPath(AggregateInfo table, String savePath) {
-    return Paths.get(getBasePath(table, savePath).toString(), "instances");
+    return Paths.get(getBasePath(table, savePath).toString(), INSTANCES_PATH);
   }
 
   public static String getCSVName(CsvConfig config) {
-    return (config.isDownloadAttachment() ? "data" : "link") +
-        (config.isScanFormatting() ? "_formatted" : "_unformatted") +
-        (config.isExtraMetadata() ? "_extra" : "") + ".csv";
+    StringBuilder csvNameBuilder = new StringBuilder();
+
+    csvNameBuilder
+        .append(config.isDownloadAttachment() ? DATA_CSV_MODIFIER : LINK_CSV_MODIFIER);
+
+    csvNameBuilder
+        .append(CSV_MODIFIER_SEPARATOR)
+        .append(config.isScanFormatting() ? FORMATTED_CSV_MODIFIER : UNFORMATTED_CSV_MODIFIER);
+
+    if (config.isExtraMetadata()) {
+      csvNameBuilder
+          .append(CSV_MODIFIER_SEPARATOR)
+          .append(EXTRA_DATA_CSV_MODIFIER);
+    }
+
+    return csvNameBuilder.append(CSV_EXTENSION).toString();
   }
 
   public static void createBaseDirectory(AggregateInfo table, String savePath)
@@ -93,6 +121,6 @@ public class FileUtils {
   }
 
   public static boolean checkUploadDir(String path) {
-    return Files.exists(Paths.get(path, "assets")) || Files.exists(Paths.get(path, "tables"));
+    return Files.exists(Paths.get(path, ASSETS_PATH)) || Files.exists(Paths.get(path, TABLES_PATH));
   }
 }
