@@ -107,14 +107,16 @@ public class RESTClient {
 
     // delete table definitions
     for (String id : aggregateInfo.getAllTableId()) {
-      int counter = 0; //TODO: remove
+
+      // when a table is too big, table definition deletion times out
+      // so it needs to be deleted repeatedly
       while (
-          odkWinkClient.deleteTableDefinition(aggregateInfo.getServerUrl(), aggregateInfo.getAppId()
-          , id, aggregateInfo.getSchemaETag(id)) == 500) {
-        counter++;
+          odkWinkClient.deleteTableDefinition(
+              aggregateInfo.getServerUrl(), aggregateInfo.getAppId(), id,
+              aggregateInfo.getSchemaETag(id)) == 500) {
+
         Thread.sleep(DELETE_TABLE_DEF_WAIT);
       }
-      System.out.println("retry count " + counter); //TODO: remove
     }
 
     Thread.sleep(PUSH_DONE_WAIT);
