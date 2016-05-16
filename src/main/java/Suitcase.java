@@ -879,8 +879,6 @@ public class Suitcase {
       case RESET:
         sResetButton.setText(RESETTING_LABEL);
         break;
-      default:
-        throw new IllegalArgumentException("Invalid operation");
       }
     }
   }

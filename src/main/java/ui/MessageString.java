@@ -13,7 +13,8 @@ public class MessageString {
   public static final String GENERIC_ERR = "Error occurred";
   public static final String BAD_URL = AGGREGATE + " address is invalid.";
   public static final String BAD_CRED = AGGREGATE + " address, " + APP_ID + ", username, or password is invalid. Please check your credentials.";
-  public static final String DATA_DIR_INVALID = "Data directory does not contain \"assets\" directory or \"tables\" directory";
+  public static final String DATA_DIR_INVALID = "Data directory does not contain \"assets\" directory or \"tables\" directory.";
+  public static final String JSON_PARSE_ERROR = "Please visit" + AGGREGATE + "web interface for error detail.";
 
   // unable to ... error
   private static final String UNABLE_PREFIX = "Unable to ";
@@ -34,6 +35,7 @@ public class MessageString {
   public static final String PASSWORD_EMPTY = "Password" + CANNOT_EMPTY_POSTFIX;
   public static final String VERSION_EMPTY = "Version" + CANNOT_EMPTY_POSTFIX;
   public static final String DATA_PATH_EMPTY = "Data path" + CANNOT_EMPTY_POSTFIX;
+  public static final String SAVE_PATH_EMPTY = "Save path" + CANNOT_EMPTY_POSTFIX;
 
   // Prompts
   public static final String OVERWRITE_DATA = "Data from a previous session detected. Delete existing data and download data from Aggregate server?";
