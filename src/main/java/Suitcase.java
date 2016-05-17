@@ -350,11 +350,18 @@ public class Suitcase {
 
     // Will add upload options in the future, adding these now makes layout easier (a lot easier)
     JPanel pushPrefPanel = new JPanel(new GridLayout(2, 1));
+
+    // these are temporary, don't judge
+    JCheckBox cBox1 = new JCheckBox();
+    JCheckBox cBox2 = new JCheckBox();
     buildCheckboxArea(
         pushPrefPanel,
         new String[] {"Option Placeholder", "Option Placeholder 2"},
-        new JCheckBox[] {new JCheckBox(), new JCheckBox()}
+        new JCheckBox[] {cBox1, cBox2}
     );
+    cBox1.setVisible(false);
+    cBox2.setVisible(false);
+
     gbc.weighty = 5;
     pushPanel.add(pushPrefPanel, gbc);
 
