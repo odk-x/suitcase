@@ -9,6 +9,7 @@
     <version>2.0</version>
 
     <properties>
+        <!--This is trunk-7de9932ac013a6be2cd0edabfa564f052e6caf00-->
         <org.opendatakit.wink.version>1.0-SNAPSHOT</org.opendatakit.wink.version>
         <org.opendatakit.aggregate.rest.interface>2015-12-17</org.opendatakit.aggregate.rest.interface>
         <org.apache.wink.version>1.4</org.apache.wink.version>
