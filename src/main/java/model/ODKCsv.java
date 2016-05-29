@@ -11,7 +11,7 @@ import java.util.*;
 
 import static org.opendatakit.wink.client.WinkClient.*;
 
-//!!!ATTENTION!!! One per table
+//!!!ATTENTION!!! One per aggInfo
 public class ODKCsv implements Iterable<String[]> {
   public class ODKCSVIterator implements Iterator<String[]> {
     private int cursor;
@@ -119,52 +119,66 @@ public class ODKCsv implements Iterable<String[]> {
   //Due to optimization and how Scan is designed, 1 column is always filtered
   private static final int NUM_FILTERED = 1; //TODO: generalize this?
 
+  private AttachmentManager attMngr;
+  private AggregateInfo aggInfo;
+  private String tableId;
+
   private List<JSONArray> jsonRows;
   private String[] completeCSVHeader;
   //Header of row data only
   private String[] completeDataHeader;
   private int size;
   private Map<String, Action> colAction;
-  private AttachmentManager attMngr;
-  private AggregateInfo table;
-
-  /**
-   * Initialize an empty ODKCsv
-   *
-   * @param attMngr
-   * @param table
-   */
-  public ODKCsv(AttachmentManager attMngr, AggregateInfo table) {
-    this.size = 0;
-    this.attMngr = attMngr;
-    this.jsonRows = new ArrayList<>();
-    this.table = table;
-  }
 
   /**
    * Initialize ODKCsv with rows
    *
    * @param rows
    * @param attMngr
-   * @param table
+   * @param aggInfo
    * @throws JSONException
    */
-  public ODKCsv(JSONArray rows, AttachmentManager attMngr, AggregateInfo table)
+  public ODKCsv(JSONArray rows, AttachmentManager attMngr, AggregateInfo aggInfo, String tableId)
       throws JSONException {
-    if (rows == null) {
-      throw new IllegalArgumentException("invalid json");
+    if (attMngr == null) {
+      throw new IllegalArgumentException("AttachmentManager cannot be null");
+    }
+    if (aggInfo == null) {
+      throw new IllegalArgumentException("AggregateInfo cannot be null");
+    }
+    if (tableId == null || tableId.isEmpty()) {
+      throw new IllegalArgumentException("Table Id cannot be null or empty");
+    }
+    if (!aggInfo.tableIdExists(tableId)) {
+      throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
 
-    this.size = rows.size();
-
-    this.jsonRows = new ArrayList<>();
-    this.jsonRows.add(rows);
-
-    this.completeDataHeader = extractDataHeader(rows.getJSONObject(0));
-    this.completeCSVHeader = buildCSVHeader();
-    this.colAction = buildActionMap();
     this.attMngr = attMngr;
-    this.table = table;
+    this.aggInfo = aggInfo;
+    this.tableId = tableId;
+
+    this.size = 0;
+    this.jsonRows = new ArrayList<>();
+
+    if (rows != null) {
+      this.size = rows.size();
+      this.jsonRows.add(rows);
+
+      this.completeDataHeader = extractDataHeader(rows.getJSONObject(0));
+      this.completeCSVHeader = buildCSVHeader();
+      this.colAction = buildActionMap();
+    }
+  }
+
+  /**
+   * Initialize an empty ODKCsv
+   *
+   * @param attMngr
+   * @param aggInfo
+   */
+  public ODKCsv(AttachmentManager attMngr, AggregateInfo aggInfo, String tableId)
+      throws JSONException {
+    this(null, attMngr, aggInfo, tableId);
   }
 
   /**
@@ -278,6 +292,14 @@ public class ODKCsv implements Iterable<String[]> {
   public int getSize() {
     return this.size;
   }
+
+  public String getTableId() {
+    return this.tableId;
+  }
+
+//  public void setAttachmentManager(AttachmentManager mngr) {
+//    this.attMngr = mngr;
+//  }
 
   /**
    * Extract data header from 1 row of JSON
@@ -462,9 +484,9 @@ public class ODKCsv implements Iterable<String[]> {
       attachmentUrlStr = attachmentUrl.toString();
     } else {
       attachmentUrlStr =
-          this.table.getServerUrl() + "/" + "tables" + "/" + this.table.getAppId() + "/" +
-              this.table.getCurrentTableId() + "/ref/" +
-              this.table.getSchemaETag(this.table.getCurrentTableId()) + "/attachments/" +
+          this.aggInfo.getServerUrl() + "/" + "tables" + "/" + this.aggInfo.getAppId() + "/" +
+              this.tableId + "/ref/" +
+              this.aggInfo.getSchemaETag(this.tableId) + "/attachments/" +
               row.optString(jsonId) + "/file/" + fileName;
     }
 

@@ -13,8 +13,7 @@ public class AggregateInfo {
   private String appId;
   private String userName;
   private String password;
-  private Map<String, String> tableIdSchemaETag;
-  private String currentTableId;
+  private SortedMap<String, String> tableIdSchemaETag;
   
   public AggregateInfo(String serverUrl, String appId, String userName, String password)
       throws MalformedURLException {
@@ -29,7 +28,6 @@ public class AggregateInfo {
     this.userName = userName;
     this.password = password;
     this.tableIdSchemaETag = new TreeMap<>();
-    this.currentTableId = null;
   }
 
   public String getServerUrl() {
@@ -44,12 +42,12 @@ public class AggregateInfo {
     return appId;
   }
 
-  public String getCurrentTableId() {
-    return currentTableId;
-  }
-
   public Set<String> getAllTableId() {
     return tableIdSchemaETag.keySet();
+  }
+
+  public SortedMap<String, String> getAllSchemaETag() {
+    return Collections.unmodifiableSortedMap(tableIdSchemaETag);
   }
   
   public String getUserName() {
@@ -68,18 +66,8 @@ public class AggregateInfo {
     return tableIdSchemaETag.get(tableId);
   }
 
-  public void setCurrentTableId(String tableId) {
-    if (!tableIdExists(tableId)) {
-      throw new IllegalArgumentException("Invalid Table ID");
-    }
-
-    this.currentTableId = tableId;
-  }
-
   public void addTableId(String tableId, String schemaETag) {
-    if (!tableIdExists(tableId)) {
-      tableIdSchemaETag.put(tableId, schemaETag);
-    }
+    tableIdSchemaETag.put(tableId, schemaETag);
   }
 
   public boolean tableIdExists(String tableId) {
@@ -122,7 +110,6 @@ public class AggregateInfo {
         ", userName='" + userName + '\'' +
         ", password='" + password + '\'' +
         ", tableIdSchemaETag=" + tableIdSchemaETag +
-        ", currentTableId='" + currentTableId + '\'' +
         '}';
   }
 }

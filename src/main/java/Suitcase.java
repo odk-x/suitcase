@@ -1,885 +1,898 @@
-import model.AggregateInfo;
-import model.CsvConfig;
-import net.RESTClient;
-import org.apache.commons.cli.*;
-import org.apache.wink.json4j.JSONException;
-import ui.LayoutDefault;
-import ui.PathChooserPanel;
-import utils.FileUtils;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Scanner;
-
-import static ui.MessageString.*;
-
-/**
- * Handles UI of Suitcase
- */
-public class Suitcase {
-  private static final String APP_NAME = "ODK Suitcase";
-
-  // button labels
-  private static final String LOGIN_LABEL = "Login";
-  private static final String LOGIN_ANON_LABEL = "Anonymous Login";
-  private static final String LOGIN_LOADING_LABEL = "Loading";
-  private static final String DOWNLOAD_LABEL = "Download";
-  private static final String DOWNLOADING_LABEL = "Downloading";
-  private static final String UPLOAD_LABEL = "Upload";
-  private static final String UPLOADING_LABEL = "Uploading";
-  private static final String RESET_LABEL = "Reset";
-  private static final String RESETTING_LABEL = "Resetting";
-
-  // other labels
-  private static final String SAVE_PATH_LABEL = "Save to";
-  private static final String DATA_PATH_LABEL = "Upload";
-
-  // progress bar strings
-  private static final String PB_ERROR = "Error";
-  private static final String PB_DONE = "Done!";
-  private static final String PB_IDLE = "Idle";
-  private static final String PB_DOWNLOAD = "Downloading";
-  private static final String PB_UPLOAD = "Uploading";
-  private static final String PB_RESET = "Resetting";
-
-  private static final int WIDTH = 1000;
-  private static final int HEIGHT = 400;
-  private static final int PUSH_PULL_H_MARGIN = 10;
-
-  // Global UI Hooks
-  private JFrame frame;
-  private JTextField sAggregateAddressText;
-  private JTextField sAppIdText;
-  private JTextField sTableIdText;
-  private JTextField sVersionPushText;
-  private PathChooserPanel savePathChooser;
-  private PathChooserPanel dataPathChooser;
-  private JTextField sUserNameText;
-  private JPasswordField sPasswordText;
-  private JProgressBar sProgressBar;
-  private JCheckBox sDownloadAttachment;
-  private JCheckBox sApplyScanFmt;
-  private JCheckBox sExtraMetadata;
-  private JButton sLoginButton;
-  private JButton sAnonLoginButton;
-  private JButton sPullButton;
-  private JButton sPushButton;
-  private JButton sResetButton;
-  private boolean isGUI;
-  private CardLayout contentCardLayout;
-  private JPanel contentPanel;
-
-  // Server data
-  private AggregateInfo table;
-  private RESTClient restClient;
-
-  private boolean force;
-  private Scanner console;
-
-  private enum Operation {
-    DOWNLOAD, UPLOAD, RESET, INFO
-  }
-
-  public static void main(String[] args) {
-    Suitcase rs = new Suitcase();
-    rs.start(args);
-  }
-
-  private Suitcase() {
-    this.sAggregateAddressText = new JTextField(1);
-    this.sAppIdText = new JTextField(1);
-    this.sTableIdText = new JTextField(1);
-    this.sVersionPushText = new JTextField(1);
-    this.savePathChooser = new PathChooserPanel(
-        SAVE_PATH_LABEL, FileUtils.getDefaultSavePath().toAbsolutePath().toString()
-    );
-    this.dataPathChooser = new PathChooserPanel(
-        DATA_PATH_LABEL, FileUtils.getDefaultSavePath().toAbsolutePath().toString()
-    );
-    this.sUserNameText = new JTextField();
-    this.sPasswordText = new JPasswordField();
-    this.sProgressBar = new JProgressBar();
-    this.sDownloadAttachment = new JCheckBox();
-    this.sApplyScanFmt = new JCheckBox();
-    this.sExtraMetadata = new JCheckBox();
-    this.sLoginButton = new JButton();
-    this.sAnonLoginButton = new JButton();
-    this.sPullButton = new JButton();
-    this.sPushButton = new JButton();
-    this.sResetButton = new JButton();
-    this.contentCardLayout = new CardLayout();
-    this.contentPanel = new JPanel(contentCardLayout);
-
-    this.isGUI = true;
-    this.console = new Scanner(System.in);
-  }
-
-  private void start(String[] args) {
-    if (args.length == 0) {
-      //start GUI when no argument is passed
-      startGUI();
-    } else {
-      isGUI = false;
-      startCLI(args);
-    }
-  }
-
-  private void startCLI(String[] args) {
-    switch (parseArgs(args, buildOptions())) {
-    case DOWNLOAD:
-      if (checkDownloadFields())
-        download();
-      break;
-    case UPLOAD:
-      if (checkUploadFields()) {
-        upload();
-      }
-      break;
-    case RESET:
-      if (checkResetFields()) {
-        reset();
-      }
-      break;
-    default:
-      //nothing
-    }
-  }
-
-  private Options buildOptions() {
-    Options opt = new Options();
-    //operations
-    opt.addOption("download", false, "Download csv");
-    opt.addOption("upload", false, "Upload csv");
-    opt.addOption("reset", false, "Reset server");
-
-    //aggregate related
-    opt.addOption("aggregate_url", true, "url to Aggregate server");
-    opt.addOption("app_id", true, "app id");
-    opt.addOption("table_id", true, "table id");
-    opt.addOption("username", true, "username");
-    opt.addOption("password", true, "password");
-    opt.addOption("dataVersion", true, "version of data, usually 1 or 2");
-
-    //csv
-    opt.addOption("a", "attachment", false, "download attachments");
-    opt.addOption("s", "scan", false, "apply Scan formatting");
-    opt.addOption("e", "extra", false, "add extra metadata columns");
-    opt.addOption
-        ("o", "output", true, "specify a custom output directory, default is ./Download/");
-
-    //UI
-    opt.addOption("f", "force", false, "do not prompt, overwrite existing files");
-
-    //misc
-    opt.addOption("h", "help", false, "print this message");
-    opt.addOption("v", "version", false, "prints version information");
-
-    return opt;
-  }
-
-  /**
-   * Parses user arguments from pre-specified Options.
-   *
-   * @param args Arguments passed to by user
-   * @param options Options to parse from
-   * @return false when either "-h" or "-v" is passed, otherwise true
-   */
-  private Operation parseArgs(String[] args, Options options) {
-    try {
-      CommandLineParser parser = new DefaultParser();
-      CommandLine line = parser.parse(options, args);
-
-      //handle -h and --help
-      if (line.hasOption('h')) {
-        HelpFormatter hf = new HelpFormatter();
-        hf.printHelp("suitcase", options);
-        return Operation.INFO;
-      }
-
-      //handle -v
-      if (line.hasOption('v')) {
-        System.out.println("ODK Suitcase 2.0");
-        return Operation.INFO;
-      }
-
-      //Aggregate related
-      sAggregateAddressText.setText(line.getOptionValue("aggregate_url"));
-      sAppIdText.setText(line.getOptionValue("app_id"));
-      sTableIdText.setText(line.getOptionValue("table_id"));
-      sUserNameText.setText(line.getOptionValue("username"));
-      sPasswordText.setText(line.getOptionValue("password"));
-
-      //CSV options
-      sDownloadAttachment.setSelected(line.hasOption("a"));
-      sApplyScanFmt.setSelected(line.hasOption("s"));
-      sExtraMetadata.setSelected(line.hasOption("e"));
-      this.force = line.hasOption("f");
-
-      //Misc
-      //TODO: fix CLI
-//      sSavePathText.setText(line.getOptionValue("o"));
-    } catch (ParseException e) {
-      e.printStackTrace();
-    }
-
-    return Operation.DOWNLOAD;
-  }
-
-  private void startGUI() {
-    this.frame = new JFrame(APP_NAME);
-    frame.setSize(WIDTH, HEIGHT);
-    frame.setLocationRelativeTo(null);
-    frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
-    buildJFrame();
-  }
-
-  private void buildJFrame() {
-    // UI Container Panels
-    JPanel loginCard = new JPanel(new GridBagLayout());
-    buildLoginCard(loginCard);
-
-    JPanel pushPullCard = new JPanel(new GridBagLayout());
-    buildPushPullCard(pushPullCard);
-
-    contentPanel.add(loginCard);
-    contentPanel.add(pushPullCard);
-
-    // Finish building the frame
-    frame.add(contentPanel);
-    frame.setVisible(true);
-  }
-
-  private void buildLoginCard(JPanel loginCard) {
-    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
-    gbc.gridx = 0;
-    gbc.gridy = GridBagConstraints.RELATIVE;
-
-    JPanel inputPanel = new JPanel(new GridBagLayout());
-    buildInputArea(
-        inputPanel,
-        new String[] {"Aggregate Address", "App ID", "Username", "Password"},
-        new JTextField[] {sAggregateAddressText, sAppIdText, sUserNameText, sPasswordText},
-        new String[] {"https://aggregate-server-url.appspot.com", "default", "", ""}
-    );
-    gbc.weighty = 85;
-    gbc.insets = new Insets(80, 200, 0, 200);
-    loginCard.add(inputPanel, gbc);
-
-    JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 20, 0));
-    buildLoginButtonArea(buttonPanel);
-    gbc.weighty = 15;
-    gbc.insets = new Insets(20, WIDTH / 4, 80, WIDTH / 4);
-    loginCard.add(buttonPanel, gbc);
-  }
-
-  private void buildPushPullCard(JPanel pushPullCard) {
-    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
-
-    JPanel pullPanel = new JPanel(new GridBagLayout());
-    pullPanel.setBorder(new EmptyBorder(10, PUSH_PULL_H_MARGIN, 0, PUSH_PULL_H_MARGIN));
-    buildPullArea(pullPanel);
-
-    JPanel pushPanel = new JPanel(new GridBagLayout());
-    pushPanel.setBorder(new EmptyBorder(10, PUSH_PULL_H_MARGIN, 0, PUSH_PULL_H_MARGIN));
-    buildPushArea(pushPanel);
-
-    JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, pullPanel, pushPanel);
-    splitPane.setResizeWeight(0.5);
-    splitPane.setDividerSize(0);
-    splitPane.setEnabled(false);
-    pushPullCard.add(splitPane, gbc);
-
-    JPanel progressBarPanel = new JPanel(new GridLayout(1, 1));
-    buildProgressBarArea(progressBarPanel);
-
-    JSplitPane splitPaneVertical =
-        new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitPane, progressBarPanel);
-    splitPaneVertical.setResizeWeight(0.8);
-    splitPaneVertical.setDividerSize(0);
-    splitPaneVertical.setEnabled(false);
-    pushPullCard.add(splitPaneVertical, gbc);
-  }
-
-  private void buildPullArea(JPanel pullPanel) {
-    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
-    gbc.gridx = 0;
-    gbc.gridy = GridBagConstraints.RELATIVE;
-
-    JPanel pullInputPanel = new JPanel(new GridBagLayout());
-    buildInputArea(
-        pullInputPanel,
-        new String[] {"Table ID"}, new JTextField[] {sTableIdText}, new String[] {"table_id"}
-    );
-    gbc.weighty = 2;
-    pullPanel.add(pullInputPanel, gbc);
-
-    JPanel pullPrefPanel = new JPanel(new GridLayout(2, 1));
-    buildCheckboxArea(
-        pullPrefPanel,
-        new String[] {"Download attachments?", "Apply Scan formatting?", "Extra metadata columns?"},
-        new JCheckBox[] {sDownloadAttachment, sApplyScanFmt, sExtraMetadata}
-    );
-    gbc.weighty = 5;
-    pullPanel.add(pullPrefPanel, gbc);
-
-    gbc.weighty = 1;
-    pullPanel.add(this.savePathChooser, gbc);
-
-    JPanel pullButtonPanel = new JPanel(new GridLayout(1, 1));
-    buildPullButtonArea(pullButtonPanel);
-    gbc.weighty = 2;
-    gbc.insets = new Insets(10, 0, 0, 0);
-    pullPanel.add(pullButtonPanel, gbc);
-  }
-
-  private void buildPushArea(JPanel pushPanel) {
-    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
-    gbc.gridx = 0;
-    gbc.gridy = GridBagConstraints.RELATIVE;
-
-    JPanel pushInputPanel = new JPanel(new GridBagLayout());
-    buildInputArea(
-        pushInputPanel,
-        new String[] {"Version"}, new JTextField[] {sVersionPushText}, new String[] {"2"}
-    );
-    gbc.weighty = 2;
-    pushPanel.add(pushInputPanel, gbc);
-
-    // Will add upload options in the future, adding these now makes layout easier (a lot easier)
-    JPanel pushPrefPanel = new JPanel(new GridLayout(2, 1));
-    buildCheckboxArea(
-        pushPrefPanel,
-        new String[] {"Option Placeholder", "Option Placeholder 2"},
-        new JCheckBox[] {new JCheckBox(), new JCheckBox()}
-    );
-    gbc.weighty = 5;
-    pushPanel.add(pushPrefPanel, gbc);
-
-    gbc.weighty = 1;
-    pushPanel.add(dataPathChooser, gbc);
-
-    JPanel pushButtonPanel = new JPanel(new GridBagLayout());
-    buildPushButtonArea(pushButtonPanel);
-    gbc.insets = new Insets(10, -100, 0, 0);
-    gbc.weighty = 2;
-    pushPanel.add(pushButtonPanel, gbc);
-  }
-
-  private void buildInputArea(JPanel parentPanel, String[] labelArr, JTextField[] fields,
-      String[] defaultText) {
-    if ((labelArr.length != fields.length) || (fields.length != defaultText.length)) {
-      throw new IllegalArgumentException("Arrays have unequal length!");
-    }
-
-    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
-    gbc.gridx = GridBagConstraints.RELATIVE;
-    gbc.gridy = 0;
-
-    //labels
-    JPanel labelPanel = new JPanel(new GridLayout(labelArr.length, 1));
-    gbc.weightx = 1;
-    parentPanel.add(labelPanel, gbc);
-    for (String label : labelArr) {
-      labelPanel.add(new JLabel(label));
-    }
-
-    //text fields
-    JPanel inputPanel = new JPanel(new GridLayout(labelArr.length, 1));
-    gbc.weightx = 9;
-    parentPanel.add(inputPanel, gbc);
-    for (int i = 0; i < fields.length; i++) {
-      if (!defaultText[i].isEmpty()) {
-        fields[i].setText(defaultText[i]);
-      }
-      fields[i].setBorder(BorderFactory.createLineBorder(Color.BLACK));
-      inputPanel.add(fields[i]);
-    }
-  }
-
-  private void buildLoginButtonArea(JPanel buttonsPanel) {
-    // Define buttons
-    sLoginButton.setText(LOGIN_LABEL);
-    sLoginButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        if (checkLoginFields(false)) {
-          sLoginButton.setEnabled(false);
-          sLoginButton.setText(LOGIN_LOADING_LABEL);
-
-          sAnonLoginButton.setEnabled(false);
-
-          new Thread(new Runnable() {
-            @Override
-            public void run() {
-              if (login()) {
-                contentCardLayout.next(contentPanel);
-              }
-            }
-          }).start();
-        }
-      }
-    });
-
-    sAnonLoginButton.setText(LOGIN_ANON_LABEL);
-    sAnonLoginButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        if (checkLoginFields(true)) {
-          sAnonLoginButton.setEnabled(false);
-          sAnonLoginButton.setText(LOGIN_LOADING_LABEL);
-
-          sLoginButton.setEnabled(false);
-
-          sUserNameText.setText("");
-          sPasswordText.setText("");
-
-          new Thread(new Runnable() {
-            @Override
-            public void run() {
-              if (login()) {
-                contentCardLayout.next(contentPanel);
-              }
-            }
-          }).start();
-        }
-      }
-    });
-
-    buttonsPanel.add(sLoginButton);
-    buttonsPanel.add(sAnonLoginButton);
-  }
-
-  private void buildPullButtonArea(JPanel pullButtonPanel) {
-    sPullButton.setText(DOWNLOAD_LABEL);
-    sPullButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        if (checkDownloadFields()) {
-          setPushPullAreaState(false, Operation.DOWNLOAD);
-          sPullButton.setText(DOWNLOADING_LABEL);
-          sProgressBar.setIndeterminate(true);
-
-          new Thread(new Runnable() {
-            @Override
-            public void run() {
-              download();
-            }
-          }).start();
-        }
-      }
-    });
-
-    pullButtonPanel.add(sPullButton);
-  }
-
-  private void buildPushButtonArea(JPanel pushButtonPanel) {
-    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
-    gbc.gridx = GridBagConstraints.RELATIVE;
-    gbc.gridy = 0;
-
-    sPushButton.setText(UPLOAD_LABEL);
-    sPushButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        if (checkUploadFields()) {
-          setPushPullAreaState(false, Operation.UPLOAD);
-          sPushButton.setText(UPLOADING_LABEL);
-          sProgressBar.setIndeterminate(true);
-
-          new Thread(new Runnable() {
-            @Override
-            public void run() {
-              upload();
-            }
-          }).start();
-        }
-      }
-    });
-
-    sResetButton.setText(RESET_LABEL);
-    sResetButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        if (checkResetFields()) {
-          setPushPullAreaState(false, Operation.RESET);
-          sResetButton.setText(RESETTING_LABEL);
-          sProgressBar.setIndeterminate(true);
-
-          new Thread(new Runnable() {
-            @Override
-            public void run() {
-              reset();
-            }
-          }).start();
-        }
-      }
-    });
-
-    pushButtonPanel.add(sResetButton, gbc);
-    pushButtonPanel.add(sPushButton, gbc);
-  }
-
-  private void buildCheckboxArea(JPanel parentPanel, String[] labels, JCheckBox[] checkBoxes) {
-    if (labels.length != checkBoxes.length) {
-      throw new IllegalArgumentException("Array length not equal");
-    }
-
-    for (int i = 0; i < labels.length; i++) {
-      JCheckBox cb = checkBoxes[i];
-
-      cb.setText(labels[i]);
-      cb.setHorizontalAlignment(JCheckBox.CENTER);
-      cb.setBorder(new EmptyBorder(0, -100, 0, -100));
-
-      parentPanel.add(cb);
-    }
-  }
-
-  private void buildProgressBarArea(JPanel pbPanel) {
-    sProgressBar.setMinimum(0);
-    sProgressBar.setMaximum(100);
-    sProgressBar.setValue(100);
-    sProgressBar.setString(PB_IDLE);
-    sProgressBar.setStringPainted(true);
-
-    pbPanel.add(sProgressBar);
-  }
-
-  private boolean login() {
-    try {
-      this.table = new AggregateInfo(
-          sAggregateAddressText.getText(), sAppIdText.getText(),
-          sUserNameText.getText(), String.valueOf(sPasswordText.getPassword())
-      );
-      this.restClient = new RESTClient(table);
-      if (isGUI) {
-        this.restClient.setProgressBar(this.sProgressBar);
-      }
-
-      return true;
-    } catch (MalformedURLException e) {
-      e.printStackTrace();
-      showError(BAD_URL);
-    } catch (JSONException e) {
-      e.printStackTrace();
-      showError(BAD_CRED);
-    } catch (Exception e) {
-      e.printStackTrace();
-      showError(GENERIC_ERR);
-    } finally {
-      if (isGUI) {
-        sLoginButton.setEnabled(true);
-        sAnonLoginButton.setEnabled(true);
-
-        sLoginButton.setText(LOGIN_LABEL);
-        sAnonLoginButton.setText(LOGIN_ANON_LABEL);
-
-        sProgressBar.setString(PB_IDLE);
-      }
-    }
-
-    return false;
-  }
-
-  private void download() {
-    boolean firstRun = table.getCurrentTableId() == null;
-
-    CsvConfig csvConfig = new CsvConfig(
-        sDownloadAttachment.isSelected(), sApplyScanFmt.isSelected(), sExtraMetadata.isSelected()
-    );
-
-    table.setCurrentTableId(sTableIdText.getText());
-
-    if (firstRun && FileUtils.isDownloaded(table, savePathChooser.getPath())) {
-      boolean delete = promptConfirm(OVERWRITE_DATA);
-
-      if (delete) {
-        try {
-          FileUtils.deleteTableData(table, savePathChooser.getPath());
-        } catch (IOException e) {
-          e.printStackTrace();
-          showError(IO_DELETE_ERR);
-        }
-      }
-    }
-
-    if (FileUtils.isDownloaded(table, csvConfig, savePathChooser.getPath())) {
-      boolean delete = promptConfirm(OVERWRITE_CSV);
-
-      if (delete) {
-        try {
-          Files.delete(FileUtils.getCSVPath(table, csvConfig, savePathChooser.getPath()));
-        } catch (IOException e) {
-          e.printStackTrace();
-          showError(IO_DELETE_ERR);
-        }
-      }
-    }
-
-    try {
-      if (csvConfig.isDownloadAttachment() || csvConfig.isScanFormatting()) {
-        FileUtils.createInstancesDirectory(table, savePathChooser.getPath());
-      } else {
-        FileUtils.createBaseDirectory(table, savePathChooser.getPath());
-      }
-
-      restClient.writeCSVToFile(csvConfig, savePathChooser.getPath());
-
-      if (isGUI)
-        sProgressBar.setString(PB_DONE);
-      else
-        System.out.println("Done!");
-    } catch (IOException e) {
-      e.printStackTrace();
-      showError(IO_WRITE_ERR);
-    } catch (JSONException e) {
-      e.printStackTrace();
-      showError(GENERIC_ERR);
-    } finally {
-      if (isGUI) {
-        setPushPullAreaState(true, Operation.DOWNLOAD);
-      }
-    }
-  }
-
-  private void upload() {
-    try {
-      restClient.pushAllData(dataPathChooser.getPath(), sVersionPushText.getText());
-
-      if (isGUI)
-        sProgressBar.setString(PB_DONE);
-      else
-        System.out.println("Done!");
-    } catch (Exception e) {
-      e.printStackTrace();
-      showError(GENERIC_ERR);
-    } finally {
-      try {
-        restClient.updateTableList();
-      } catch (Exception e) {
-        // ignore
-      }
-
-      if (isGUI) {
-        setPushPullAreaState(true, Operation.UPLOAD);
-      }
-    }
-  }
-
-  private void reset() {
-    try {
-      restClient.deleteAllRemote(sVersionPushText.getText());
-
-      if (isGUI)
-        sProgressBar.setString(PB_DONE);
-      else
-        System.out.println("Done!");
-    } catch (Exception e) {
-      e.printStackTrace();
-      showError(GENERIC_ERR);
-    } finally {
-      try {
-        restClient.updateTableList();
-      } catch (Exception e) {
-        // ignore
-      }
-
-      if (isGUI) {
-        setPushPullAreaState(true, Operation.RESET);
-      }
-    }
-  }
-
-  /**
-   * Checks if aggregate address, App ID, and Table ID supplied are empty.
-   * And displays a pop up showing the fields that are empty, if applicable.
-   *
-   * @return true when information presented has no problem
-   */
-  private boolean checkLoginFields(boolean anonymous) {
-    sAggregateAddressText.setText(sAggregateAddressText.getText().trim());
-    sAppIdText.setText(sAppIdText.getText().trim());
-    sUserNameText.setText(sUserNameText.getText().trim());
-
-    boolean state = true;
-    StringBuilder errorMsgBuilder = new StringBuilder();
-
-    if (sAggregateAddressText.getText().isEmpty()) {
-      errorMsgBuilder.append(AGG_EMPTY).append(NEW_LINE);
-      state = false;
-    }
-
-    if (sAppIdText.getText().isEmpty()) {
-      errorMsgBuilder.append(APP_ID_EMPTY).append(NEW_LINE);
-      state = false;
-    }
-
-    if (!anonymous) {
-      if (sUserNameText.getText().isEmpty()) {
-        errorMsgBuilder.append(USERNAME_EMPTY).append(NEW_LINE);
-        state = false;
-      }
-
-      if (String.valueOf(sPasswordText.getPassword()).isEmpty()) {
-        errorMsgBuilder.append(PASSWORD_EMPTY).append(NEW_LINE);
-        state = false;
-      }
-    }
-
-    if (!state) {
-      showError(errorMsgBuilder.toString().trim());
-    }
-
-    return state;
-  }
-
-  private boolean checkDownloadFields() {
-    sTableIdText.setText(sTableIdText.getText().trim());
-
-    boolean state = true;
-    StringBuilder errorMsgBuilder = new StringBuilder();
-
-    if (sTableIdText.getText().isEmpty()) {
-      errorMsgBuilder.append(TABLE_ID_EMPTY).append(NEW_LINE);
-      state = false;
-    }
-
-    if (!sTableIdText.getText().isEmpty() && !table.tableIdExists(sTableIdText.getText())) {
-      errorMsgBuilder.append(BAD_TABLE_ID).append(NEW_LINE);
-      state = false;
-    }
-
-    if (savePathChooser.getPath().isEmpty()) {
-      errorMsgBuilder.append(SAVE_PATH_EMPTY).append(NEW_LINE);
-      state = false;
-    }
-
-    if (!state) {
-      showError(errorMsgBuilder.toString().trim());
-    }
-
-    return state;
-  }
-
-  private boolean checkUploadFields() {
-    sVersionPushText.setText(sVersionPushText.getText().trim());
-
-    boolean state = true;
-    StringBuilder errorMsgBuilder = new StringBuilder();
-
-    if (sVersionPushText.getText().isEmpty()) {
-      errorMsgBuilder.append(VERSION_EMPTY).append(NEW_LINE);
-      state = false;
-    }
-
-    if (dataPathChooser.getPath().isEmpty()) {
-      errorMsgBuilder.append(DATA_PATH_EMPTY).append(NEW_LINE);
-      state = false;
-    } else {
-      if (Files.notExists(Paths.get(dataPathChooser.getPath()))) {
-        errorMsgBuilder.append(DATA_DIR_NOT_EXIST).append(NEW_LINE);
-        state = false;
-      } else {
-        if (!FileUtils.checkUploadDir(dataPathChooser.getPath())) {
-          errorMsgBuilder.append(DATA_DIR_INVALID).append(NEW_LINE);
-          state = false;
-        }
-      }
-    }
-
-    if (!state) {
-      showError(errorMsgBuilder.toString().trim());
-    }
-
-    return state;
-  }
-
-  private boolean checkResetFields() {
-    sVersionPushText.setText(sVersionPushText.getText().trim());
-
-    boolean state = true;
-    StringBuilder errorMsgBuilder = new StringBuilder();
-
-    if (sVersionPushText.getText().isEmpty()) {
-      errorMsgBuilder.append(VERSION_EMPTY).append(NEW_LINE);
-      state = false;
-    }
-
-    if (!state) {
-      showError(errorMsgBuilder.toString().trim());
-    }
-
-    return state;
-  }
-
-  /**
-   * Displays error message.
-   *
-   * When ran as GUI,
-   * displays a pop up with an error message.
-   * Progress bar is set to non-indeterminate and string set to "error."
-   *
-   * @param errMsg Error message to display
-   */
-  private void showError(String errMsg) {
-    if (isGUI) {
-      sProgressBar.setIndeterminate(false);
-      sProgressBar.setString(PB_ERROR);
-      JOptionPane.showConfirmDialog(frame, errMsg, "Error", JOptionPane.DEFAULT_OPTION,
-          JOptionPane.ERROR_MESSAGE);
-    }
-    else
-      System.out.println("Error: " + errMsg);
-  }
-
-  private boolean promptConfirm(String msg) {
-    if (force)
-      return true;
-
-    if (isGUI) {
-      return JOptionPane.YES_OPTION ==
-          JOptionPane.showConfirmDialog(frame, msg, APP_NAME, JOptionPane.YES_NO_OPTION,
-          JOptionPane.QUESTION_MESSAGE);
-    } else {
-      System.out.print(msg + " yes / no ");
-      return console.nextLine().toLowerCase().startsWith("y");
-    }
-  }
-
-  private void setPushPullAreaState(boolean state, Operation trigger) {
-    sProgressBar.setIndeterminate(!state);
-
-    // this is effective only when pb is determinate
-    sProgressBar.setValue(sProgressBar.getMaximum());
-
-    sPullButton.setEnabled(state);
-    sPushButton.setEnabled(state);
-    sResetButton.setEnabled(state);
-
-    if (state) {
-      sPullButton.setText(DOWNLOAD_LABEL);
-      sPushButton.setText(UPLOAD_LABEL);
-      sResetButton.setText(RESET_LABEL);
-    } else {
-      switch (trigger) {
-      case DOWNLOAD:
-        sPullButton.setText(DOWNLOADING_LABEL);
-        break;
-      case UPLOAD:
-        sPushButton.setText(UPLOADING_LABEL);
-        break;
-      case RESET:
-        sResetButton.setText(RESETTING_LABEL);
-        break;
-      }
-    }
-  }
-}
+//import model.AggregateInfo;
+//import model.CsvConfig;
+//import net.RESTClient;
+//import org.apache.commons.cli.*;
+//import org.apache.wink.json4j.JSONException;
+//import ui.InputPanel;
+//import ui.LayoutDefault;
+//import ui.PathChooserPanel;
+//import utils.FileUtils;
+//
+//import javax.swing.*;
+//import javax.swing.border.EmptyBorder;
+//import java.awt.*;
+//import java.awt.event.ActionEvent;
+//import java.awt.event.ActionListener;
+//import java.io.IOException;
+//import java.net.MalformedURLException;
+//import java.nio.file.Files;
+//import java.nio.file.Paths;
+//import java.util.Scanner;
+//
+//import static ui.MessageString.*;
+//
+///**
+// * Handles UI of Suitcase
+// */
+//public class Suitcase {
+//  private static final String APP_NAME = "ODK Suitcase";
+//
+//  // button labels
+//  private static final String LOGIN_LABEL = "Login";
+//  private static final String LOGIN_ANON_LABEL = "Anonymous Login";
+//  private static final String LOGIN_LOADING_LABEL = "Loading";
+//  private static final String DOWNLOAD_LABEL = "Download";
+//  private static final String DOWNLOADING_LABEL = "Downloading";
+//  private static final String UPLOAD_LABEL = "Upload";
+//  private static final String UPLOADING_LABEL = "Uploading";
+//  private static final String RESET_LABEL = "Reset";
+//  private static final String RESETTING_LABEL = "Resetting";
+//
+//  // other labels
+//  private static final String SAVE_PATH_LABEL = "Save to";
+//  private static final String DATA_PATH_LABEL = "Upload";
+//
+//  // progress bar strings
+//  private static final String PB_ERROR = "Error";
+//  private static final String PB_DONE = "Done!";
+//  private static final String PB_IDLE = "Idle";
+//  private static final String PB_DOWNLOAD = "Downloading";
+//  private static final String PB_UPLOAD = "Uploading";
+//  private static final String PB_RESET = "Resetting";
+//
+//  private static final int WINDOW_WIDTH = 1000;
+//  private static final int WINDOW_HEIGHT = 400;
+//  private static final int PUSH_PULL_H_MARGIN = 10;
+//
+//  // Global UI Hooks
+//  private JFrame frame;
+//  private JTextField sAggregateAddressText;
+//  private JTextField sAppIdText;
+//  private JTextField sTableIdText;
+//  private JTextField sVersionPushText;
+//  private PathChooserPanel savePathChooser;
+//  private PathChooserPanel dataPathChooser;
+//  private JTextField sUserNameText;
+//  private JPasswordField sPasswordText;
+//  private JProgressBar sProgressBar;
+//  private JCheckBox sDownloadAttachment;
+//  private JCheckBox sApplyScanFmt;
+//  private JCheckBox sExtraMetadata;
+//  private JButton sLoginButton;
+//  private JButton sAnonLoginButton;
+//  private JButton sPullButton;
+//  private JButton sPushButton;
+//  private JButton sResetButton;
+//  private boolean isGUI;
+//  private CardLayout contentCardLayout;
+//  private JPanel contentPanel;
+//
+//  // Server data
+//  private AggregateInfo table;
+//  private RESTClient restClient;
+//
+//  private boolean force;
+//  private Scanner console;
+//
+//  private enum Operation {
+//    DOWNLOAD, UPLOAD, RESET, INFO
+//  }
+//
+//  public static void main(String[] args) {
+//    Suitcase rs = new Suitcase();
+//    rs.start(args);
+//  }
+//
+//  private Suitcase() {
+//    this.sAggregateAddressText = new JTextField(1);
+//    this.sAppIdText = new JTextField(1);
+//    this.sTableIdText = new JTextField(1);
+//    this.sVersionPushText = new JTextField(1);
+//    this.savePathChooser = new PathChooserPanel(
+//        SAVE_PATH_LABEL, FileUtils.getDefaultSavePath().toAbsolutePath().toString()
+//    );
+//    this.dataPathChooser = new PathChooserPanel(
+//        DATA_PATH_LABEL, FileUtils.getDefaultSavePath().toAbsolutePath().toString()
+//    );
+//    this.sUserNameText = new JTextField();
+//    this.sPasswordText = new JPasswordField();
+//    this.sProgressBar = new JProgressBar();
+//    this.sDownloadAttachment = new JCheckBox();
+//    this.sApplyScanFmt = new JCheckBox();
+//    this.sExtraMetadata = new JCheckBox();
+//    this.sLoginButton = new JButton();
+//    this.sAnonLoginButton = new JButton();
+//    this.sPullButton = new JButton();
+//    this.sPushButton = new JButton();
+//    this.sResetButton = new JButton();
+//    this.contentCardLayout = new CardLayout();
+//    this.contentPanel = new JPanel(contentCardLayout);
+//
+//    this.isGUI = true;
+//    this.console = new Scanner(System.in);
+//  }
+//
+//  private void start(String[] args) {
+//    if (args.length == 0) {
+//      //start GUI when no argument is passed
+//      startGUI();
+//    } else {
+//      isGUI = false;
+//      startCLI(args);
+//    }
+//  }
+//
+//  private void startCLI(String[] args) {
+//    switch (parseArgs(args, buildOptions())) {
+//    case DOWNLOAD:
+//      if (checkDownloadFields())
+//        download();
+//      break;
+//    case UPLOAD:
+//      if (checkUploadFields()) {
+//        upload();
+//      }
+//      break;
+//    case RESET:
+//      if (checkResetFields()) {
+//        reset();
+//      }
+//      break;
+//    default:
+//      //nothing
+//    }
+//  }
+//
+//  private Options buildOptions() {
+//    Options opt = new Options();
+//    //operations
+//    opt.addOption("download", false, "Download csv");
+//    opt.addOption("upload", false, "Upload csv");
+//    opt.addOption("reset", false, "Reset server");
+//
+//    //aggregate related
+//    opt.addOption("aggregate_url", true, "url to Aggregate server");
+//    opt.addOption("app_id", true, "app id");
+//    opt.addOption("table_id", true, "table id");
+//    opt.addOption("username", true, "username");
+//    opt.addOption("password", true, "password");
+//    opt.addOption("dataVersion", true, "version of data, usually 1 or 2");
+//
+//    //csv
+//    opt.addOption("a", "attachment", false, "download attachments");
+//    opt.addOption("s", "scan", false, "apply Scan formatting");
+//    opt.addOption("e", "extra", false, "add extra metadata columns");
+//    opt.addOption
+//        ("o", "output", true, "specify a custom output directory, default is ./Download/");
+//
+//    //UI
+//    opt.addOption("f", "force", false, "do not prompt, overwrite existing files");
+//
+//    //misc
+//    opt.addOption("h", "help", false, "print this message");
+//    opt.addOption("v", "version", false, "prints version information");
+//
+//    return opt;
+//  }
+//
+//  /**
+//   * Parses user arguments from pre-specified Options.
+//   *
+//   * @param args Arguments passed to by user
+//   * @param options Options to parse from
+//   * @return false when either "-h" or "-v" is passed, otherwise true
+//   */
+//  private Operation parseArgs(String[] args, Options options) {
+//    try {
+//      CommandLineParser parser = new DefaultParser();
+//      CommandLine line = parser.parse(options, args);
+//
+//      //handle -h and --help
+//      if (line.hasOption('h')) {
+//        HelpFormatter hf = new HelpFormatter();
+//        hf.printHelp("suitcase", options);
+//        return Operation.INFO;
+//      }
+//
+//      //handle -v
+//      if (line.hasOption('v')) {
+//        System.out.println("ODK Suitcase 2.0");
+//        return Operation.INFO;
+//      }
+//
+//      //Aggregate related
+//      sAggregateAddressText.setText(line.getOptionValue("aggregate_url"));
+//      sAppIdText.setText(line.getOptionValue("app_id"));
+//      sTableIdText.setText(line.getOptionValue("table_id"));
+//      sUserNameText.setText(line.getOptionValue("username"));
+//      sPasswordText.setText(line.getOptionValue("password"));
+//
+//      //CSV options
+//      sDownloadAttachment.setSelected(line.hasOption("a"));
+//      sApplyScanFmt.setSelected(line.hasOption("s"));
+//      sExtraMetadata.setSelected(line.hasOption("e"));
+//      this.force = line.hasOption("f");
+//
+//      //Misc
+//      //TODO: fix CLI
+////      sSavePathText.setText(line.getOptionValue("o"));
+//    } catch (ParseException e) {
+//      e.printStackTrace();
+//    }
+//
+//    return Operation.DOWNLOAD;
+//  }
+//
+//  private void startGUI() {
+//    this.frame = new JFrame(APP_NAME);
+//    frame.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+//    frame.setLocationRelativeTo(null);
+//    frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+//
+//    buildJFrame();
+//  }
+//
+//  private void buildJFrame() {
+//    // UI Container Panels
+//    JPanel loginCard = new JPanel(new GridBagLayout());
+//    buildLoginCard(loginCard);
+//
+//    JPanel pushPullCard = new JPanel(new GridBagLayout());
+//    buildPushPullCard(pushPullCard);
+//
+//    contentPanel.add(loginCard);
+//    contentPanel.add(pushPullCard);
+//
+//    // Finish building the frame
+//    frame.add(contentPanel);
+//    frame.setVisible(true);
+//  }
+//
+//  private void buildLoginCard(JPanel loginCard) {
+//    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
+//    gbc.gridx = 0;
+//    gbc.gridy = GridBagConstraints.RELATIVE;
+//
+//    JPanel inputPanel = new InputPanel(
+//        new String[] {"Aggregate Address", "App ID", "Username", "Password"},
+//        new JTextField[] {sAggregateAddressText, sAppIdText, sUserNameText, sPasswordText},
+//        new String[] {"https://aggregate-server-url.appspot.com", "default", "", ""}
+//    );
+////    buildInputArea(
+////        inputPanel,
+////        new String[] {"Aggregate Address", "App ID", "Username", "Password"},
+////        new JTextField[] {sAggregateAddressText, sAppIdText, sUserNameText, sPasswordText},
+////        new String[] {"https://aggregate-server-url.appspot.com", "default", "", ""}
+////    );
+//    gbc.weighty = 85;
+//    gbc.insets = new Insets(80, 200, 0, 200);
+//    loginCard.add(inputPanel, gbc);
+//
+//    JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 20, 0));
+//    buildLoginButtonArea(buttonPanel);
+//    gbc.weighty = 15;
+//    gbc.insets = new Insets(20, WINDOW_WIDTH / 4, 80, WINDOW_WIDTH / 4);
+//    loginCard.add(buttonPanel, gbc);
+//  }
+//
+//  private void buildPushPullCard(JPanel pushPullCard) {
+//    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
+//
+//    JPanel pullPanel = new JPanel(new GridBagLayout());
+//    pullPanel.setBorder(new EmptyBorder(10, PUSH_PULL_H_MARGIN, 0, PUSH_PULL_H_MARGIN));
+//    buildPullArea(pullPanel);
+//
+//    JPanel pushPanel = new JPanel(new GridBagLayout());
+//    pushPanel.setBorder(new EmptyBorder(10, PUSH_PULL_H_MARGIN, 0, PUSH_PULL_H_MARGIN));
+//    buildPushArea(pushPanel);
+//
+//    JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, pullPanel, pushPanel);
+//    splitPane.setResizeWeight(0.5);
+//    splitPane.setDividerSize(0);
+//    splitPane.setEnabled(false);
+//    pushPullCard.add(splitPane, gbc);
+//
+//    JPanel progressBarPanel = new JPanel(new GridLayout(1, 1));
+//    buildProgressBarArea(progressBarPanel);
+//
+//    JSplitPane splitPaneVertical =
+//        new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitPane, progressBarPanel);
+//    splitPaneVertical.setResizeWeight(0.8);
+//    splitPaneVertical.setDividerSize(0);
+//    splitPaneVertical.setEnabled(false);
+//    pushPullCard.add(splitPaneVertical, gbc);
+//  }
+//
+//  private void buildPullArea(JPanel pullPanel) {
+//    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
+//    gbc.gridx = 0;
+//    gbc.gridy = GridBagConstraints.RELATIVE;
+//
+//    JPanel pullInputPanel = new InputPanel(
+//        new String[] {"Table ID"},
+//        new JTextField[] {sTableIdText},
+//        new String[] {"table_id"}
+//    );
+////    buildInputArea(
+////        pullInputPanel,
+////        new String[] {"Table ID"}, new JTextField[] {sTableIdText}, new String[] {"table_id"}
+////    );
+//    gbc.weighty = 2;
+//    pullPanel.add(pullInputPanel, gbc);
+//
+//    JPanel pullPrefPanel = new JPanel(new GridLayout(2, 1));
+//    buildCheckboxArea(
+//        pullPrefPanel,
+//        new String[] {"Download attachments?", "Apply Scan formatting?", "Extra metadata columns?"},
+//        new JCheckBox[] {sDownloadAttachment, sApplyScanFmt, sExtraMetadata}
+//    );
+//    gbc.weighty = 5;
+//    pullPanel.add(pullPrefPanel, gbc);
+//
+//    gbc.weighty = 1;
+//    pullPanel.add(this.savePathChooser, gbc);
+//
+//    JPanel pullButtonPanel = new JPanel(new GridLayout(1, 1));
+//    buildPullButtonArea(pullButtonPanel);
+//    gbc.weighty = 2;
+//    gbc.insets = new Insets(10, 0, 0, 0);
+//    pullPanel.add(pullButtonPanel, gbc);
+//  }
+//
+//  private void buildPushArea(JPanel pushPanel) {
+//    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
+//    gbc.gridx = 0;
+//    gbc.gridy = GridBagConstraints.RELATIVE;
+//
+//    JPanel pushInputPanel = new InputPanel(
+//        new String[] {"Version"},
+//        new JTextField[] {sVersionPushText},
+//        new String[] {"2"}
+//    );
+////    buildInputArea(
+////        pushInputPanel,
+////        new String[] {"Version"}, new JTextField[] {sVersionPushText}, new String[] {"2"}
+////    );
+//    gbc.weighty = 2;
+//    pushPanel.add(pushInputPanel, gbc);
+//
+//    // Will add upload options in the future, adding these now makes layout easier (a lot easier)
+//    JPanel pushPrefPanel = new JPanel(new GridLayout(2, 1));
+//    buildCheckboxArea(
+//        pushPrefPanel,
+//        new String[] {"Option Placeholder", "Option Placeholder 2"},
+//        new JCheckBox[] {new JCheckBox(), new JCheckBox()}
+//    );
+//    gbc.weighty = 5;
+//    pushPanel.add(pushPrefPanel, gbc);
+//
+//    gbc.weighty = 1;
+//    pushPanel.add(dataPathChooser, gbc);
+//
+//    JPanel pushButtonPanel = new JPanel(new GridBagLayout());
+//    buildPushButtonArea(pushButtonPanel);
+//    gbc.insets = new Insets(10, -100, 0, 0);
+//    gbc.weighty = 2;
+//    pushPanel.add(pushButtonPanel, gbc);
+//  }
+//
+////  private void buildInputArea(JPanel parentPanel, String[] labelArr, JTextField[] fields,
+////      String[] defaultText) {
+////    if ((labelArr.length != fields.length) || (fields.length != defaultText.length)) {
+////      throw new IllegalArgumentException("Arrays have unequal length!");
+////    }
+////
+////    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
+////    gbc.gridx = GridBagConstraints.RELATIVE;
+////    gbc.gridy = 0;
+////
+////    //labels
+////    JPanel labelPanel = new JPanel(new GridLayout(labelArr.length, 1));
+////    gbc.weightx = 1;
+////    parentPanel.add(labelPanel, gbc);
+////    for (String label : labelArr) {
+////      labelPanel.add(new JLabel(label));
+////    }
+////
+////    //text fields
+////    JPanel inputPanel = new JPanel(new GridLayout(labelArr.length, 1));
+////    gbc.weightx = 9;
+////    parentPanel.add(inputPanel, gbc);
+////    for (int i = 0; i < fields.length; i++) {
+////      if (!defaultText[i].isEmpty()) {
+////        fields[i].setText(defaultText[i]);
+////      }
+////      fields[i].setBorder(BorderFactory.createLineBorder(Color.BLACK));
+////      inputPanel.add(fields[i]);
+////    }
+////  }
+//
+//  private void buildLoginButtonArea(JPanel buttonsPanel) {
+//    // Define buttons
+//    sLoginButton.setText(LOGIN_LABEL);
+//    sLoginButton.addActionListener(new ActionListener() {
+//      @Override
+//      public void actionPerformed(ActionEvent e) {
+//        if (checkLoginFields(false)) {
+//          sLoginButton.setEnabled(false);
+//          sLoginButton.setText(LOGIN_LOADING_LABEL);
+//
+//          sAnonLoginButton.setEnabled(false);
+//
+//          new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//              if (login()) {
+//                contentCardLayout.next(contentPanel);
+//              }
+//            }
+//          }).start();
+//        }
+//      }
+//    });
+//
+//    sAnonLoginButton.setText(LOGIN_ANON_LABEL);
+//    sAnonLoginButton.addActionListener(new ActionListener() {
+//      @Override
+//      public void actionPerformed(ActionEvent e) {
+//        if (checkLoginFields(true)) {
+//          sAnonLoginButton.setEnabled(false);
+//          sAnonLoginButton.setText(LOGIN_LOADING_LABEL);
+//
+//          sLoginButton.setEnabled(false);
+//
+//          sUserNameText.setText("");
+//          sPasswordText.setText("");
+//
+//          new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//              if (login()) {
+//                contentCardLayout.next(contentPanel);
+//              }
+//            }
+//          }).start();
+//        }
+//      }
+//    });
+//
+//    buttonsPanel.add(sLoginButton);
+//    buttonsPanel.add(sAnonLoginButton);
+//  }
+//
+//  private void buildPullButtonArea(JPanel pullButtonPanel) {
+//    sPullButton.setText(DOWNLOAD_LABEL);
+//    sPullButton.addActionListener(new ActionListener() {
+//      @Override
+//      public void actionPerformed(ActionEvent e) {
+//        if (checkDownloadFields()) {
+//          setPushPullAreaState(false, Operation.DOWNLOAD);
+//          sPullButton.setText(DOWNLOADING_LABEL);
+//          sProgressBar.setIndeterminate(true);
+//
+//          new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//              download();
+//            }
+//          }).start();
+//        }
+//      }
+//    });
+//
+//    pullButtonPanel.add(sPullButton);
+//  }
+//
+//  private void buildPushButtonArea(JPanel pushButtonPanel) {
+//    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
+//    gbc.gridx = GridBagConstraints.RELATIVE;
+//    gbc.gridy = 0;
+//
+//    sPushButton.setText(UPLOAD_LABEL);
+//    sPushButton.addActionListener(new ActionListener() {
+//      @Override
+//      public void actionPerformed(ActionEvent e) {
+//        if (checkUploadFields()) {
+//          setPushPullAreaState(false, Operation.UPLOAD);
+//          sPushButton.setText(UPLOADING_LABEL);
+//          sProgressBar.setIndeterminate(true);
+//
+//          new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//              upload();
+//            }
+//          }).start();
+//        }
+//      }
+//    });
+//
+//    sResetButton.setText(RESET_LABEL);
+//    sResetButton.addActionListener(new ActionListener() {
+//      @Override
+//      public void actionPerformed(ActionEvent e) {
+//        if (checkResetFields()) {
+//          setPushPullAreaState(false, Operation.RESET);
+//          sResetButton.setText(RESETTING_LABEL);
+//          sProgressBar.setIndeterminate(true);
+//
+//          new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//              reset();
+//            }
+//          }).start();
+//        }
+//      }
+//    });
+//
+//    pushButtonPanel.add(sResetButton, gbc);
+//    pushButtonPanel.add(sPushButton, gbc);
+//  }
+//
+//  private void buildCheckboxArea(JPanel parentPanel, String[] labels, JCheckBox[] checkBoxes) {
+//    if (labels.length != checkBoxes.length) {
+//      throw new IllegalArgumentException("Array length not equal");
+//    }
+//
+//    for (int i = 0; i < labels.length; i++) {
+//      JCheckBox cb = checkBoxes[i];
+//
+//      cb.setText(labels[i]);
+//      cb.setHorizontalAlignment(JCheckBox.CENTER);
+//      cb.setBorder(new EmptyBorder(0, -100, 0, -100));
+//
+//      parentPanel.add(cb);
+//    }
+//  }
+//
+//  private void buildProgressBarArea(JPanel pbPanel) {
+//    sProgressBar.setMinimum(0);
+//    sProgressBar.setMaximum(100);
+//    sProgressBar.setValue(100);
+//    sProgressBar.setString(PB_IDLE);
+//    sProgressBar.setStringPainted(true);
+//
+//    pbPanel.add(sProgressBar);
+//  }
+//
+//  private boolean login() {
+//    try {
+//      this.table = new AggregateInfo(
+//          sAggregateAddressText.getText(), sAppIdText.getText(),
+//          sUserNameText.getText(), String.valueOf(sPasswordText.getPassword())
+//      );
+//      this.restClient = new RESTClient(table);
+//      if (isGUI) {
+//        this.restClient.setProgressBar(this.sProgressBar);
+//      }
+//
+//      return true;
+//    } catch (MalformedURLException e) {
+//      e.printStackTrace();
+//      showError(BAD_URL);
+//    } catch (JSONException e) {
+//      e.printStackTrace();
+//      showError(BAD_CRED);
+//    } catch (Exception e) {
+//      e.printStackTrace();
+//      showError(GENERIC_ERR);
+//    } finally {
+//      if (isGUI) {
+//        sLoginButton.setEnabled(true);
+//        sAnonLoginButton.setEnabled(true);
+//
+//        sLoginButton.setText(LOGIN_LABEL);
+//        sAnonLoginButton.setText(LOGIN_ANON_LABEL);
+//
+//        sProgressBar.setString(PB_IDLE);
+//      }
+//    }
+//
+//    return false;
+//  }
+//
+//  private void download() {
+//    boolean firstRun = table.getCurrentTableId() == null;
+//
+//    CsvConfig csvConfig = new CsvConfig(
+//        sDownloadAttachment.isSelected(), sApplyScanFmt.isSelected(), sExtraMetadata.isSelected()
+//    );
+//
+//    table.setCurrentTableId(sTableIdText.getText());
+//
+//    if (firstRun && FileUtils.isDownloaded(table, savePathChooser.getPath())) {
+//      boolean delete = promptConfirm(OVERWRITE_DATA);
+//
+//      if (delete) {
+//        try {
+//          FileUtils.deleteTableData(table, savePathChooser.getPath());
+//        } catch (IOException e) {
+//          e.printStackTrace();
+//          showError(IO_DELETE_ERR);
+//        }
+//      }
+//    }
+//
+//    if (FileUtils.isDownloaded(table, csvConfig, savePathChooser.getPath())) {
+//      boolean delete = promptConfirm(OVERWRITE_CSV);
+//
+//      if (delete) {
+//        try {
+//          Files.delete(FileUtils.getCSVPath(table, csvConfig, savePathChooser.getPath()));
+//        } catch (IOException e) {
+//          e.printStackTrace();
+//          showError(IO_DELETE_ERR);
+//        }
+//      }
+//    }
+//
+//    try {
+//      if (csvConfig.isDownloadAttachment() || csvConfig.isScanFormatting()) {
+//        FileUtils.createInstancesDirectory(table, savePathChooser.getPath());
+//      } else {
+//        FileUtils.createBaseDirectory(table, savePathChooser.getPath());
+//      }
+//
+//      restClient.writeCSVToFile(csvConfig, savePathChooser.getPath());
+//
+//      if (isGUI)
+//        sProgressBar.setString(PB_DONE);
+//      else
+//        System.out.println("Done!");
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//      showError(IO_WRITE_ERR);
+//    } catch (JSONException e) {
+//      e.printStackTrace();
+//      showError(GENERIC_ERR);
+//    } finally {
+//      if (isGUI) {
+//        setPushPullAreaState(true, Operation.DOWNLOAD);
+//      }
+//    }
+//  }
+//
+//  private void upload() {
+//    try {
+//      restClient.pushAllData(dataPathChooser.getPath(), sVersionPushText.getText());
+//
+//      if (isGUI)
+//        sProgressBar.setString(PB_DONE);
+//      else
+//        System.out.println("Done!");
+//    } catch (Exception e) {
+//      e.printStackTrace();
+//      showError(GENERIC_ERR);
+//    } finally {
+//      try {
+//        restClient.updateTableList();
+//      } catch (Exception e) {
+//        // ignore
+//      }
+//
+//      if (isGUI) {
+//        setPushPullAreaState(true, Operation.UPLOAD);
+//      }
+//    }
+//  }
+//
+//  private void reset() {
+//    try {
+//      restClient.deleteAllRemote(sVersionPushText.getText());
+//
+//      if (isGUI)
+//        sProgressBar.setString(PB_DONE);
+//      else
+//        System.out.println("Done!");
+//    } catch (Exception e) {
+//      e.printStackTrace();
+//      showError(GENERIC_ERR);
+//    } finally {
+//      try {
+//        restClient.updateTableList();
+//      } catch (Exception e) {
+//        // ignore
+//      }
+//
+//      if (isGUI) {
+//        setPushPullAreaState(true, Operation.RESET);
+//      }
+//    }
+//  }
+//
+//  /**
+//   * Checks if aggregate address, App ID, and Table ID supplied are empty.
+//   * And displays a pop up showing the fields that are empty, if applicable.
+//   *
+//   * @return true when information presented has no problem
+//   */
+//  private boolean checkLoginFields(boolean anonymous) {
+//    sAggregateAddressText.setText(sAggregateAddressText.getText().trim());
+//    sAppIdText.setText(sAppIdText.getText().trim());
+//    sUserNameText.setText(sUserNameText.getText().trim());
+//
+//    boolean state = true;
+//    StringBuilder errorMsgBuilder = new StringBuilder();
+//
+//    if (sAggregateAddressText.getText().isEmpty()) {
+//      errorMsgBuilder.append(AGG_EMPTY).append(NEW_LINE);
+//      state = false;
+//    }
+//
+//    if (sAppIdText.getText().isEmpty()) {
+//      errorMsgBuilder.append(APP_ID_EMPTY).append(NEW_LINE);
+//      state = false;
+//    }
+//
+//    if (!anonymous) {
+//      if (sUserNameText.getText().isEmpty()) {
+//        errorMsgBuilder.append(USERNAME_EMPTY).append(NEW_LINE);
+//        state = false;
+//      }
+//
+//      if (String.valueOf(sPasswordText.getPassword()).isEmpty()) {
+//        errorMsgBuilder.append(PASSWORD_EMPTY).append(NEW_LINE);
+//        state = false;
+//      }
+//    }
+//
+//    if (!state) {
+//      showError(errorMsgBuilder.toString().trim());
+//    }
+//
+//    return state;
+//  }
+//
+//  private boolean checkDownloadFields() {
+//    sTableIdText.setText(sTableIdText.getText().trim());
+//
+//    boolean state = true;
+//    StringBuilder errorMsgBuilder = new StringBuilder();
+//
+//    if (sTableIdText.getText().isEmpty()) {
+//      errorMsgBuilder.append(TABLE_ID_EMPTY).append(NEW_LINE);
+//      state = false;
+//    }
+//
+//    if (!sTableIdText.getText().isEmpty() && !table.tableIdExists(sTableIdText.getText())) {
+//      errorMsgBuilder.append(BAD_TABLE_ID).append(NEW_LINE);
+//      state = false;
+//    }
+//
+//    if (savePathChooser.getPath().isEmpty()) {
+//      errorMsgBuilder.append(SAVE_PATH_EMPTY).append(NEW_LINE);
+//      state = false;
+//    }
+//
+//    if (!state) {
+//      showError(errorMsgBuilder.toString().trim());
+//    }
+//
+//    return state;
+//  }
+//
+//  private boolean checkUploadFields() {
+//    sVersionPushText.setText(sVersionPushText.getText().trim());
+//
+//    boolean state = true;
+//    StringBuilder errorMsgBuilder = new StringBuilder();
+//
+//    if (sVersionPushText.getText().isEmpty()) {
+//      errorMsgBuilder.append(VERSION_EMPTY).append(NEW_LINE);
+//      state = false;
+//    }
+//
+//    if (dataPathChooser.getPath().isEmpty()) {
+//      errorMsgBuilder.append(DATA_PATH_EMPTY).append(NEW_LINE);
+//      state = false;
+//    } else {
+//      if (Files.notExists(Paths.get(dataPathChooser.getPath()))) {
+//        errorMsgBuilder.append(DATA_DIR_NOT_EXIST).append(NEW_LINE);
+//        state = false;
+//      } else {
+//        if (!FileUtils.checkUploadDir(dataPathChooser.getPath())) {
+//          errorMsgBuilder.append(DATA_DIR_INVALID).append(NEW_LINE);
+//          state = false;
+//        }
+//      }
+//    }
+//
+//    if (!state) {
+//      showError(errorMsgBuilder.toString().trim());
+//    }
+//
+//    return state;
+//  }
+//
+//  private boolean checkResetFields() {
+//    sVersionPushText.setText(sVersionPushText.getText().trim());
+//
+//    boolean state = true;
+//    StringBuilder errorMsgBuilder = new StringBuilder();
+//
+//    if (sVersionPushText.getText().isEmpty()) {
+//      errorMsgBuilder.append(VERSION_EMPTY).append(NEW_LINE);
+//      state = false;
+//    }
+//
+//    if (!state) {
+//      showError(errorMsgBuilder.toString().trim());
+//    }
+//
+//    return state;
+//  }
+//
+//  /**
+//   * Displays error message.
+//   *
+//   * When ran as GUI,
+//   * displays a pop up with an error message.
+//   * Progress bar is set to non-indeterminate and string set to "error."
+//   *
+//   * @param errMsg Error message to display
+//   */
+////  private void showError(String errMsg) {
+////    if (isGUI) {
+////      sProgressBar.setIndeterminate(false);
+////      sProgressBar.setString(PB_ERROR);
+////      JOptionPane.showConfirmDialog(frame, errMsg, "Error", JOptionPane.DEFAULT_OPTION,
+////          JOptionPane.ERROR_MESSAGE);
+////    }
+////    else
+////      System.out.println("Error: " + errMsg);
+////  }
+////
+////  private boolean promptConfirm(String msg) {
+////    if (force)
+////      return true;
+////
+////    if (isGUI) {
+////      return JOptionPane.YES_OPTION ==
+////          JOptionPane.showConfirmDialog(frame, msg, APP_NAME, JOptionPane.YES_NO_OPTION,
+////          JOptionPane.QUESTION_MESSAGE);
+////    } else {
+////      System.out.print(msg + " yes / no ");
+////      return console.nextLine().toLowerCase().startsWith("y");
+////    }
+////  }
+//
+//  private void setPushPullAreaState(boolean state, Operation trigger) {
+//    sProgressBar.setIndeterminate(!state);
+//
+//    // this is effective only when pb is determinate
+//    sProgressBar.setValue(sProgressBar.getMaximum());
+//
+//    sPullButton.setEnabled(state);
+//    sPushButton.setEnabled(state);
+//    sResetButton.setEnabled(state);
+//
+//    if (state) {
+//      sPullButton.setText(DOWNLOAD_LABEL);
+//      sPushButton.setText(UPLOAD_LABEL);
+//      sResetButton.setText(RESET_LABEL);
+//    } else {
+//      switch (trigger) {
+//      case DOWNLOAD:
+//        sPullButton.setText(DOWNLOADING_LABEL);
+//        break;
+//      case UPLOAD:
+//        sPushButton.setText(UPLOADING_LABEL);
+//        break;
+//      case RESET:
+//        sResetButton.setText(RESETTING_LABEL);
+//        break;
+//      }
+//    }
+//  }
+//}

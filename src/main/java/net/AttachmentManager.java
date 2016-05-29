@@ -21,15 +21,15 @@ import java.util.*;
  * !!!ATTENTION!!! One AttachmentManager per table
  */
 public class AttachmentManager {
-  private AggregateInfo table;
+  private AggregateInfo aggInfo;
+  private String tableId;
+  private String savePath;
   private Map<String, JSONObject> attachmentManifests;
   private Map<String, Map<String, String>> allAttachments;
-  private WinkClient wc;
-  private String savePath;
   
-  public AttachmentManager(AggregateInfo table, WinkClient wc, String savePath) {
-    this.table = table;
-    this.wc = wc;
+  public AttachmentManager(AggregateInfo aggInfo, String tableId, String savePath) {
+    this.aggInfo = aggInfo;
+    this.tableId = tableId;
     this.savePath = savePath;
 
     this.attachmentManifests = new HashMap<>();
@@ -45,11 +45,7 @@ public class AttachmentManager {
   public void getListOfRowAttachments(String rowId) {
     if (!this.allAttachments.containsKey(rowId)) {
       try {
-        JSONObject manifest =
-            wc.getManifestForRow(this.table.getServerUrl(), this.table.getAppId(),
-                this.table.getCurrentTableId(),
-                this.table.getSchemaETag(this.table.getCurrentTableId()), rowId
-            );
+        JSONObject manifest = WinkSingleton.getInstance().getManifestForRow(tableId, rowId);
         JSONArray attachments = manifest.getJSONArray("files");
 
         if (attachments.size() > 0) {
@@ -71,7 +67,7 @@ public class AttachmentManager {
 
   /**
    * Retrieves URL for attachment.
-   * If a localUrl is requested, url is inferred from filename and table info
+   * If a localUrl is requested, url is inferred from filename and aggInfo info
    * If a row lacks attachment manifest, null is returned.
    * When allAttachment lacks record of requested rowId, IllegalStateException will be thrown.
    * When allAttachment lacks record of requested filename, IllegalArgumentException will be thrown.
@@ -119,17 +115,14 @@ public class AttachmentManager {
     if (this.attachmentManifests.containsKey(rowId)) {
       try {
         if (scanRawJsonOnly) {
-          wc.getFileForRow(
-              table.getServerUrl(), table.getAppId(), table.getCurrentTableId(),
-              table.getSchemaETag(table.getCurrentTableId()), rowId, false,
-              getAttachmentLocalPath(rowId, getJsonFilename(rowId)).toAbsolutePath().toString(),
-              getJsonFilename(rowId)
+          WinkSingleton.getInstance().getFileForRow(
+              tableId, rowId, getAttachmentLocalPath(rowId, getScanJsonFilename(rowId)).toString(),
+              getScanJsonFilename(rowId)
           );
         } else {
-          wc.batchGetFilesForRow(
-              table.getServerUrl(), table.getAppId(), table.getCurrentTableId(),
-              table.getSchemaETag(table.getCurrentTableId()),
-              rowId, getAttachmentLocalDir(rowId).toString(), attachmentManifests.get(rowId), -1
+          WinkSingleton.getInstance().batchGetFilesForRow(
+              tableId, rowId, getAttachmentLocalDir(rowId).toString(),
+              attachmentManifests.get(rowId)
           );
         }
       }
@@ -157,21 +150,30 @@ public class AttachmentManager {
     }
 
     try {
-      return Files.newInputStream(getAttachmentLocalPath(rowId, getJsonFilename(rowId)));
+      return Files.newInputStream(getAttachmentLocalPath(rowId, getScanJsonFilename(rowId)));
     } catch (NoSuchFileException e) {
       return null;
     }
   }
 
   /**
-   * Infers local path to attachment directory with rowId and table info.
+   * Overwrites the original save path
+   *
+   * @param path
+   */
+  public void setSavePath(String path) {
+    this.savePath = path;
+  }
+
+  /**
+   * Infers local path to attachment directory with rowId and aggInfo info.
    *
    * @param rowId
    * @return
    */
   private Path getAttachmentLocalDir(String rowId) throws IOException {
     String sanitizedRowId = WinkClient.convertRowIdForInstances(rowId);
-    String insPath = FileUtils.getInstancesPath(table, savePath).toString();
+    String insPath = FileUtils.getInstancesPath(aggInfo, tableId, savePath).toString();
 
     if (Files.notExists(Paths.get(insPath, sanitizedRowId))) {
       Files.createDirectories(Paths.get(insPath, sanitizedRowId));
@@ -181,7 +183,7 @@ public class AttachmentManager {
   }
 
   /**
-   * Infers local path to attachment with rowId, filename and table info.
+   * Infers local path to attachment with rowId, filename and aggInfo info.
    *
    * Warning: Doesn't check if filename is valid (THIS IS INTENDED)
    *
@@ -200,7 +202,7 @@ public class AttachmentManager {
    * @param rowId
    * @return
    */
-  private String getJsonFilename(String rowId) {
+  private String getScanJsonFilename(String rowId) {
     return "raw_" + WinkClient.convertRowIdForInstances(rowId) + ".json";
   }
 }
