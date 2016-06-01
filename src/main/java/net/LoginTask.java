@@ -21,7 +21,7 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
 
   @Override
   protected Void doInBackground() throws Exception {
-    WinkSingleton wink = WinkSingleton.getInstance();
+    WinkWrapper wink = WinkWrapper.getInstance();
 
     wink.reset();
     wink.init(aggInfo);

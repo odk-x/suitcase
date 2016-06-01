@@ -31,7 +31,7 @@ public class UploadTask extends SuitcaseSwingWorker<Void> {
   protected Void doInBackground() throws Exception {
     setString(IN_PROGRESS_STRING);
 
-    WinkSingleton wink = WinkSingleton.getInstance();
+    WinkWrapper wink = WinkWrapper.getInstance();
     wink.pushAllData(dataPath, version);
 
     Thread.sleep(PUSH_FINISH_WAIT);

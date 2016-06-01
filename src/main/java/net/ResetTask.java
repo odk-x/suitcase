@@ -28,7 +28,7 @@ public class ResetTask extends SuitcaseSwingWorker<Void> {
   protected Void doInBackground() throws Exception {
     setString(IN_PROGRESS_STRING);
 
-    WinkSingleton wink = WinkSingleton.getInstance();
+    WinkWrapper wink = WinkWrapper.getInstance();
 
     // first delete all app level files
     publish(new ProgressBarStatus(0, "Stage 1/3: Delete app level files", false));

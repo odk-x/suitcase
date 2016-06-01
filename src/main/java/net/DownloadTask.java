@@ -12,11 +12,8 @@ import ui.ProgressBarStatus;
 import ui.SuitcaseProgressBar;
 import utils.FileUtils;
 
-import javax.swing.*;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static ui.MessageString.*;
@@ -53,7 +50,7 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
     // then create directory structure when needed
     FileUtils.createDirectory(aggInfo, csvConfig, csv.getTableId(), savePath);
 
-    WinkSingleton wink = WinkSingleton.getInstance();
+    WinkWrapper wink = WinkWrapper.getInstance();
 
     // retrieve data from Aggregate and store in csv
     if (csv.getSize() == 0) {

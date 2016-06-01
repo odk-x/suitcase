@@ -45,7 +45,7 @@ public class AttachmentManager {
   public void getListOfRowAttachments(String rowId) {
     if (!this.allAttachments.containsKey(rowId)) {
       try {
-        JSONObject manifest = WinkSingleton.getInstance().getManifestForRow(tableId, rowId);
+        JSONObject manifest = WinkWrapper.getInstance().getManifestForRow(tableId, rowId);
         JSONArray attachments = manifest.getJSONArray("files");
 
         if (attachments.size() > 0) {
@@ -115,12 +115,12 @@ public class AttachmentManager {
     if (this.attachmentManifests.containsKey(rowId)) {
       try {
         if (scanRawJsonOnly) {
-          WinkSingleton.getInstance().getFileForRow(
+          WinkWrapper.getInstance().getFileForRow(
               tableId, rowId, getAttachmentLocalPath(rowId, getScanJsonFilename(rowId)).toString(),
               getScanJsonFilename(rowId)
           );
         } else {
-          WinkSingleton.getInstance().batchGetFilesForRow(
+          WinkWrapper.getInstance().batchGetFilesForRow(
               tableId, rowId, getAttachmentLocalDir(rowId).toString(),
               attachmentManifests.get(rowId)
           );

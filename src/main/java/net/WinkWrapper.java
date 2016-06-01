@@ -1,24 +1,18 @@
 package net;
 
 import model.AggregateInfo;
-import model.CsvConfig;
-import model.ODKCsv;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
-import org.opendatakit.aggregate.odktables.rest.RFC4180CsvWriter;
 import org.opendatakit.wink.client.WinkClient;
-import utils.FileUtils;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.zip.DataFormatException;
 
 import static org.opendatakit.wink.client.WinkClient.*;
 
-public class WinkSingleton {
+public class WinkWrapper {
   private static final String FETCH_LIMIT = "1000";
   private static final int DELETE_TABLE_DEF_WAIT = 1000;
   private static final int PUSH_DONE_WAIT = 5000;
@@ -27,15 +21,15 @@ public class WinkSingleton {
   private WinkClient wc;
   private boolean hasInit;
 
-  private WinkSingleton() {
+  private WinkWrapper() {
     this.hasInit = false;
   }
 
   private static class InstanceHolder {
-    private static final WinkSingleton INSTANCE = new WinkSingleton();
+    private static final WinkWrapper INSTANCE = new WinkWrapper();
   }
 
-  public static WinkSingleton getInstance() {
+  public static WinkWrapper getInstance() {
     return InstanceHolder.INSTANCE;
   }
 

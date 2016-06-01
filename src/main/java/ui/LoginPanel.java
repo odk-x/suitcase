@@ -3,7 +3,7 @@ package ui;
 import model.AggregateInfo;
 import net.LoginTask;
 import net.SuitcaseSwingWorker;
-import net.WinkSingleton;
+import net.WinkWrapper;
 import utils.FieldsValidatorUtils;
 
 import javax.swing.*;
@@ -151,7 +151,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
       sAnonLoginButton.setEnabled(true);
 
       // if login is successful, let parent switch to the next card
-      if (WinkSingleton.getInstance().isInitialized()) {
+      if (WinkWrapper.getInstance().isInitialized()) {
         ((CardLayout) getParent().getLayout()).next(getParent());
       }
     }
