@@ -3,6 +3,7 @@ package ui;
 import net.ResetTask;
 import net.SuitcaseSwingWorker;
 import net.UploadTask;
+import utils.FieldsValidatorUtils;
 import utils.FileUtils;
 
 import javax.swing.*;
@@ -39,7 +40,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
     this.sPushButton = new JButton();
     this.sResetButton = new JButton();
     this.dataPathChooser = new PathChooserPanel(
-        DATA_PATH_LABEL, FileUtils.getDefaultSavePath().toAbsolutePath().toString()
+        DATA_PATH_LABEL, FileUtils.getDefaultUploadPath().toString()
     );
 
     GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
@@ -55,9 +56,14 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
     this.add(pushInputPanel, gbc);
 
     // Will add upload options in the future, adding these now makes layout easier (a lot easier)
+    JCheckBox placeholderCheckbox = new JCheckBox();
+    placeholderCheckbox.setVisible(false);
+    JCheckBox placeholderCheckbox2 = new JCheckBox();
+    placeholderCheckbox2.setVisible(false);
     JPanel pushPrefPanel = new CheckboxPanel(
         new String[] {"Option Placeholder", "Option Placeholder 2"},
-        new JCheckBox[] {new JCheckBox(), new JCheckBox()}, 2, 1
+        new JCheckBox[] {placeholderCheckbox, placeholderCheckbox2},
+        2, 1
     );
     gbc.weighty = 5;
     this.add(pushPrefPanel, gbc);
@@ -81,13 +87,19 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
     sPushButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        if (checkUploadFields()) {
+        sVersionPushText.setText(sVersionPushText.getText().trim());
+
+        String error = FieldsValidatorUtils.checkUploadFields(sVersionPushText.getText(),
+            dataPathChooser.getPath());
+
+        if (error != null) {
+          DialogUtils.showError(error, true);
+        } else {
           sPushButton.setText(PUSHING_LABEL);
           setButtonState(false);
 
-          UploadTask worker = new UploadTask(
-              parent.getAggInfo(), dataPathChooser.getPath(), sVersionPushText.getText(), true
-          );
+          UploadTask worker = new UploadTask(parent.getAggInfo(), dataPathChooser.getPath(),
+              sVersionPushText.getText(), true);
           worker.addPropertyChangeListener(parent.getProgressBar());
           worker.addPropertyChangeListener(PushPanel.this);
           worker.execute();
@@ -99,7 +111,13 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
     sResetButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        if (checkResetFields()) {
+        sVersionPushText.setText(sVersionPushText.getText().trim());
+
+        String error = FieldsValidatorUtils.checkResetFields(sVersionPushText.getText());
+
+        if (error != null) {
+          DialogUtils.showError(error, true);
+        } else {
           sResetButton.setText(RESETTING_LABEL);
           setButtonState(false);
 
@@ -113,57 +131,6 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
 
     pushButtonPanel.add(sResetButton, gbc);
     pushButtonPanel.add(sPushButton, gbc);
-  }
-
-  private boolean checkUploadFields() {
-    sVersionPushText.setText(sVersionPushText.getText().trim());
-
-    boolean state = true;
-    StringBuilder errorMsgBuilder = new StringBuilder();
-
-    if (sVersionPushText.getText().isEmpty()) {
-      errorMsgBuilder.append(VERSION_EMPTY).append(NEW_LINE);
-      state = false;
-    }
-
-    if (dataPathChooser.getPath().isEmpty()) {
-      errorMsgBuilder.append(DATA_PATH_EMPTY).append(NEW_LINE);
-      state = false;
-    } else {
-      if (Files.notExists(Paths.get(dataPathChooser.getPath()))) {
-        errorMsgBuilder.append(DATA_DIR_NOT_EXIST).append(NEW_LINE);
-        state = false;
-      } else {
-        if (!FileUtils.checkUploadDir(dataPathChooser.getPath())) {
-          errorMsgBuilder.append(DATA_DIR_INVALID).append(NEW_LINE);
-          state = false;
-        }
-      }
-    }
-
-    if (!state) {
-      DialogUtils.showError(errorMsgBuilder.toString().trim(), true);
-    }
-
-    return state;
-  }
-
-  private boolean checkResetFields() {
-    sVersionPushText.setText(sVersionPushText.getText().trim());
-
-    boolean state = true;
-    StringBuilder errorMsgBuilder = new StringBuilder();
-
-    if (sVersionPushText.getText().isEmpty()) {
-      errorMsgBuilder.append(VERSION_EMPTY).append(NEW_LINE);
-      state = false;
-    }
-
-    if (!state) {
-      DialogUtils.showError(errorMsgBuilder.toString().trim(), true);
-    }
-
-    return state;
   }
 
   private void setButtonState(boolean state) {

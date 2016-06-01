@@ -25,8 +25,8 @@ public class AggregateInfo {
 
     this.serverUrl = processUrl(serverUrl);
     this.appId = appId;
-    this.userName = userName;
-    this.password = password;
+    this.userName = userName == null ? "" : userName;
+    this.password = password == null ? "" : password;
     this.tableIdSchemaETag = new TreeMap<>();
   }
 

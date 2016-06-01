@@ -6,6 +6,7 @@ import net.AttachmentManager;
 import net.DownloadTask;
 import net.SuitcaseSwingWorker;
 import org.apache.wink.json4j.JSONException;
+import utils.FieldsValidatorUtils;
 import utils.FileUtils;
 
 import javax.swing.*;
@@ -48,7 +49,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     this.sPullButton = new JButton();
     this.sTableIdText = new JTextField(1);
     this.savePathChooser = new PathChooserPanel(
-        SAVE_PATH_LABEL, FileUtils.getDefaultSavePath().toAbsolutePath().toString()
+        SAVE_PATH_LABEL, FileUtils.getDefaultSavePath().toString()
     );
 
     GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
@@ -85,14 +86,20 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     sPullButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        if (checkDownloadFields()) {
-          sPullButton.setText(DOWNLOADING_LABEL);
+        sTableIdText.setText(sTableIdText.getText().trim());
 
+        String error = FieldsValidatorUtils.checkDownloadFields(
+            sTableIdText.getText(), savePathChooser.getPath(), parent.getAggInfo());
+
+        if (error != null) {
+          DialogUtils.showError(error, true);
+        } else {
           // disable download button
           sPullButton.setEnabled(false);
 
-          CsvConfig config = new CsvConfig(sDownloadAttachment.isSelected(), sApplyScanFmt
-              .isSelected(), sExtraMetadata.isSelected());
+          sPullButton.setText(DOWNLOADING_LABEL);
+
+          CsvConfig config = new CsvConfig(sDownloadAttachment.isSelected(), sApplyScanFmt.isSelected(), sExtraMetadata.isSelected());
 
           if (attachMngr == null) {
             attachMngr = new AttachmentManager(parent.getAggInfo(), sTableIdText.getText(),
@@ -108,9 +115,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
             } catch (JSONException e1) { /*should never happen*/ }
           }
 
-          DownloadTask worker = new DownloadTask(
-              parent.getAggInfo(), csv, config, savePathChooser.getPath(), true
-          );
+          DownloadTask worker = new DownloadTask(parent.getAggInfo(), csv, config, savePathChooser.getPath(), true);
           worker.addPropertyChangeListener(parent.getProgressBar());
           worker.addPropertyChangeListener(PullPanel.this);
           worker.execute();
@@ -119,34 +124,6 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     });
 
     pullButtonPanel.add(sPullButton);
-  }
-
-  private boolean checkDownloadFields() {
-    sTableIdText.setText(sTableIdText.getText().trim());
-
-    boolean state = true;
-    StringBuilder errorMsgBuilder = new StringBuilder();
-
-    if (sTableIdText.getText().isEmpty()) {
-      errorMsgBuilder.append(TABLE_ID_EMPTY).append(NEW_LINE);
-      state = false;
-    }
-
-    if (!sTableIdText.getText().isEmpty() && !parent.getAggInfo().tableIdExists(sTableIdText.getText())) {
-      errorMsgBuilder.append(BAD_TABLE_ID).append(NEW_LINE);
-      state = false;
-    }
-
-    if (savePathChooser.getPath().isEmpty()) {
-      errorMsgBuilder.append(SAVE_PATH_EMPTY).append(NEW_LINE);
-      state = false;
-    }
-
-    if (!state) {
-      DialogUtils.showError(errorMsgBuilder.toString().trim(), true);
-    }
-
-    return state;
   }
 
   @Override

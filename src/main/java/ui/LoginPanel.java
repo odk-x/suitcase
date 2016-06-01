@@ -4,6 +4,7 @@ import model.AggregateInfo;
 import net.LoginTask;
 import net.SuitcaseSwingWorker;
 import net.WinkSingleton;
+import utils.FieldsValidatorUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -30,10 +31,19 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-      if (checkFields(isAnon)) {
+      sanitizeFields(isAnon);
+      String error = FieldsValidatorUtils.checkLoginFields(
+          sAggregateAddressText.getText(), sAppIdText.getText(), sUserNameText.getText(),
+          String.valueOf(sPasswordText.getPassword()), isAnon
+      );
+
+      if (error != null) {
+        DialogUtils.showError(error, true);
+      } else {
         loginButton.setEnabled(false);
         anonLoginButton.setEnabled(false);
 
+        // change label of the login button clicked
         (isAnon ? anonLoginButton : loginButton).setText(LOGIN_LOADING_LABEL);
 
         try {
@@ -122,42 +132,6 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
       sUserNameText.setText("");
       sPasswordText.setText("");
     }
-  }
-
-  private boolean checkFields(boolean anonymous) {
-    sanitizeFields(anonymous);
-
-    boolean state = true;
-    StringBuilder errorMsgBuilder = new StringBuilder();
-
-    if (sAggregateAddressText.getText().isEmpty()) {
-      errorMsgBuilder.append(AGG_EMPTY).append(NEW_LINE);
-      state = false;
-    }
-
-    if (sAppIdText.getText().isEmpty()) {
-      errorMsgBuilder.append(APP_ID_EMPTY).append(NEW_LINE);
-      state = false;
-    }
-
-    // these are not required for anonymous authentication
-    if (!anonymous) {
-      if (sUserNameText.getText().isEmpty()) {
-        errorMsgBuilder.append(USERNAME_EMPTY).append(NEW_LINE);
-        state = false;
-      }
-
-      if (String.valueOf(sPasswordText.getPassword()).isEmpty()) {
-        errorMsgBuilder.append(PASSWORD_EMPTY).append(NEW_LINE);
-        state = false;
-      }
-    }
-
-    if (!state) {
-      DialogUtils.showError(errorMsgBuilder.toString().trim(), true);
-    }
-
-    return state;
   }
 
   private void buildAggregateInfo() throws MalformedURLException {
