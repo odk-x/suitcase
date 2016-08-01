@@ -11,6 +11,7 @@ public class FileUtils {
   // paths
   private static final String DEFAULT_SAVE_PATH = "Download";
   private static final String DEFAULT_UPLOAD_PATH = "Upload";
+  private static final String DEFAULT_UPDATE_PATH = "Update";
   private static final String INSTANCES_PATH = "instances";
   private static final String ASSETS_PATH = "assets";
   private static final String TABLES_PATH = "tables";
@@ -76,6 +77,15 @@ public class FileUtils {
    */
   public static Path getDefaultUploadPath() {
     return Paths.get(DEFAULT_UPLOAD_PATH).toAbsolutePath();
+  }
+  
+  /**
+   * Returns the default update path
+   *
+   * @return absolute Path
+   */
+  public static Path getDefaultUpdatePath() {
+    return Paths.get(DEFAULT_UPDATE_PATH).toAbsolutePath();
   }
 
   /**

@@ -6,19 +6,23 @@ import model.ODKCsv;
 import net.AttachmentManager;
 import net.DownloadTask;
 import net.ResetTask;
+import net.UpdateTask;
 import net.UploadTask;
+
 import org.apache.commons.cli.*;
 import org.apache.wink.json4j.JSONException;
+
 import utils.FieldsValidatorUtils;
 import utils.FileUtils;
 
 import java.net.MalformedURLException;
+import java.util.concurrent.CountDownLatch;
 
 import static ui.MessageString.*;
 
 public class SuitcaseCLI {
   private enum Operation {
-    DOWNLOAD, UPLOAD, RESET, INFO
+    DOWNLOAD, UPLOAD, UPDATE, RESET, INFO
   }
 
   private String[] args;
@@ -86,6 +90,33 @@ public class SuitcaseCLI {
         new ResetTask(version, false).execute();
       }
       break;
+      
+    case UPDATE:
+        error = FieldsValidatorUtils.checkUpdateFields(tableId, path, version);
+
+        if (error != null) {
+          DialogUtils.showError(error, false);
+        } else {
+          final CountDownLatch signal = new CountDownLatch(1);
+          UpdateTask task = new UpdateTask(aggInfo, path == null ? FileUtils.getDefaultUpdatePath().toString() : path, version, tableId, false) {
+            @Override
+            protected void finished() {
+              signal.countDown();// notify the count downlatch
+            }
+          };
+          task.execute();
+          
+          try {
+            signal.await();// wait for callback
+            task.get();
+            
+          } catch (Exception e1) {
+            System.out.println("testUpdateTaskAdd failed with exception: " + e1);
+            e1.printStackTrace();
+          }
+          
+        }
+        break;
     }
   }
 
@@ -97,27 +128,28 @@ public class SuitcaseCLI {
     operation.addOption(new Option("download", false, "Download csv"));
     operation.addOption(new Option("upload", false, "Upload csv"));
     operation.addOption(new Option("reset", false, "Reset server"));
-    operation.setRequired(true);
+    operation.addOption(new Option("update", false, "Update tableId using csv specified by path"));
+    //operation.setRequired(true);
     opt.addOptionGroup(operation);
 
     //aggregate related
-    Option aggUrl = new Option("aggregate-url", true, "url to Aggregate server");
-    aggUrl.setRequired(true);
+    Option aggUrl = new Option("aggregateUrl", true, "url to Aggregate server");
+    //aggUrl.setRequired(true);
     opt.addOption(aggUrl);
 
-    Option appId = new Option("app-id", true, "app id");
-    appId.setRequired(true);
+    Option appId = new Option("appId", true, "app id");
+    //appId.setRequired(true);
     opt.addOption(appId);
 
-    Option tableId = new Option("table-id", true, "table id");
-    tableId.setRequired(true);
+    Option tableId = new Option("tableId", true, "table id");
+    //tableId.setRequired(true);
     opt.addOption(tableId);
 
     opt.addOption("username", true, "username"); // not required
     opt.addOption("password", true, "password"); // not required
 
     // not required for download, check later
-    opt.addOption("data-version", true, "version of data, usually 1 or 2");
+    opt.addOption("dataVersion", true, "version of data, usually 1 or 2");
 
     //csv options
     opt.addOption("a", "attachment", false, "download attachments");
@@ -169,11 +201,13 @@ public class SuitcaseCLI {
         operation = Operation.UPLOAD;
       } else if (line.hasOption("reset")) {
         operation = Operation.RESET;
+      } else if (line.hasOption("update")){
+        operation = Operation.UPDATE;
       } else {
         operation = Operation.DOWNLOAD;
       }
 
-      if (operation != Operation.DOWNLOAD && !line.hasOption("data-version")) {
+      if (operation != Operation.DOWNLOAD && !line.hasOption("dataVersion")) {
         throw new ParseException("Data version is required for upload and reset");
       }
 
@@ -183,7 +217,7 @@ public class SuitcaseCLI {
 
       // validate fields before creating AggregateInfo object
       String error = FieldsValidatorUtils.checkLoginFields(
-          line.getOptionValue("aggregate_url"), line.getOptionValue("app_id"),
+          line.getOptionValue("aggregateUrl"), line.getOptionValue("appId"),
           username, password, username.isEmpty() && password.isEmpty()
       );
       if (error != null) {
@@ -192,10 +226,10 @@ public class SuitcaseCLI {
         return null;
       }
       aggInfo = new AggregateInfo(
-          line.getOptionValue("aggregate_url"), line.getOptionValue("app_id"),
+          line.getOptionValue("aggregateUrl"), line.getOptionValue("appId"),
           line.getOptionValue("username"), line.getOptionValue("password")
       );
-      tableId = line.getOptionValue("table_id");
+      tableId = line.getOptionValue("tableId");
 
       if (operation == Operation.DOWNLOAD) {
         //CSV options
@@ -205,7 +239,7 @@ public class SuitcaseCLI {
       }
 
       path = line.getOptionValue("path");
-      version = line.getOptionValue("data-version");
+      version = line.getOptionValue("dataVersion");
 
       force = line.hasOption("f");
     } catch (ParseException e) {

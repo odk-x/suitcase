@@ -95,4 +95,22 @@ public class FieldsValidatorUtils {
 
     return errorMsgBuilder.length() > 0 ? errorMsgBuilder.toString().trim() : null;
   }
+  
+  public static String checkUpdateFields(String tableId, String version, String dataPath) {
+    StringBuilder errorMsgBuilder = new StringBuilder();
+
+    if (tableId.isEmpty()) {
+      errorMsgBuilder.append(TABLE_ID_EMPTY).append(NEW_LINE);
+    }
+    
+    if (version.isEmpty()) {
+      errorMsgBuilder.append(VERSION_EMPTY).append(NEW_LINE);
+    }
+
+    if (dataPath.isEmpty()) {
+      errorMsgBuilder.append(DATA_PATH_EMPTY).append(NEW_LINE);
+    }
+
+    return errorMsgBuilder.length() > 0 ? errorMsgBuilder.toString().trim() : null;
+  }
 }
