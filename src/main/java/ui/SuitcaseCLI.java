@@ -20,6 +20,8 @@ public class SuitcaseCLI {
     DOWNLOAD, UPLOAD, UPDATE, RESET, INFO
   }
 
+  private static final String[] REQUIRED_ARGS = new String[]{"aggregateUrl", "tableId", "appId"};
+
   private String[] args;
 
   private Options cliOptions;
@@ -105,20 +107,19 @@ public class SuitcaseCLI {
     operation.addOption(new Option("upload", false, "Upload csv"));
     operation.addOption(new Option("reset", false, "Reset server"));
     operation.addOption(new Option("update", false, "Update tableId using csv specified by path"));
-    //operation.setRequired(true);
+    operation.addOption(new Option("h", "help", false, "print this message"));
+    operation.addOption(new Option("v", "version", false, "prints version information"));
+    operation.setRequired(true);
     opt.addOptionGroup(operation);
 
     //aggregate related
     Option aggUrl = new Option("aggregateUrl", true, "url to Aggregate server");
-    //aggUrl.setRequired(true);
     opt.addOption(aggUrl);
 
     Option appId = new Option("appId", true, "app id");
-    //appId.setRequired(true);
     opt.addOption(appId);
 
     Option tableId = new Option("tableId", true, "table id");
-    //tableId.setRequired(true);
     opt.addOption(tableId);
 
     opt.addOption("username", true, "username"); // not required
@@ -138,10 +139,6 @@ public class SuitcaseCLI {
 
     //UI
     opt.addOption("f", "force", false, "do not prompt, overwrite existing files");
-
-    //misc
-    opt.addOption("h", "help", false, "print this message");
-    opt.addOption("v", "version", false, "prints version information");
 
     return opt;
   }
@@ -185,6 +182,12 @@ public class SuitcaseCLI {
 
       if (operation != Operation.DOWNLOAD && !line.hasOption("dataVersion")) {
         throw new ParseException("Data version is required for upload, update and reset");
+      }
+
+      for (String arg : REQUIRED_ARGS) {
+        if (!line.hasOption(arg)) {
+          throw new ParseException(arg + "is required");
+        }
       }
 
       //Aggregate related
