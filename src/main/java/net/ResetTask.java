@@ -20,6 +20,8 @@ public class ResetTask extends SuitcaseSwingWorker<Void> {
   private boolean isGUI;
 
   public ResetTask(String version, boolean isGUI) {
+    super();
+
     this.version = version;
     this.isGUI = isGUI;
   }

@@ -30,6 +30,8 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
 
   public DownloadTask(AggregateInfo aggInfo, ODKCsv csv, CsvConfig csvConfig, String savePath,
       boolean isGUI) {
+    super();
+
     this.aggInfo = aggInfo;
     this.csv = csv;
     this.csvConfig = csvConfig;
@@ -41,9 +43,9 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
   protected Void doInBackground() throws Exception {
     //assume csv has already been initialized by caller of this worker
 
-    // check existing data
+    // check existing data, skip check for CLI
     if (FileUtils.isDownloaded(aggInfo, csv.getTableId(), csvConfig, savePath) &&
-        DialogUtils.promptConfirm(OVERWRITE_CSV, true)) {
+        DialogUtils.promptConfirm(OVERWRITE_CSV, isGUI, !isGUI)) {
       FileUtils.deleteCsv(aggInfo, csvConfig, csv.getTableId(), savePath);
     }
 

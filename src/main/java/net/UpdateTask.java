@@ -1,9 +1,6 @@
 package net;
 
-import static ui.MessageString.GENERIC_ERR;
-import static ui.MessageString.INVALID_CSV;
-import static ui.MessageString.IO_READ_ERR;
-import static ui.MessageString.VISIT_WEB_ERROR;
+import static ui.MessageString.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -50,6 +47,8 @@ public class UpdateTask  extends SuitcaseSwingWorker<Void> {
 	  private boolean isGUI;
 
 	  public UpdateTask(AggregateInfo aggInfo, String dataPath, String version, String tableId, boolean isGUI) {
+	  	super();
+
 	    this.aggInfo = aggInfo;
 	    this.dataPath = dataPath;
 	    this.version = version;
@@ -62,7 +61,6 @@ public class UpdateTask  extends SuitcaseSwingWorker<Void> {
 	    setString(IN_PROGRESS_STRING);
 
 	    WinkWrapper wink = WinkWrapper.getInstance();
-	    wink.init(this.aggInfo);
 	    
 	    // We always want to update the table list as 
 	    // things could have changed during the update
@@ -123,8 +121,8 @@ public class UpdateTask  extends SuitcaseSwingWorker<Void> {
 	    rowSavepointTimestamp = firstLine[rowSavepointTimestampIdx];
 	    rowSavepointCreator = firstLine[rowSavepointCreatorIdx];
 	    
-       int lastCol = firstLine.length - 1; 
-       int rowETagIdx = lastCol - 2, rowFilterTypeIdx = lastCol - 1, rowFilterValueIdx = lastCol;
+			int lastCol = firstLine.length - 1;
+      int rowETagIdx = lastCol - 2, rowFilterTypeIdx = lastCol - 1, rowFilterValueIdx = lastCol;
 	    rowETag = firstLine[rowETagIdx];
 	    rowFilterType = firstLine[rowFilterTypeIdx];
 	    rowFilterValue = firstLine[rowFilterValueIdx];
@@ -133,9 +131,9 @@ public class UpdateTask  extends SuitcaseSwingWorker<Void> {
 	        (!rowId.equals(WinkClient.rowDefId)) ||
 	        (!rowFormId.equals(WinkClient.rowDefFormId)) || 
 	        (!rowLocale.equals(WinkClient.rowDefLocale)) || 
-           (!rowSavepointType.equals(WinkClient.rowDefSavepointType)) ||
-           (!rowSavepointTimestamp.equals(WinkClient.rowDefSavepointTimestamp)) || 
-           (!rowSavepointCreator.equals(WinkClient.rowDefSavepointCreator))) {
+					(!rowSavepointType.equals(WinkClient.rowDefSavepointType)) ||
+          (!rowSavepointTimestamp.equals(WinkClient.rowDefSavepointTimestamp)) ||
+          (!rowSavepointCreator.equals(WinkClient.rowDefSavepointCreator))) {
 	      
 	      throw new IllegalArgumentException("The number of columns in CSV does not contain the first set of metadata columns");
 	    }
@@ -186,7 +184,7 @@ public class UpdateTask  extends SuitcaseSwingWorker<Void> {
 	      } while (rows.getBoolean(WinkClient.jsonHasMoreResults));
 	      
 	      setupRowIdToRowETagMap(rowIdToRowETag, rowResArray);
-         String existingRowETag = rowIdToRowETag.get(rowId);
+				String existingRowETag = rowIdToRowETag.get(rowId);
 	      
 	      switch(opToCompare)
 	      {
@@ -353,9 +351,6 @@ public class UpdateTask  extends SuitcaseSwingWorker<Void> {
 	      DialogUtils.showError(errMsg, isGUI);
 	      setString(SuitcaseProgressBar.PB_ERROR);
 	      cause.printStackTrace();
-	    } catch (Exception e) {
-	      e.printStackTrace();
-	      System.out.println("Exception in UpdateTask");
 	    } finally {
 	      setIndeterminate(false);
 	    }

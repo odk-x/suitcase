@@ -15,6 +15,8 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
   private boolean isGUI;
 
   public LoginTask(AggregateInfo aggInfo, boolean isGUI) {
+    super();
+
     this.aggInfo = aggInfo;
     this.isGUI = isGUI;
   }

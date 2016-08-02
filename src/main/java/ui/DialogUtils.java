@@ -26,7 +26,11 @@ public class DialogUtils {
     }
   }
 
-  public static boolean promptConfirm(String msg, boolean isGUI) {
+  public static boolean promptConfirm(String msg, boolean isGUI, boolean skip) {
+    if (skip) {
+      return true;
+    }
+
     if (isGUI) {
       return JOptionPane.YES_OPTION ==
           JOptionPane.showConfirmDialog(null, msg, CONFIRM_POPUP_TITLE, JOptionPane.YES_NO_OPTION,

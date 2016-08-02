@@ -3,6 +3,9 @@ package net;
 import ui.ProgressBarStatus;
 
 import javax.swing.*;
+import java.beans.ExceptionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
 
 public abstract class SuitcaseSwingWorker<T> extends SwingWorker<T, ProgressBarStatus> {
@@ -10,6 +13,16 @@ public abstract class SuitcaseSwingWorker<T> extends SwingWorker<T, ProgressBarS
   public static final String INDETERMINATE_PROPERTY = "indeterminate";
   public static final String PROGRESS_PROPERTY = "progress"; // hardcoded in SwingWorker
   public static final String DONE_PROPERTY = "done";
+
+  private static final int BLOCKING_EXEC_WAIT = 500;
+
+  protected T result;
+  private boolean isDone;
+
+  public SuitcaseSwingWorker() {
+    this.result = null;
+    this.isDone = false;
+  }
 
   @Override
   protected final void process(List<ProgressBarStatus> chunks) {
@@ -26,6 +39,7 @@ public abstract class SuitcaseSwingWorker<T> extends SwingWorker<T, ProgressBarS
   protected final void done() {
     try {
       finished();
+      isDone = true;
     } finally {
       notifyDone();
     }
@@ -55,5 +69,17 @@ public abstract class SuitcaseSwingWorker<T> extends SwingWorker<T, ProgressBarS
 
   private void notifyDone() {
     firePropertyChange(DONE_PROPERTY, null, true);
+  }
+
+  public T blockingExecute() {
+    this.execute();
+
+    while (!isDone) {
+      try {
+        Thread.sleep(BLOCKING_EXEC_WAIT);
+      } catch (Exception e) {/* ignored */}
+    }
+
+    return result;
   }
 }

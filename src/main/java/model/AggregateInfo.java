@@ -87,7 +87,7 @@ public class AggregateInfo {
     }
 
     if (!serverUrl.startsWith("http")) {
-      serverUrl += "http://";
+      serverUrl = "http://" + serverUrl;
     }
 
     URL url = new URL(serverUrl);

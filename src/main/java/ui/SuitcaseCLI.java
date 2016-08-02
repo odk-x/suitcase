@@ -3,11 +3,7 @@ package ui;
 import model.AggregateInfo;
 import model.CsvConfig;
 import model.ODKCsv;
-import net.AttachmentManager;
-import net.DownloadTask;
-import net.ResetTask;
-import net.UpdateTask;
-import net.UploadTask;
+import net.*;
 
 import org.apache.commons.cli.*;
 import org.apache.wink.json4j.JSONException;
@@ -16,7 +12,6 @@ import utils.FieldsValidatorUtils;
 import utils.FileUtils;
 
 import java.net.MalformedURLException;
-import java.util.concurrent.CountDownLatch;
 
 import static ui.MessageString.*;
 
@@ -67,8 +62,7 @@ public class SuitcaseCLI {
       if (error != null) {
         DialogUtils.showError(error, false);
       } else {
-        new DownloadTask(aggInfo, csv, config,
-            path == null ? FileUtils.getDefaultSavePath().toString() : path, false).execute();
+        new DownloadTask(aggInfo, csv, config, path, false).blockingExecute();
       }
       break;
     case UPLOAD:
@@ -77,8 +71,7 @@ public class SuitcaseCLI {
       if (error != null) {
         DialogUtils.showError(error, false);
       } else {
-        new UploadTask(aggInfo, path == null ? FileUtils.getDefaultUploadPath().toString() : path,
-            version, false).execute();
+        new UploadTask(aggInfo, path, version, false).blockingExecute();
       }
       break;
     case RESET:
@@ -87,7 +80,7 @@ public class SuitcaseCLI {
       if (error != null) {
         DialogUtils.showError(error, false);
       } else {
-        new ResetTask(version, false).execute();
+        new ResetTask(version, false).blockingExecute();
       }
       break;
       
@@ -97,24 +90,7 @@ public class SuitcaseCLI {
         if (error != null) {
           DialogUtils.showError(error, false);
         } else {
-          final CountDownLatch signal = new CountDownLatch(1);
-          UpdateTask task = new UpdateTask(aggInfo, path == null ? FileUtils.getDefaultUpdatePath().toString() : path, version, tableId, false) {
-            @Override
-            protected void finished() {
-              signal.countDown();// notify the count downlatch
-            }
-          };
-          task.execute();
-          
-          try {
-            signal.await();// wait for callback
-            task.get();
-            
-          } catch (Exception e1) {
-            System.out.println("testUpdateTaskAdd failed with exception: " + e1);
-            e1.printStackTrace();
-          }
-          
+          new UpdateTask(aggInfo, path, version, tableId, false).blockingExecute();
         }
         break;
     }
@@ -208,27 +184,32 @@ public class SuitcaseCLI {
       }
 
       if (operation != Operation.DOWNLOAD && !line.hasOption("dataVersion")) {
-        throw new ParseException("Data version is required for upload and reset");
+        throw new ParseException("Data version is required for upload, update and reset");
       }
 
       //Aggregate related
-      String username = line.getOptionValue("username");
-      String password = line.getOptionValue("password");
+      String username = line.getOptionValue("username", "");
+      String password = line.getOptionValue("password", "");
 
       // validate fields before creating AggregateInfo object
       String error = FieldsValidatorUtils.checkLoginFields(
           line.getOptionValue("aggregateUrl"), line.getOptionValue("appId"),
-          username, password, username.isEmpty() && password.isEmpty()
+          username, password,
+          username.isEmpty() && password.isEmpty()
       );
       if (error != null) {
         DialogUtils.showError(error, false);
         // return early when validation fails
         return null;
       }
+
       aggInfo = new AggregateInfo(
           line.getOptionValue("aggregateUrl"), line.getOptionValue("appId"),
-          line.getOptionValue("username"), line.getOptionValue("password")
+          username, password
       );
+
+      new LoginTask(aggInfo, false).blockingExecute();
+
       tableId = line.getOptionValue("tableId");
 
       if (operation == Operation.DOWNLOAD) {
@@ -238,7 +219,8 @@ public class SuitcaseCLI {
         extraMetadata = line.hasOption("e");
       }
 
-      path = line.getOptionValue("path");
+      path = line.getOptionValue("path", FileUtils.getDefaultSavePath().toString());
+
       version = line.getOptionValue("dataVersion");
 
       force = line.hasOption("f");

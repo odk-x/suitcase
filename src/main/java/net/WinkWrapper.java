@@ -72,7 +72,7 @@ public class WinkWrapper {
 
   public void pushAllData(String dataPath, String version)
       throws JSONException, IOException, DataFormatException, Exception {
-    System.out.println("pushAllData " + aggInfo.getServerUrl() + " " +aggInfo.getAppId() + " " + dataPath +" "+version);
+//    System.out.println("pushAllData " + aggInfo.getServerUrl() + " " +aggInfo.getAppId() + " " + dataPath +" "+version);
     wc.pushAllDataToUri(aggInfo.getServerUrl(), aggInfo.getAppId(), dataPath, version);
 
     try {
@@ -193,8 +193,8 @@ public class WinkWrapper {
       JSONObject res = wc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, tableSchemaETag, null, null,
           null);
       
-      if (res.containsKey(WinkClient.jsonDataETag) && !res.isNull(WinkClient.jsonDataETag)) {
-        dataETag = res.getString(WinkClient.jsonDataETag);
+      if (res.containsKey(jsonDataETag) && !res.isNull(jsonDataETag)) {
+        dataETag = res.getString(jsonDataETag);
       }
       
     } catch (Exception e) {

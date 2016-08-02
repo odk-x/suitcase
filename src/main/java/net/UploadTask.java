@@ -21,6 +21,8 @@ public class UploadTask extends SuitcaseSwingWorker<Void> {
   private boolean isGUI;
 
   public UploadTask(AggregateInfo aggInfo, String dataPath, String version, boolean isGUI) {
+    super();
+
     this.aggInfo = aggInfo;
     this.dataPath = dataPath;
     this.version = version;
