@@ -75,7 +75,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>Suitcase</mainClass>
+                            <mainClass>org.opendatakit.suitcase.Suitcase</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
