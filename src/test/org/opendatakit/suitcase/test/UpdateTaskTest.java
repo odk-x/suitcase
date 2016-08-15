@@ -1,19 +1,16 @@
 package org.opendatakit.suitcase.test;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+
 import java.net.URL;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONObject;
-import org.opendatakit.aggregate.odktables.rest.RFC4180CsvReader;
 import org.opendatakit.wink.client.WinkClient;
-
+import org.opendatakit.suitcase.net.LoginTask;
 import org.opendatakit.suitcase.net.UpdateTask;
 import org.opendatakit.suitcase.model.AggregateInfo;
+
 import junit.framework.TestCase;
 
 public class UpdateTaskTest extends TestCase{
@@ -39,7 +36,7 @@ public class UpdateTaskTest extends TestCase{
     //batchSize = Integer.valueOf(System.getProperty("test.batchSize"));
     
     serverUrl = "https://test.appspot.com";
-    appId = "odktables/default";
+    appId = "default";
     absolutePathOfTestFiles = "testfiles/";
     batchSize = 1000;
     username = "";
@@ -49,9 +46,7 @@ public class UpdateTaskTest extends TestCase{
     version = "2";
   }
   
-  public void testUpdateTaskAdd() {
-
-    String suitcaseAppId = "default"; 
+  public void testUpdateTaskAdd_ExpectPass() {
     AggregateInfo aggInfo = null;
     String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
     String dataPath = absolutePathOfTestFiles + "plot/plot-add.csv";
@@ -60,67 +55,55 @@ public class UpdateTaskTest extends TestCase{
     WinkClient wc = null;
 
     try {
-    aggInfo = new AggregateInfo(serverUrl, suitcaseAppId, username, password);
-    wc = new WinkClient();
-    wc.init(serverUrl, username, password);
+      aggInfo = new AggregateInfo(serverUrl, appId, username, password);
+      wc = new WinkClient();
+      wc.init(aggInfo.getHostUrl(), aggInfo.getUserName(), aggInfo.getPassword());
 
-    JSONObject result = wc.createTableWithCSV(serverUrl, appId, testTableId, null, csvFile);
-    System.out.println("testUpdateTaskAdd: result is " + result);
+      LoginTask lTask = new LoginTask(aggInfo, false);
+      lTask.blockingExecute();
 
-    if (result.containsKey("tableId")) {
-      String tableId = result.getString("tableId");
-      assertEquals(tableId, testTableId);
-      tableSchemaETag = result.getString("schemaETag");
-    }
+      JSONObject result = wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+          testTableId, null, csvFile);
+      System.out.println("testUpdateTaskAdd: result is " + result);
 
-    // Get the table definition
-    JSONObject tableDef = wc.getTableDefinition(serverUrl, appId, testTableId, tableSchemaETag);
+      if (result.containsKey(WinkClient.jsonTableId)) {
+        String tableId = result.getString(WinkClient.jsonTableId);
+        assertEquals(tableId, testTableId);
+        tableSchemaETag = result.getString(WinkClient.jsonSchemaETag);
+      }
 
-    // Make sure it is the same as the csv definition
-    assertTrue(checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
+      // Get the table definition
+      JSONObject tableDef = wc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+          testTableId, tableSchemaETag);
 
-    } catch (Exception e) {
-      System.out.println("testUpdateTaskAdd failed during table creation: " + e);
-      fail();
-      e.printStackTrace();
-    }
-    
-    final CountDownLatch signal = new CountDownLatch(1);
-    
-    UpdateTask task = null;
-    try {
-      task = new UpdateTask(aggInfo, dataPath, version, testTableId, false) {
-        @Override
-        protected void finished() {
-          signal.countDown();// notify the count downlatch
-        }
-      };
-      task.execute();
-    } catch (Exception e) {
-      System.out.println("testUpdateTaskAdd failed with exception: " + e);
-      fail();
-      e.printStackTrace();
-    }
-    
-    try {
-      signal.await();// wait for callback
-      task.get();
-      
-      JSONObject res = wc.getRowsSince(serverUrl, appId, testTableId, tableSchemaETag, null, null,
-          null);
-      
+      // Make sure it is the same as the csv definition
+      assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
+
+      UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, false);
+      updateTask.blockingExecute();
+
+      JSONObject res = wc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+          tableSchemaETag, null, null, null);
+
       JSONArray rows = res.getJSONArray("rows");
 
       assertEquals(rows.size(), 1);
-      
+
       JSONObject jsonRow = rows.getJSONObject(0);
-      
+
       // Now check that the row was created with the right rowId
-      assertTrue(this.checkThatRowHasId("12", jsonRow));
-      
+      assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
+
       // Now delete the table
-      wc.deleteTableDefinition(serverUrl, appId, testTableId, tableSchemaETag);
-      
+      wc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+          tableSchemaETag);
+
+      // Check that table no longer exists
+      JSONObject obj = wc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
+
+      wc.close();
+
     } catch (Exception e1) {
       e1.printStackTrace();
       System.out.println("testUpdateTaskAdd failed with exception: " + e1);
@@ -129,8 +112,6 @@ public class UpdateTaskTest extends TestCase{
   }
   
   public void testUpdateTaskDelete() {
-
-    String suitcaseAppId = "default"; 
     AggregateInfo aggInfo = null;
     String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
     String dataPathAdd = absolutePathOfTestFiles + "plot/plot-add.csv";
@@ -140,100 +121,63 @@ public class UpdateTaskTest extends TestCase{
     WinkClient wc = null;
 
     try {
-    aggInfo = new AggregateInfo(serverUrl, suitcaseAppId, username, password);
-    wc = new WinkClient();
-    wc.init(serverUrl, username, password);
+      aggInfo = new AggregateInfo(serverUrl, appId, username, password);
+      wc = new WinkClient();
+      wc.init(aggInfo.getHostUrl(), aggInfo.getUserName(), aggInfo.getPassword());
 
-    JSONObject result = wc.createTableWithCSV(serverUrl, appId, testTableId, null, csvFile);
-    System.out.println("testUpdateTaskDelete: result is " + result);
+      JSONObject result = wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+          testTableId, null, csvFile);
+      System.out.println("testUpdateTaskDelete: result is " + result);
 
-    if (result.containsKey("tableId")) {
-      String tableId = result.getString("tableId");
-      assertEquals(tableId, testTableId);
-      tableSchemaETag = result.getString("schemaETag");
-    }
+      if (result.containsKey(WinkClient.jsonTableId)) {
+        String tableId = result.getString(WinkClient.jsonTableId);
+        assertEquals(tableId, testTableId);
+        tableSchemaETag = result.getString(WinkClient.jsonSchemaETag);
+      }
 
-    // Get the table definition
-    JSONObject tableDef = wc.getTableDefinition(serverUrl, appId, testTableId, tableSchemaETag);
+      // Get the table definition
+      JSONObject tableDef = wc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+          testTableId, tableSchemaETag);
 
-    // Make sure it is the same as the csv definition
-    assertTrue(checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
+      // Make sure it is the same as the csv definition
+      assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 
-    } catch (Exception e) {
-      System.out.println("testUpdateTaskDelete failed during table creation: " + e);
-      fail();
-      e.printStackTrace();
-    }
-    
-    final CountDownLatch signal = new CountDownLatch(1);
-    
-    UpdateTask task = null;
-    try {
-      task = new UpdateTask(aggInfo, dataPathAdd, version, testTableId, false) {
-        @Override
-        protected void finished() {
-          signal.countDown();// notify the count downlatch
-        }
-      };
-      task.execute();
-    } catch (Exception e) {
-      System.out.println("testUpdateTaskDelete failed with exception: " + e);
-      fail();
-      e.printStackTrace();
-    }
-    
-    try {
-      signal.await();// wait for callback
-      task.get();
-      
-      JSONObject res = wc.getRowsSince(serverUrl, appId, testTableId, tableSchemaETag, null, null,
+      LoginTask lTask = new LoginTask(aggInfo, false);
+      lTask.blockingExecute();
+
+      UpdateTask updateTask = new UpdateTask(aggInfo, dataPathAdd, version, testTableId, false);
+      updateTask.blockingExecute();
+
+      JSONObject res = wc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null,
           null);
-      
+
       JSONArray rows = res.getJSONArray("rows");
 
       assertEquals(rows.size(), 1);
-      
+
       JSONObject jsonRow = rows.getJSONObject(0);
-      
+
       // Now check that the row was created with the right rowId
-      assertTrue(this.checkThatRowHasId("12", jsonRow));
-      
-    } catch (Exception e1) {
-      e1.printStackTrace();
-      System.out.println("testUpdateTaskDelete failed with exception: " + e1);
-      fail();
-    }
-    
-    final CountDownLatch deleteSignal = new CountDownLatch(1);
-    
-    UpdateTask taskDelete = null;
-    try {
-      taskDelete = new UpdateTask(aggInfo, dataPathDelete, version, testTableId, false) {
-        @Override
-        protected void finished() {
-          deleteSignal.countDown();// notify the count downlatch
-        }
-      };
-      taskDelete.execute();
-    } catch (Exception e) {
-      System.out.println("testUpdateTaskDelete failed with exception: " + e);
-      fail();
-      e.printStackTrace();
-    }
-    
-    try {
-      deleteSignal.await();// wait for callback
-      taskDelete.get();
-      
-      JSONObject res = wc.getRowsSince(serverUrl, appId, testTableId, tableSchemaETag, null, null,
+      assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
+
+      UpdateTask taskDelete = new UpdateTask(aggInfo, dataPathDelete, version, testTableId, false);
+      taskDelete.blockingExecute();
+
+      res = wc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null,
           null);
-      
-      JSONArray rows = res.getJSONArray("rows");
+
+      rows = res.getJSONArray("rows");
 
       assertEquals(rows.size(), 0);
-      
+
       // Now delete the table
-      wc.deleteTableDefinition(serverUrl, appId, testTableId, tableSchemaETag);
+      wc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag);
+      
+      // Check that table no longer exists
+      JSONObject obj = wc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
+      
+      wc.close();
       
     } catch (Exception e1) {
       e1.printStackTrace();
@@ -243,7 +187,6 @@ public class UpdateTaskTest extends TestCase{
   }
   
   public void testUpdateTaskUpdate() {
-    String suitcaseAppId = "default"; 
     AggregateInfo aggInfo = null;
     String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
     String dataPathAdd = absolutePathOfTestFiles + "plot/plot-add.csv";
@@ -253,108 +196,72 @@ public class UpdateTaskTest extends TestCase{
     WinkClient wc = null;
 
     try {
-    aggInfo = new AggregateInfo(serverUrl, suitcaseAppId, username, password);
-    wc = new WinkClient();
-    wc.init(serverUrl, username, password);
+      aggInfo = new AggregateInfo(serverUrl, appId, username, password);
+      wc = new WinkClient();
+      wc.init(aggInfo.getHostUrl(), aggInfo.getUserName(), aggInfo.getPassword());
 
-    JSONObject result = wc.createTableWithCSV(serverUrl, appId, testTableId, null, csvFile);
-    System.out.println("testUpdateTaskUpdate: result is " + result);
+      JSONObject result = wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+          testTableId, null, csvFile);
+      System.out.println("testUpdateTaskUpdate: result is " + result);
 
-    if (result.containsKey("tableId")) {
-      String tableId = result.getString("tableId");
-      assertEquals(tableId, testTableId);
-      tableSchemaETag = result.getString("schemaETag");
-    }
+      if (result.containsKey(WinkClient.jsonTableId)) {
+        String tableId = result.getString(WinkClient.jsonTableId);
+        assertEquals(tableId, testTableId);
+        tableSchemaETag = result.getString(WinkClient.jsonSchemaETag);
+      }
 
-    // Get the table definition
-    JSONObject tableDef = wc.getTableDefinition(serverUrl, appId, testTableId, tableSchemaETag);
+      // Get the table definition
+      JSONObject tableDef = wc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+          testTableId, tableSchemaETag);
 
-    // Make sure it is the same as the csv definition
-    assertTrue(checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
+      // Make sure it is the same as the csv definition
+      assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 
-    } catch (Exception e) {
-      System.out.println("testUpdateTaskUpdate failed during table creation: " + e);
-      fail();
-      e.printStackTrace();
-    }
-    
-    final CountDownLatch signal = new CountDownLatch(1);
-    
-    UpdateTask task = null;
-    try {
-      task = new UpdateTask(aggInfo, dataPathAdd, version, testTableId, false) {
-        @Override
-        protected void finished() {
-          signal.countDown();// notify the count downlatch
-        }
-      };
-      task.execute();
-    } catch (Exception e) {
-      System.out.println("testUpdateTaskUpdate failed with exception: " + e);
-      fail();
-      e.printStackTrace();
-    }
-    
-    try {
-      signal.await();// wait for callback
-      task.get();
-      
-      JSONObject res = wc.getRowsSince(serverUrl, appId, testTableId, tableSchemaETag, null, null,
-          null);
-      
+      LoginTask lTask = new LoginTask(aggInfo, false);
+      lTask.blockingExecute();
+
+      UpdateTask updateTask = new UpdateTask(aggInfo, dataPathAdd, version, testTableId, false);
+      updateTask.blockingExecute();
+
+      JSONObject res = wc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+          tableSchemaETag, null, null, null);
+
       JSONArray rows = res.getJSONArray("rows");
 
       assertEquals(rows.size(), 1);
-      
+
       JSONObject jsonRow = rows.getJSONObject(0);
-      
+
       // Check that the row was created with the right rowId
-      assertTrue(this.checkThatRowHasId("12", jsonRow));
-      
-    } catch (Exception e1) {
-      e1.printStackTrace();
-      System.out.println("testUpdateTaskUpdate failed with exception: " + e1);
-      fail();
-    }
-    
-    final CountDownLatch updateSignal = new CountDownLatch(1);
-    
-    UpdateTask taskUpdate = null;
-    try {
-      taskUpdate = new UpdateTask(aggInfo, dataPathUpdate, version, testTableId, false) {
-        @Override
-        protected void finished() {
-          updateSignal.countDown();// notify the count downlatch
-        }
-      };
-      taskUpdate.execute();
-    } catch (Exception e) {
-      System.out.println("testUpdateTaskUpdate failed with exception: " + e);
-      fail();
-      e.printStackTrace();
-    }
-    
-    try {
-      updateSignal.await();// wait for callback
-      taskUpdate.get();
-      
-      JSONObject res = wc.getRowsSince(serverUrl, appId, testTableId, tableSchemaETag, null, null,
-          null);
-      
-      JSONArray rows = res.getJSONArray("rows");
+      assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
+
+      UpdateTask taskUpdate = new UpdateTask(aggInfo, dataPathUpdate, version, testTableId, false);
+      taskUpdate.blockingExecute();
+
+      res = wc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+          tableSchemaETag, null, null, null);
+
+      rows = res.getJSONArray("rows");
 
       assertEquals(rows.size(), 1);
-      
-      JSONObject jsonRow = rows.getJSONObject(0);
-      
+
+      jsonRow = rows.getJSONObject(0);
+
       // Check that the row was created with the right rowId
-      assertTrue(checkThatRowHasId("12", jsonRow));
-     
-      assertTrue(checkThatRowHasColumnValue("plot_name", "Clarice", jsonRow));
-      
+      assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
+
+      assertTrue(TestUtilities.checkThatRowHasColumnValue("plot_name", "Clarice", jsonRow));
+
       // Now delete the table
-      wc.deleteTableDefinition(serverUrl, appId, testTableId, tableSchemaETag);
+      wc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+          tableSchemaETag);
       
+      // Check that table no longer exists
+      JSONObject obj = wc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
+
+      wc.close();
+
     } catch (Exception e1) {
       e1.printStackTrace();
       System.out.println("testUpdateTaskUpdate failed with exception: " + e1);
@@ -363,7 +270,6 @@ public class UpdateTaskTest extends TestCase{
   }
   
   public void testUpdateTaskForceUpdate() {
-    String suitcaseAppId = "default"; 
     AggregateInfo aggInfo = null;
     String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
     String dataPathAdd = absolutePathOfTestFiles + "plot/plot-add.csv";
@@ -373,108 +279,69 @@ public class UpdateTaskTest extends TestCase{
     WinkClient wc = null;
 
     try {
-    aggInfo = new AggregateInfo(serverUrl, suitcaseAppId, username, password);
-    wc = new WinkClient();
-    wc.init(serverUrl, username, password);
+      aggInfo = new AggregateInfo(serverUrl, appId, username, password);
+      wc = new WinkClient();
+      wc.init(aggInfo.getHostUrl(), aggInfo.getUserName(), aggInfo.getPassword());
 
-    JSONObject result = wc.createTableWithCSV(serverUrl, appId, testTableId, null, csvFile);
-    System.out.println("testUpdateTaskForceUpdate: result is " + result);
+      JSONObject result = wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+          testTableId, null, csvFile);
+      System.out.println("testUpdateTaskForceUpdate: result is " + result);
 
-    if (result.containsKey("tableId")) {
-      String tableId = result.getString("tableId");
-      assertEquals(tableId, testTableId);
-      tableSchemaETag = result.getString("schemaETag");
-    }
+      if (result.containsKey(WinkClient.jsonTableId)) {
+        String tableId = result.getString(WinkClient.jsonTableId);
+        assertEquals(tableId, testTableId);
+        tableSchemaETag = result.getString(WinkClient.jsonSchemaETag);
+      }
 
-    // Get the table definition
-    JSONObject tableDef = wc.getTableDefinition(serverUrl, appId, testTableId, tableSchemaETag);
+      // Get the table definition
+      JSONObject tableDef = wc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+          testTableId, tableSchemaETag);
 
-    // Make sure it is the same as the csv definition
-    assertTrue(checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
+      // Make sure it is the same as the csv definition
+      assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 
-    } catch (Exception e) {
-      System.out.println("testUpdateTaskForceUpdate failed during table creation: " + e);
-      fail();
-      e.printStackTrace();
-    }
-    
-    final CountDownLatch signal = new CountDownLatch(1);
-    
-    UpdateTask task = null;
-    try {
-      task = new UpdateTask(aggInfo, dataPathAdd, version, testTableId, false) {
-        @Override
-        protected void finished() {
-          signal.countDown();// notify the count downlatch
-        }
-      };
-      task.execute();
-    } catch (Exception e) {
-      System.out.println("testUpdateTaskForceUpdate failed with exception: " + e);
-      fail();
-      e.printStackTrace();
-    }
-    
-    try {
-      signal.await();// wait for callback
-      task.get();
-      
-      JSONObject res = wc.getRowsSince(serverUrl, appId, testTableId, tableSchemaETag, null, null,
+      LoginTask lTask = new LoginTask(aggInfo, false);
+      lTask.blockingExecute();
+
+      UpdateTask task = new UpdateTask(aggInfo, dataPathAdd, version, testTableId, false);
+      task.blockingExecute();
+
+      JSONObject res = wc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null,
           null);
-      
+
       JSONArray rows = res.getJSONArray("rows");
 
       assertEquals(rows.size(), 1);
-      
+
       JSONObject jsonRow = rows.getJSONObject(0);
-      
+
       // Check that the row was created with the right rowId
-      assertTrue(this.checkThatRowHasId("12", jsonRow));
-      
-    } catch (Exception e1) {
-      e1.printStackTrace();
-      System.out.println("testUpdateTaskForceUpdate failed with exception: " + e1);
-      fail();
-    }
-    
-    final CountDownLatch updateSignal = new CountDownLatch(1);
-    
-    UpdateTask taskUpdate = null;
-    try {
-      taskUpdate = new UpdateTask(aggInfo, dataPathUpdate, version, testTableId, false) {
-        @Override
-        protected void finished() {
-          updateSignal.countDown();// notify the count downlatch
-        }
-      };
-      taskUpdate.execute();
-    } catch (Exception e) {
-      System.out.println("testUpdateTaskForceUpdate failed with exception: " + e);
-      fail();
-      e.printStackTrace();
-    }
-    
-    try {
-      updateSignal.await();// wait for callback
-      taskUpdate.get();
-      
-      JSONObject res = wc.getRowsSince(serverUrl, appId, testTableId, tableSchemaETag, null, null,
-          null);
-      
-      JSONArray rows = res.getJSONArray("rows");
+      assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
+
+      UpdateTask taskUpdate = new UpdateTask(aggInfo, dataPathUpdate, version, testTableId, false);
+      taskUpdate.blockingExecute();
+
+      res = wc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null, null);
+
+      rows = res.getJSONArray("rows");
 
       assertEquals(rows.size(), 1);
-      
-      JSONObject jsonRow = rows.getJSONObject(0);
-      
+
+      jsonRow = rows.getJSONObject(0);
+
       // Check that the row was created with the right rowId
-      assertTrue(checkThatRowHasId("12", jsonRow));
-     
-      assertTrue(checkThatRowHasColumnValue("plot_name", "Clarice", jsonRow));
-      
+      assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
+
+      assertTrue(TestUtilities.checkThatRowHasColumnValue("plot_name", "Clarice", jsonRow));
+
       // Now delete the table
-      wc.deleteTableDefinition(serverUrl, appId, testTableId, tableSchemaETag);
-      
+      wc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+          tableSchemaETag);
+
+      // Check that table no longer exists
+      JSONObject obj = wc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
+
     } catch (Exception e1) {
       e1.printStackTrace();
       System.out.println("testUpdateTaskForceUpdate failed with exception: " + e1);
@@ -482,91 +349,14 @@ public class UpdateTaskTest extends TestCase{
     }
   }
   
-  public boolean checkThatTableDefAndCSVDefAreEqual(String csvFile, JSONObject tableDef) {
-    boolean same = false;
-    InputStream in;
-
-    try {
-      in = new FileInputStream(new File(csvFile));
-
-      InputStreamReader inputStream = new InputStreamReader(in);
-      RFC4180CsvReader reader = new RFC4180CsvReader(inputStream);
-
-      // Skip the first line - it's just headers
-      reader.readNext();
-
-      if (tableDef.containsKey("orderedColumns")) {
-        JSONArray cols = tableDef.getJSONArray("orderedColumns");
-        String[] csvDef;
-        while ((csvDef = reader.readNext()) != null) {
-          same = false;
-          for (int i = 0; i < cols.size(); i++) {
-            JSONObject col = cols.getJSONObject(i);
-            String testElemKey = col.getString("elementKey");
-            if (csvDef[0].equals(testElemKey)) {
-              same = true;
-              // Remove the index so we don't keep
-              // comparing old defs
-              cols.remove(i);
-              break;
-            }
-          }
-
-          if (!same) {
-            return same;
-          }
-        }
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return same;
-  }
-  
-  public boolean checkThatRowHasId(String RowId, JSONObject rowRes) {
-    boolean same = false;
-
-    try {
-      if (RowId.equals(rowRes.getString("id"))) {
-        same = true;
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return same;
-  }
-  
-  public boolean checkThatRowHasColumnValue(String column, String columnValue, JSONObject rowRes) {
-    String COLUMN_STRING = "column";
-    String VALUE_STRING = "value";
+  // TODO:
+  public void testUpdateTaskWithOver2000Rows_ExpectPass() {
     
-    if (column == null || columnValue == null) {
-      return false;
-    }
-
-    try {
-      if (rowRes.has(WinkClient.orderedColumnsDef)) {
-        JSONArray ordCols = rowRes.getJSONArray(WinkClient.orderedColumnsDef);
-        for (int i = 0; i < ordCols.length(); i++) {
-          JSONObject col = ordCols.getJSONObject(i);
-          String colStr = col.has(COLUMN_STRING) && !col.isNull(COLUMN_STRING) ? col.getString(COLUMN_STRING) : null;
-          if (colStr == null) {
-            return false;
-          }
-          if (colStr.equals(column)) {
-            String recVal = col.has(VALUE_STRING) && !col.isNull(VALUE_STRING) ? col.getString(VALUE_STRING) : null;
-            if (recVal == null) {
-              return false;
-            }
-            if (recVal.equals(columnValue)) {
-              return true;
-            }
-          }
-        }
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return false;
   }
+  
+  // TODO:
+  public void testUpdateTaskAllOperationsInFile_ExpectPass() {
+  }
+  
+
 }

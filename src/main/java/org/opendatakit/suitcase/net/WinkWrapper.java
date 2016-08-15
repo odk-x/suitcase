@@ -1,7 +1,6 @@
 package org.opendatakit.suitcase.net;
 
 import org.opendatakit.suitcase.model.AggregateInfo;
-
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
@@ -9,6 +8,7 @@ import org.opendatakit.aggregate.odktables.rest.entity.Row;
 import org.opendatakit.aggregate.odktables.rest.entity.RowOutcomeList;
 import org.opendatakit.wink.client.WinkClient;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
@@ -17,6 +17,9 @@ import java.util.zip.DataFormatException;
 import static org.opendatakit.wink.client.WinkClient.*;
 
 public class WinkWrapper {
+  
+  // TODO: Make exception catching more specific!!
+  
   private static final String FETCH_LIMIT = "1000";
   private static final int DELETE_TABLE_DEF_WAIT = 1000;
   private static final int PUSH_DONE_WAIT = 5000;
@@ -89,16 +92,44 @@ public class WinkWrapper {
   public JSONObject getManifestForAppLevelFiles(String version) throws IOException, JSONException, Exception {
     return wc.getManifestForAppLevelFiles(aggInfo.getServerUrl(), aggInfo.getAppId(), version);
   }
+  
+  public int createTable(String tableId, String csvFilePath) {
+    if (tableId == null || tableId.length() == 0) {
+      throw new IllegalArgumentException("createTable: tableId cannot be null");
+    }
+    
+    if (csvFilePath == null || csvFilePath.length() == 0) {
+      throw new IllegalArgumentException("createTable: CSV file path cannot be null");
+    }
+    
+    File csvFile = new File(csvFilePath);
+    if (!csvFile.exists() || !csvFile.isFile()) {
+      throw new IllegalArgumentException("createTable: CSV file must exist and be a valid file");
+    }
+    
+    try {
+      wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, null, csvFilePath);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return 0;
+  }
 
   public int deleteTableDefinition(String tableId) throws IOException, Exception {
     return deleteTableDefinition(tableId, null);
   }
 
   public int deleteTableDefinition(String tableId, String schemaETag) throws IOException, Exception {
+    if (tableId == null || tableId.length() == 0) {
+      throw new IllegalArgumentException("tableId cannot be null");
+    }
+    
     if (schemaETag == null && !aggInfo.tableIdExists(tableId)) {
       throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
 
+    // This is used in the reset task
+    // TODO: Make this use the verify function
     if (schemaETag == null) {
       schemaETag = aggInfo.getSchemaETag(tableId);
     }
@@ -119,19 +150,23 @@ public class WinkWrapper {
     if (!aggInfo.tableIdExists(tableId)) {
       throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
+    
+    String schemaETag = verifyTableIdAndSchemaETag(tableId);
 
     return wc.getManifestForRow(
         aggInfo.getServerUrl(), aggInfo.getAppId(), tableId,
-        aggInfo.getSchemaETag(tableId), rowId);
+        schemaETag, rowId);
   }
 
-  public JSONObject getRows(String tableId, String cursor) throws IOException, JSONException {
+  public JSONObject getRows(String tableId, String cursor) throws IOException, JSONException, Exception {
     if (!aggInfo.tableIdExists(tableId)) {
       throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
+    
+    String schemaETag = verifyTableIdAndSchemaETag(tableId);
 
     return wc.getRows(
-        aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, aggInfo.getSchemaETag(tableId),
+        aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag,
         cursor, FETCH_LIMIT
     );
   }
@@ -141,9 +176,11 @@ public class WinkWrapper {
     if (!aggInfo.tableIdExists(tableId)) {
       throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
+    
+    String schemaETag = verifyTableIdAndSchemaETag(tableId);
 
     wc.getFileForRow(
-        aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, aggInfo.getSchemaETag(tableId),
+        aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag,
         rowId, false, savePath, relPathOnServer);
   }
 
@@ -153,37 +190,11 @@ public class WinkWrapper {
       throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
 
+    String schemaETag = verifyTableIdAndSchemaETag(tableId);
+    
     wc.batchGetFilesForRow(
-        aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, aggInfo.getSchemaETag(tableId),
+        aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag,
         rowId, savePath, files, -1);
-  }
-  
-  // CAL: Should this be changed to pull all the tables once?
-  // It may be possible that the schemaEtag changes as we may allow someone to 
-  // delete a table and create a table
-  public String getSchemaETagForTable(String tableId) {
-    String schemaETag = null;
-    try {
-      // Not sure if this will work right?
-      if (aggInfo.tableIdExists(tableId)) {
-        schemaETag = aggInfo.getSchemaETag(tableId);
-      } else {
-        JSONObject obj = wc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
-
-        JSONArray tables = obj.getJSONArray(WinkClient.jsonTables);
-
-        for (int i = 0; i < tables.size(); i++) {
-          JSONObject table = tables.getJSONObject(i);
-          if (tableId.equals(table.getString(WinkClient.jsonTableId))) {
-            schemaETag =  table.getString(WinkClient.jsonSchemaETag);
-          }
-        }
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-
-    return schemaETag;
   }
   
   public String getDataETag(String tableId, String tableSchemaETag) {
@@ -204,12 +215,63 @@ public class WinkWrapper {
     return dataETag;
   }
   
-  public RowOutcomeList alterRowsUsingSingleBatch(String tableId, String schemaETag, String dataETagVal, ArrayList<Row> rowArrayList)
+  public RowOutcomeList alterRowsUsingSingleBatch(String tableId, ArrayList<Row> rowArrayList)
     throws Exception {
-    return wc.alterRowsUsingSingleBatch(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag, dataETagVal, rowArrayList);
+    if (tableId == null || tableId.length() == 0) {
+      throw new IllegalArgumentException("writeRowDataToCSV: tableId cannot be empty");
+    }
+    
+    String schemaETag = verifyTableIdAndSchemaETag(tableId);
+    
+    String dataETag = getDataETag(tableId, schemaETag);
+    
+    return wc.alterRowsUsingSingleBatch(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag, dataETag, rowArrayList);
   }
   
-
+  public void deleteRowsUsingBulkUpload(String tableId, ArrayList<Row> rowArrayList) throws Exception {
+    if (tableId == null || tableId.length() == 0) {
+      throw new IllegalArgumentException("deleteRowsUsingBulkUpload: tableId must not be null");
+    }
+    
+    String schemaETag = verifyTableIdAndSchemaETag(tableId);
+    
+    String dataETag = getDataETag(tableId, schemaETag);
+    
+    wc.deleteRowsUsingBulkUpload(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, 
+        schemaETag, dataETag, rowArrayList, 0);
+    
+  }
+  
+  String verifyTableIdAndSchemaETag(String tableId) throws Exception {
+    String schemaETag = null;
+    
+    if (tableId == null || tableId.length() == 0) {
+      throw new IllegalArgumentException("verifyTableIdAndSchemaETag: tableId must not be null");
+    }
+    
+    if (!aggInfo.tableIdExists(tableId)) {
+      // Update the list in case things have changed
+      updateTableList();
+      
+      if (aggInfo.tableIdExists(tableId)) {
+        throw new IllegalArgumentException("verifyTableIdAndSchemaETag: tableId does not exist on server");
+      }
+    }
+    
+    schemaETag = aggInfo.getSchemaETag(tableId);
+    if (schemaETag == null || schemaETag.length() == 0) {
+      // Update the list to make sure that we have the most recent
+      updateTableList();
+      
+      schemaETag = aggInfo.getSchemaETag(tableId);
+      if (schemaETag == null || schemaETag.length() == 0) {
+        throw new IllegalArgumentException("verifyTableIdAndSchemaETag: schemaETag does not exist on server");
+      }
+    }
+    
+    return schemaETag;
+  }
+  
   @Override
   protected Object clone() throws CloneNotSupportedException {
     super.clone();

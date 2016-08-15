@@ -183,7 +183,7 @@ public class UpdateTask  extends SuitcaseSwingWorker<Void> {
 	      } while (rows.getBoolean(WinkClient.jsonHasMoreResults));
 	      
 	      setupRowIdToRowETagMap(rowIdToRowETag, rowResArray);
-				String existingRowETag = rowIdToRowETag.get(rowId);
+			String existingRowETag = rowIdToRowETag.get(rowId);
 	      
 	      switch(opToCompare)
 	      {
@@ -235,33 +235,31 @@ public class UpdateTask  extends SuitcaseSwingWorker<Void> {
 	    String schemaETag = null;
 	    if (aggInfo.tableIdExists(tableId)) {
 	      schemaETag = aggInfo.getSchemaETag(tableId);
-	    } else {
-	      schemaETag = wink.getSchemaETagForTable(tableId);
 	    }
 	    
 	     // Handle the new rows
 	    String dataETag = null;
 	    if (newRowArrayList.size() > 0) {
 	      dataETag = wink.getDataETag(tableId, schemaETag);
-	      handleRowBatches(wink, dataPath, tableId, schemaETag, dataETag, newRowArrayList);
+	      handleRowBatches(wink, dataPath, tableId, newRowArrayList);
 	    }
     
 	    // Handle the deleted rows
 	    if (deletedRowArrayList.size() > 0) {
 	     dataETag = wink.getDataETag(tableId, schemaETag);
-	     handleRowBatches(wink, dataPath, tableId, schemaETag, dataETag, deletedRowArrayList);
+	     handleRowBatches(wink, dataPath, tableId, deletedRowArrayList);
 	    }
 	    
 	    // Handle the updated rows
 	    if (updatedRowArrayList.size() > 0) {
 	      dataETag = wink.getDataETag(tableId, schemaETag);
-	      handleRowBatches(wink, dataPath, tableId, schemaETag, dataETag, updatedRowArrayList);
+	      handleRowBatches(wink, dataPath, tableId, updatedRowArrayList);
 	    }
 	    
 	    // Handle the force-updated rows
 	    if (forceUpdatedRowArrayList.size() > 0) {
 	      dataETag = wink.getDataETag(tableId, schemaETag);
-	      handleRowBatches(wink, dataPath, tableId, schemaETag, dataETag, forceUpdatedRowArrayList);
+	      handleRowBatches(wink, dataPath, tableId, forceUpdatedRowArrayList);
 	    }
 
 	    Thread.sleep(PUSH_FINISH_WAIT);
@@ -270,7 +268,7 @@ public class UpdateTask  extends SuitcaseSwingWorker<Void> {
 	    return null;
 	  }
 	  
-	  protected void handleRowBatches(WinkWrapper wink, String dataPath, String tableId, String schemaETag, String dataETagVal, ArrayList<Row> rows)  
+	  protected void handleRowBatches(WinkWrapper wink, String dataPath, String tableId, ArrayList<Row> rows)  
 	    throws Exception {
 	   
 	    ArrayList<Row> batchedRows = new ArrayList<Row>();
@@ -280,7 +278,7 @@ public class UpdateTask  extends SuitcaseSwingWorker<Void> {
 	      batchedRows.add(rows.get(i));
 	      
 	      if (batchedRows.size() > MAX_BATCH_SIZE) {
-	        rowOutcomeList = wink.alterRowsUsingSingleBatch(tableId, schemaETag, dataETagVal, batchedRows);
+	        rowOutcomeList = wink.alterRowsUsingSingleBatch(tableId, batchedRows);
 	        handleRowOutcomeList(rowOutcomeList);
 	        batchedRows = new ArrayList<Row>();
 	      }
@@ -288,7 +286,7 @@ public class UpdateTask  extends SuitcaseSwingWorker<Void> {
 	    }
 	    
 	    if (batchedRows.size() > 0) {
-	      rowOutcomeList = wink.alterRowsUsingSingleBatch(tableId, schemaETag, dataETagVal, batchedRows);
+	      rowOutcomeList = wink.alterRowsUsingSingleBatch(tableId, batchedRows);
          handleRowOutcomeList(rowOutcomeList);
 	    }
 	  }
