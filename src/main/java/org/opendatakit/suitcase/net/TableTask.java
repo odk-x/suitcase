@@ -111,8 +111,8 @@ public class TableTask extends SuitcaseSwingWorker<Void> {
           row.setDeleted(true);
           rowList.add(row);
         }
-        cursor = rows.optString(WinkClient.jsonWebSafeResumeCursor);
-      } while (rows.getBoolean(WinkClient.jsonHasMoreResults));
+        cursor = rows.optString(WinkClient.WEB_SAFE_RESUME_CURSOR_JSON);
+      } while (rows.getBoolean(WinkClient.HAS_MORE_RESULTS_JSON));
       
       wrapper.deleteRowsUsingBulkUpload(tableId, rowList);
 

@@ -21,7 +21,7 @@ public class TableTaskTest extends TestCase{
   
   @Override
   protected void setUp() throws Exception {
-    serverUrl = "https://test.appspot.com";
+    serverUrl = "https://clarlars.appspot.com";
     appId = "default";
     userName = "";
     password = "";
@@ -132,7 +132,7 @@ public class TableTaskTest extends TestCase{
       tTask.blockingExecute();
       
       JSONObject rowsObj = wc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
-      JSONArray rows = rowsObj.getJSONArray(WinkClient.jsonRowsString);
+      JSONArray rows = rowsObj.getJSONArray(WinkClient.ROWS_STR_JSON);
       
       assertEquals(rows.size(), 0);
       

@@ -63,9 +63,9 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
 
       do {
         rows = wink.getRows(csv.getTableId(), cursor);
-        cursor = rows.optString(WinkClient.jsonWebSafeResumeCursor);
-        csv.tryAdd(rows.getJSONArray(WinkClient.jsonRowsString));
-      } while (rows.getBoolean(WinkClient.jsonHasMoreResults));
+        cursor = rows.optString(WinkClient.WEB_SAFE_RESUME_CURSOR_JSON);
+        csv.tryAdd(rows.getJSONArray(WinkClient.ROWS_STR_JSON));
+      } while (rows.getBoolean(WinkClient.HAS_MORE_RESULTS_JSON));
     }
 
     // write out csv to file

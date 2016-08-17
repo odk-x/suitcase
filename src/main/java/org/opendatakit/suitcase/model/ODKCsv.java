@@ -77,19 +77,19 @@ public class ODKCsv implements Iterable<String[]> {
     List<String> frontList = new ArrayList<>();
     List<String> endList = new ArrayList<>();
 
-    frontList.add(rowDefId);
-    frontList.add(rowDefFormId);
-    frontList.add(rowDefLocale);
-    frontList.add(rowDefSavepointType);
-    frontList.add(rowDefSavepointTimestamp);
-    frontList.add(rowDefSavepointCreator);
+    frontList.add(ID_ROW_DEF);
+    frontList.add(FORM_ID_ROW_DEF);
+    frontList.add(LOCALE_ROW_DEF);
+    frontList.add(SAVEPOINT_TYPE_ROW_DEF);
+    frontList.add(SAVEPOINT_TIMESTAMP_ROW_DEF);
+    frontList.add(SAVEPOINT_CREATOR_ROW_DEF);
     frontList.add("_create_user");
     frontList.add("_last_update_user");
     METADATA_POSITION.put(Position.FRONT, frontList);
 
-    endList.add(rowDefRowETag);
-    endList.add(rowDefFilterType);
-    endList.add(rowDefFilterValue);
+    endList.add(ROW_ETAG_ROW_DEF);
+    endList.add(FILTER_TYPE_ROW_DEF);
+    endList.add(FILTER_VALUE_ROW_DEF);
     METADATA_POSITION.put(Position.END, endList);
   }
 
@@ -99,15 +99,15 @@ public class ODKCsv implements Iterable<String[]> {
   static {
     METADATA_JSON_NAME = new HashMap<>();
 
-    METADATA_JSON_NAME.put(rowDefId, jsonId);
-    METADATA_JSON_NAME.put(rowDefFormId, jsonFormId);
-    METADATA_JSON_NAME.put(rowDefLocale, jsonLocale);
-    METADATA_JSON_NAME.put(rowDefSavepointType, jsonSavepointType);
-    METADATA_JSON_NAME.put(rowDefSavepointTimestamp, jsonSavepointTimestamp);
-    METADATA_JSON_NAME.put(rowDefSavepointCreator, jsonSavepointCreator);
-    METADATA_JSON_NAME.put(rowDefRowETag, jsonRowETag);
-    METADATA_JSON_NAME.put(rowDefFilterType, jsonFilterScope + ": type");
-    METADATA_JSON_NAME.put(rowDefFilterValue, jsonFilterScope + ": value");
+    METADATA_JSON_NAME.put(ID_ROW_DEF, ID_JSON);
+    METADATA_JSON_NAME.put(FORM_ID_ROW_DEF, FORM_ID_JSON);
+    METADATA_JSON_NAME.put(LOCALE_ROW_DEF, LOCALE_JSON);
+    METADATA_JSON_NAME.put(SAVEPOINT_TYPE_ROW_DEF, SAVEPOINT_TYPE_JSON);
+    METADATA_JSON_NAME.put(SAVEPOINT_TIMESTAMP_ROW_DEF, SAVEPOINT_TIMESTAMP_JSON);
+    METADATA_JSON_NAME.put(SAVEPOINT_CREATOR_ROW_DEF, SAVEPOINT_CREATOR_JSON);
+    METADATA_JSON_NAME.put(ROW_ETAG_ROW_DEF, ROW_ETAG_JSON);
+    METADATA_JSON_NAME.put(FILTER_TYPE_ROW_DEF, FILTER_SCOPE_JSON + ": type");
+    METADATA_JSON_NAME.put(FILTER_VALUE_ROW_DEF, FILTER_SCOPE_JSON + ": value");
     METADATA_JSON_NAME.put("_create_user", "createUser");
     METADATA_JSON_NAME.put("_last_update_user", "lastUpdateUser");
   }
@@ -309,7 +309,7 @@ public class ODKCsv implements Iterable<String[]> {
    * @throws JSONException
    */
   private String[] extractDataHeader(JSONObject oneRow) throws JSONException {
-    JSONArray orderedColumns = oneRow.getJSONArray(orderedColumnsDef);
+    JSONArray orderedColumns = oneRow.getJSONArray(ORDERED_COLUMNS_DEF);
     String[] columns = new String[orderedColumns.size()];
 
     for (int i = 0; i < columns.length; i++) {
@@ -386,9 +386,9 @@ public class ODKCsv implements Iterable<String[]> {
     for (String colName : metadataList) {
       String jsonName = METADATA_JSON_NAME.get(colName);
 
-      if (jsonName.startsWith(jsonFilterScope)) {
+      if (jsonName.startsWith(FILTER_SCOPE_JSON)) {
         metadata
-            .add(row.getJSONObject(jsonFilterScope).optString(jsonName.split(":")[1].trim(), NULL));
+            .add(row.getJSONObject(FILTER_SCOPE_JSON).optString(jsonName.split(":")[1].trim(), NULL));
       } else if (config.isExtraMetadata() || (this.colAction.get(colName) != Action.EXTRA)) {
         metadata.add(row.optString(jsonName, NULL));
       }
@@ -408,7 +408,7 @@ public class ODKCsv implements Iterable<String[]> {
    */
   private String[] getData(JSONObject row, CsvConfig config)
       throws Exception {
-    String rowId = row.optString(jsonId);
+    String rowId = row.optString(ID_JSON);
 
     ScanJson scanRaw = null;
     if (config.isScanFormatting() || config.isDownloadAttachment()) {
@@ -426,7 +426,7 @@ public class ODKCsv implements Iterable<String[]> {
     }
     String[] data = new String[dataLength];
 
-    JSONArray columns = row.getJSONArray(orderedColumnsDef);
+    JSONArray columns = row.getJSONArray(ORDERED_COLUMNS_DEF);
     int offset = 0;
     for (int i = 0; i < this.completeDataHeader.length; i++) {
       String colName = this.completeDataHeader[i];
@@ -477,7 +477,7 @@ public class ODKCsv implements Iterable<String[]> {
     String template = "=HYPERLINK(\"%s\", \"Ctrl + Click to view\")";
     String attachmentUrlStr;
     if (localLink) {
-      URL attachmentUrl = this.attMngr.getAttachmentUrl(row.optString(jsonId), fileName, true);
+      URL attachmentUrl = this.attMngr.getAttachmentUrl(row.optString(ID_JSON), fileName, true);
       if (attachmentUrl == null) {
         return "File is missing on Aggregate server.";
       }
@@ -487,7 +487,7 @@ public class ODKCsv implements Iterable<String[]> {
           this.aggInfo.getServerUrl() + "/" + "tables" + "/" + this.aggInfo.getAppId() + "/" +
               this.tableId + "/ref/" +
               this.aggInfo.getSchemaETag(this.tableId) + "/attachments/" +
-              row.optString(jsonId) + "/file/" + fileName;
+              row.optString(ID_JSON) + "/file/" + fileName;
     }
 
     return String.format(template, attachmentUrlStr);

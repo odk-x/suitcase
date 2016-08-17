@@ -35,7 +35,7 @@ public class UpdateTaskTest extends TestCase{
     //absolutePathOfTestFiles = System.getProperty("test.absolutePathOfTestFiles");
     //batchSize = Integer.valueOf(System.getProperty("test.batchSize"));
     
-    serverUrl = "https://test.appspot.com";
+    serverUrl = "https://clarlars.appspot.com";
     appId = "default";
     absolutePathOfTestFiles = "testfiles/";
     batchSize = 1000;
@@ -66,10 +66,10 @@ public class UpdateTaskTest extends TestCase{
           testTableId, null, csvFile);
       System.out.println("testUpdateTaskAdd: result is " + result);
 
-      if (result.containsKey(WinkClient.jsonTableId)) {
-        String tableId = result.getString(WinkClient.jsonTableId);
+      if (result.containsKey(WinkClient.TABLE_ID_JSON)) {
+        String tableId = result.getString(WinkClient.TABLE_ID_JSON);
         assertEquals(tableId, testTableId);
-        tableSchemaETag = result.getString(WinkClient.jsonSchemaETag);
+        tableSchemaETag = result.getString(WinkClient.SCHEMA_ETAG_JSON);
       }
 
       // Get the table definition
@@ -129,10 +129,10 @@ public class UpdateTaskTest extends TestCase{
           testTableId, null, csvFile);
       System.out.println("testUpdateTaskDelete: result is " + result);
 
-      if (result.containsKey(WinkClient.jsonTableId)) {
-        String tableId = result.getString(WinkClient.jsonTableId);
+      if (result.containsKey(WinkClient.TABLE_ID_JSON)) {
+        String tableId = result.getString(WinkClient.TABLE_ID_JSON);
         assertEquals(tableId, testTableId);
-        tableSchemaETag = result.getString(WinkClient.jsonSchemaETag);
+        tableSchemaETag = result.getString(WinkClient.SCHEMA_ETAG_JSON);
       }
 
       // Get the table definition
@@ -204,10 +204,10 @@ public class UpdateTaskTest extends TestCase{
           testTableId, null, csvFile);
       System.out.println("testUpdateTaskUpdate: result is " + result);
 
-      if (result.containsKey(WinkClient.jsonTableId)) {
-        String tableId = result.getString(WinkClient.jsonTableId);
+      if (result.containsKey(WinkClient.TABLE_ID_JSON)) {
+        String tableId = result.getString(WinkClient.TABLE_ID_JSON);
         assertEquals(tableId, testTableId);
-        tableSchemaETag = result.getString(WinkClient.jsonSchemaETag);
+        tableSchemaETag = result.getString(WinkClient.SCHEMA_ETAG_JSON);
       }
 
       // Get the table definition
@@ -287,10 +287,10 @@ public class UpdateTaskTest extends TestCase{
           testTableId, null, csvFile);
       System.out.println("testUpdateTaskForceUpdate: result is " + result);
 
-      if (result.containsKey(WinkClient.jsonTableId)) {
-        String tableId = result.getString(WinkClient.jsonTableId);
+      if (result.containsKey(WinkClient.TABLE_ID_JSON)) {
+        String tableId = result.getString(WinkClient.TABLE_ID_JSON);
         assertEquals(tableId, testTableId);
-        tableSchemaETag = result.getString(WinkClient.jsonSchemaETag);
+        tableSchemaETag = result.getString(WinkClient.SCHEMA_ETAG_JSON);
       }
 
       // Get the table definition

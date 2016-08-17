@@ -127,19 +127,19 @@ public class UpdateTask  extends SuitcaseSwingWorker<Void> {
 	    rowFilterValue = firstLine[rowFilterValueIdx];
 	    
 	    if ((!operation.equals(OP_STR)) || 
-	        (!rowId.equals(WinkClient.rowDefId)) ||
-	        (!rowFormId.equals(WinkClient.rowDefFormId)) || 
-	        (!rowLocale.equals(WinkClient.rowDefLocale)) || 
-					(!rowSavepointType.equals(WinkClient.rowDefSavepointType)) ||
-          (!rowSavepointTimestamp.equals(WinkClient.rowDefSavepointTimestamp)) ||
-          (!rowSavepointCreator.equals(WinkClient.rowDefSavepointCreator))) {
+	        (!rowId.equals(WinkClient.ID_ROW_DEF)) ||
+	        (!rowFormId.equals(WinkClient.FORM_ID_ROW_DEF)) || 
+	        (!rowLocale.equals(WinkClient.LOCALE_ROW_DEF)) || 
+					(!rowSavepointType.equals(WinkClient.SAVEPOINT_TYPE_ROW_DEF)) ||
+          (!rowSavepointTimestamp.equals(WinkClient.SAVEPOINT_TIMESTAMP_ROW_DEF)) ||
+          (!rowSavepointCreator.equals(WinkClient.SAVEPOINT_CREATOR_ROW_DEF))) {
 	      
 	      throw new IllegalArgumentException("The number of columns in CSV does not contain the first set of metadata columns");
 	    }
 	    
-	    if ((!rowETag.equals(WinkClient.rowDefRowETag))||
-	        (!rowFilterType.equals(WinkClient.rowDefFilterType)) ||
-	        (!rowFilterValue.equals(WinkClient.rowDefFilterValue))) {
+	    if ((!rowETag.equals(WinkClient.ROW_ETAG_ROW_DEF))||
+	        (!rowFilterType.equals(WinkClient.FILTER_TYPE_ROW_DEF)) ||
+	        (!rowFilterValue.equals(WinkClient.FILTER_VALUE_ROW_DEF))) {
 	      throw new IllegalArgumentException("The number of columns in CSV does not contain the last set of metadata columns");
 	    }
 	   
@@ -177,10 +177,10 @@ public class UpdateTask  extends SuitcaseSwingWorker<Void> {
 	      JSONArray rowResArray = new JSONArray();
 	      do {
 	        rows = wink.getRows(tableId, cursor);
-	        cursor = rows.optString(WinkClient.jsonWebSafeResumeCursor);
-	        JSONArray rowsArray = rows.getJSONArray(WinkClient.jsonRowsString);
+	        cursor = rows.optString(WinkClient.WEB_SAFE_RESUME_CURSOR_JSON);
+	        JSONArray rowsArray = rows.getJSONArray(WinkClient.ROWS_STR_JSON);
 	        rowResArray.addAll(rowsArray);
-	      } while (rows.getBoolean(WinkClient.jsonHasMoreResults));
+	      } while (rows.getBoolean(WinkClient.HAS_MORE_RESULTS_JSON));
 	      
 	      setupRowIdToRowETagMap(rowIdToRowETag, rowResArray);
 			String existingRowETag = rowIdToRowETag.get(rowId);
@@ -310,8 +310,8 @@ public class UpdateTask  extends SuitcaseSwingWorker<Void> {
        try {
          for (int i = 0; i < rowsArray.size(); i++) {
            JSONObject rowObj = rowsArray.getJSONObject(i);
-           String rowId = rowObj.has(WinkClient.jsonId) && !rowObj.isNull(WinkClient.jsonId) ? rowObj.getString(WinkClient.jsonId) : null;
-           String rowETag = rowObj.has(WinkClient.jsonRowETag) && !rowObj.isNull(WinkClient.jsonRowETag) ? rowObj.getString(WinkClient.jsonRowETag) : null;
+           String rowId = rowObj.has(WinkClient.ID_JSON) && !rowObj.isNull(WinkClient.ID_JSON) ? rowObj.getString(WinkClient.ID_JSON) : null;
+           String rowETag = rowObj.has(WinkClient.ROW_ETAG_JSON) && !rowObj.isNull(WinkClient.ROW_ETAG_JSON) ? rowObj.getString(WinkClient.ROW_ETAG_JSON) : null;
            if (rowId != null && rowETag != null) {
              idToETagMap.put(rowId, rowETag);
            }

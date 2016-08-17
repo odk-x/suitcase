@@ -25,14 +25,14 @@ public final class TestUtilities {
       // Skip the first line - it's just headers
       reader.readNext();
 
-      if (tableDef.containsKey(WinkClient.orderedColumnsDef)) {
-        JSONArray cols = tableDef.getJSONArray(WinkClient.orderedColumnsDef);
+      if (tableDef.containsKey(WinkClient.ORDERED_COLUMNS_DEF)) {
+        JSONArray cols = tableDef.getJSONArray(WinkClient.ORDERED_COLUMNS_DEF);
         String[] csvDef;
         while ((csvDef = reader.readNext()) != null) {
           same = false;
           for (int i = 0; i < cols.size(); i++) {
             JSONObject col = cols.getJSONObject(i);
-            String testElemKey = col.getString(WinkClient.jsonElemKey);
+            String testElemKey = col.getString(WinkClient.ELEM_KEY_JSON);
             if (csvDef[0].equals(testElemKey)) {
               same = true;
               // Remove the index so we don't keep
@@ -57,7 +57,7 @@ public final class TestUtilities {
     boolean same = false;
 
     try {
-      if (RowId.equals(rowRes.getString(WinkClient.jsonId))) {
+      if (RowId.equals(rowRes.getString(WinkClient.ID_JSON))) {
         same = true;
       }
     } catch (Exception e) {
@@ -75,8 +75,8 @@ public final class TestUtilities {
     }
 
     try {
-      if (rowRes.has(WinkClient.orderedColumnsDef)) {
-        JSONArray ordCols = rowRes.getJSONArray(WinkClient.orderedColumnsDef);
+      if (rowRes.has(WinkClient.ORDERED_COLUMNS_DEF)) {
+        JSONArray ordCols = rowRes.getJSONArray(WinkClient.ORDERED_COLUMNS_DEF);
         for (int i = 0; i < ordCols.length(); i++) {
           JSONObject col = ordCols.getJSONObject(i);
           String colStr = col.has(COLUMN_STRING) && !col.isNull(COLUMN_STRING) ? col.getString(COLUMN_STRING) : null;

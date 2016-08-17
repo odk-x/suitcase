@@ -62,11 +62,11 @@ public class WinkWrapper {
 
   public Set<String> updateTableList() throws IOException, JSONException, Exception {
     JSONArray tables =
-        wc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId()).getJSONArray(jsonTables);
+        wc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId()).getJSONArray(TABLES_JSON);
 
     for (int i = 0; i < tables.size(); i++) {
-      String tableId = tables.getJSONObject(i).getString(jsonTableId);
-      String eTag = tables.getJSONObject(i).getString(jsonSchemaETag);
+      String tableId = tables.getJSONObject(i).getString(TABLE_ID_JSON);
+      String eTag = tables.getJSONObject(i).getString(SCHEMA_ETAG_JSON);
       aggInfo.addTableId(tableId, eTag);
     }
 
@@ -204,8 +204,8 @@ public class WinkWrapper {
       JSONObject res = wc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, tableSchemaETag, null, null,
           null);
       
-      if (res.containsKey(jsonDataETag) && !res.isNull(jsonDataETag)) {
-        dataETag = res.getString(jsonDataETag);
+      if (res.containsKey(DATA_ETAG_JSON) && !res.isNull(DATA_ETAG_JSON)) {
+        dataETag = res.getString(DATA_ETAG_JSON);
       }
       
     } catch (Exception e) {
