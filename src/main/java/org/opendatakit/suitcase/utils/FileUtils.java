@@ -69,6 +69,15 @@ public class FileUtils {
   public static Path getDefaultSavePath() {
     return Paths.get(DEFAULT_SAVE_PATH).toAbsolutePath();
   }
+  
+  /**
+   * Returns the default save path
+   *
+   * @return absolute Path
+   */
+  public static Path getUpdateSavePath() {
+    return Paths.get(DEFAULT_UPDATE_PATH).toAbsolutePath();
+  }
 
   /**
    * Returns the default upload path

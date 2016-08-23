@@ -85,16 +85,16 @@ public class SuitcaseCLI {
         new ResetTask(version, false).blockingExecute();
       }
       break;
-      
-    case UPDATE:
-        error = FieldsValidatorUtils.checkUpdateFields(tableId, path, version);
 
-        if (error != null) {
-          DialogUtils.showError(error, false);
-        } else {
-          new UpdateTask(aggInfo, path, version, tableId, false).blockingExecute();
-        }
-        break;
+    case UPDATE:
+      error = FieldsValidatorUtils.checkUpdateFields(tableId, path, version);
+
+      if (error != null) {
+        DialogUtils.showError(error, false);
+      } else {
+        new UpdateTask(aggInfo, path, version, tableId, null, false).blockingExecute();
+      }
+      break;
     }
   }
 

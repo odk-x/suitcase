@@ -1,6 +1,7 @@
 package org.opendatakit.suitcase.net;
 
 import org.opendatakit.suitcase.model.AggregateInfo;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
@@ -9,6 +10,7 @@ import org.opendatakit.aggregate.odktables.rest.entity.RowOutcomeList;
 import org.opendatakit.wink.client.WinkClient;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
@@ -17,8 +19,6 @@ import java.util.zip.DataFormatException;
 import static org.opendatakit.wink.client.WinkClient.*;
 
 public class WinkWrapper {
-  
-  // TODO: Make exception catching more specific!!
   
   private static final String FETCH_LIMIT = "1000";
   private static final int DELETE_TABLE_DEF_WAIT = 1000;
@@ -40,7 +40,7 @@ public class WinkWrapper {
     return InstanceHolder.INSTANCE;
   }
 
-  public void init(AggregateInfo aggInfo) throws IOException, JSONException, Exception {
+  public void init(AggregateInfo aggInfo) throws IOException, JSONException {
     if (!hasInit) {
       this.aggInfo = aggInfo;
       this.wc = new WinkClient();
@@ -60,7 +60,7 @@ public class WinkWrapper {
     return hasInit;
   }
 
-  public Set<String> updateTableList() throws IOException, JSONException, Exception {
+  public Set<String> updateTableList() throws IOException, JSONException {
     JSONArray tables =
         wc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId()).getJSONArray(TABLES_JSON);
 
@@ -74,7 +74,7 @@ public class WinkWrapper {
   }
 
   public void pushAllData(String dataPath, String version)
-      throws JSONException, IOException, DataFormatException, Exception {
+      throws JSONException, IOException, DataFormatException {
 //    System.out.println("pushAllData " + aggInfo.getServerUrl() + " " +aggInfo.getAppId() + " " + dataPath +" "+version);
     wc.pushAllDataToUri(aggInfo.getServerUrl(), aggInfo.getAppId(), dataPath, version);
 
@@ -85,11 +85,11 @@ public class WinkWrapper {
     }
   }
 
-  public int deleteFile(String filename, String version) throws IOException, Exception {
+  public int deleteFile(String filename, String version) throws IOException {
     return wc.deleteFile(aggInfo.getServerUrl(), aggInfo.getAppId(), filename, version);
   }
 
-  public JSONObject getManifestForAppLevelFiles(String version) throws IOException, JSONException, Exception {
+  public JSONObject getManifestForAppLevelFiles(String version) throws IOException, JSONException {
     return wc.getManifestForAppLevelFiles(aggInfo.getServerUrl(), aggInfo.getAppId(), version);
   }
   
@@ -97,29 +97,36 @@ public class WinkWrapper {
     if (tableId == null || tableId.length() == 0) {
       throw new IllegalArgumentException("createTable: tableId cannot be null");
     }
-    
+
     if (csvFilePath == null || csvFilePath.length() == 0) {
       throw new IllegalArgumentException("createTable: CSV file path cannot be null");
     }
-    
+
     File csvFile = new File(csvFilePath);
     if (!csvFile.exists() || !csvFile.isFile()) {
       throw new IllegalArgumentException("createTable: CSV file must exist and be a valid file");
     }
-    
+
     try {
       wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, null, csvFilePath);
-    } catch (Exception e) {
-      e.printStackTrace();
+    } catch (FileNotFoundException fnfe) {
+      fnfe.printStackTrace();
+    } catch (DataFormatException dfe) {
+      dfe.printStackTrace();
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    } catch (JSONException je) {
+      je.printStackTrace();
     }
+
     return 0;
   }
 
-  public int deleteTableDefinition(String tableId) throws IOException, Exception {
+  public int deleteTableDefinition(String tableId) throws IOException {
     return deleteTableDefinition(tableId, null);
   }
 
-  public int deleteTableDefinition(String tableId, String schemaETag) throws IOException, Exception {
+  public int deleteTableDefinition(String tableId, String schemaETag) throws IOException {
     if (tableId == null || tableId.length() == 0) {
       throw new IllegalArgumentException("tableId cannot be null");
     }
@@ -128,8 +135,6 @@ public class WinkWrapper {
       throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
 
-    // This is used in the reset task
-    // TODO: Make this use the verify function
     if (schemaETag == null) {
       schemaETag = aggInfo.getSchemaETag(tableId);
     }
@@ -146,7 +151,7 @@ public class WinkWrapper {
   }
 
   public JSONObject getManifestForRow(String tableId, String rowId)
-      throws IOException, JSONException, Exception {
+      throws IOException, JSONException {
     if (!aggInfo.tableIdExists(tableId)) {
       throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
@@ -158,7 +163,7 @@ public class WinkWrapper {
         schemaETag, rowId);
   }
 
-  public JSONObject getRows(String tableId, String cursor) throws IOException, JSONException, Exception {
+  public JSONObject getRows(String tableId, String cursor) throws IOException, JSONException {
     if (!aggInfo.tableIdExists(tableId)) {
       throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
@@ -172,7 +177,7 @@ public class WinkWrapper {
   }
 
   public void getFileForRow(String tableId, String rowId, String savePath, String relPathOnServer)
-      throws IOException, Exception {
+      throws IOException, JSONException {
     if (!aggInfo.tableIdExists(tableId)) {
       throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
@@ -185,7 +190,7 @@ public class WinkWrapper {
   }
 
   public void batchGetFilesForRow(String tableId, String rowId, String savePath, JSONObject files)
-      throws IOException, JSONException, Exception {
+      throws IOException, JSONException {
     if (!aggInfo.tableIdExists(tableId)) {
       throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
@@ -200,7 +205,7 @@ public class WinkWrapper {
   public String getDataETag(String tableId, String tableSchemaETag) {
     String dataETag = null;
     
-    try {
+    try{
       JSONObject res = wc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, tableSchemaETag, null, null,
           null);
       
@@ -208,15 +213,19 @@ public class WinkWrapper {
         dataETag = res.getString(DATA_ETAG_JSON);
       }
       
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+    } catch (ClientProtocolException cpe) {
+      cpe.printStackTrace();
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    } catch (JSONException je) {
+      je.printStackTrace();
+    }  
 
     return dataETag;
   }
   
-  public RowOutcomeList alterRowsUsingSingleBatch(String tableId, ArrayList<Row> rowArrayList)
-    throws Exception {
+  public RowOutcomeList alterRowsUsingSingleBatch(String tableId, ArrayList<Row> rowArrayList) 
+      throws ClientProtocolException, IOException, JSONException {    
     if (tableId == null || tableId.length() == 0) {
       throw new IllegalArgumentException("writeRowDataToCSV: tableId cannot be empty");
     }
@@ -228,7 +237,8 @@ public class WinkWrapper {
     return wc.alterRowsUsingSingleBatch(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag, dataETag, rowArrayList);
   }
   
-  public void deleteRowsUsingBulkUpload(String tableId, ArrayList<Row> rowArrayList) throws Exception {
+  public void deleteRowsUsingBulkUpload(String tableId, ArrayList<Row> rowArrayList) 
+      throws ClientProtocolException, IOException, JSONException {
     if (tableId == null || tableId.length() == 0) {
       throw new IllegalArgumentException("deleteRowsUsingBulkUpload: tableId must not be null");
     }
@@ -242,7 +252,7 @@ public class WinkWrapper {
     
   }
   
-  String verifyTableIdAndSchemaETag(String tableId) throws Exception {
+  String verifyTableIdAndSchemaETag(String tableId) throws IOException, JSONException {
     String schemaETag = null;
     
     if (tableId == null || tableId.length() == 0) {

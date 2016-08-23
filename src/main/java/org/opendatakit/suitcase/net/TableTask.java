@@ -12,7 +12,6 @@ import java.util.zip.DataFormatException;
 
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
-import org.apache.wink.json4j.JSONArray;
 import org.opendatakit.aggregate.odktables.rest.entity.Row;
 import org.opendatakit.aggregate.odktables.rest.entity.RowResource;
 import org.opendatakit.aggregate.odktables.rest.entity.RowResourceList;
@@ -27,7 +26,6 @@ public class TableTask extends SuitcaseSwingWorker<Void> {
   private static final String IN_PROGRESS_STRING = "Updating Table...";
   private static final int PUSH_FINISH_WAIT = 5000;
 
-  // CAL: Change this to an enum on the fly
   public final static String CREATE_OP = "CREATE";
   public final static String DELETE_OP = "DELETE";
   public final static String CLEAR_OP = "CLEAR";
@@ -72,7 +70,6 @@ public class TableTask extends SuitcaseSwingWorker<Void> {
       System.out.println("tableId must be specified " + className);
     }
 
-    // TODO: Use enum
     String op = operation.toUpperCase();
 
     switch (op) {
