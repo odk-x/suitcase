@@ -103,7 +103,7 @@ public class TableTask extends SuitcaseSwingWorker<Void> {
           RowResource rowRes = rowResArrayList.get(i);
 
           Row row = Row.forUpdate(rowRes.getRowId(), rowRes.getRowETag(), rowRes.getFormId(), rowRes.getLocale(), 
-              rowRes.getSavepointType(), rowRes.getSavepointTimestamp(), rowRes.getSavepointCreator(), rowRes.getFilterScope(), 
+              rowRes.getSavepointType(), rowRes.getSavepointTimestamp(), rowRes.getSavepointCreator(), rowRes.getRowFilterScope(), 
               rowRes.getValues());
           row.setDeleted(true);
           rowList.add(row);

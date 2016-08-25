@@ -1,6 +1,7 @@
 package org.opendatakit.suitcase.test;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONObject;
@@ -23,7 +24,7 @@ public class TableTaskTest extends TestCase{
   
   @Override
   protected void setUp() throws MalformedURLException {
-    serverUrl = "https://clarlars.appspot.com";
+    serverUrl = "https://test.appspot.com";
     appId = "default";
     userName = "";
     password = "";
@@ -38,7 +39,16 @@ public class TableTaskTest extends TestCase{
     
     try {
       WinkClient wc = new WinkClient();
-      wc.init(aggInfo.getHostUrl(), aggInfo.getUserName(), aggInfo.getPassword());
+      
+      String agg_url = aggInfo.getHostUrl();
+      agg_url = agg_url.substring(0, agg_url.length()-1);
+      
+      URL url = new URL(agg_url);
+      String host = url.getHost();
+      
+      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+          
+      wc.getUsers(agg_url);
       
       LoginTask lTask = new LoginTask(aggInfo, false);
       lTask.blockingExecute();
@@ -73,7 +83,17 @@ public class TableTaskTest extends TestCase{
 
     try {
       WinkClient wc = new WinkClient();
-      wc.init(aggInfo.getHostUrl(), aggInfo.getUserName(), aggInfo.getPassword());
+      
+      String agg_url = aggInfo.getHostUrl();
+      agg_url = agg_url.substring(0, agg_url.length()-1);
+      
+      URL url = new URL(agg_url);
+      String host = url.getHost();
+      
+      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      
+      // HACK!
+      wc.getUsers(agg_url);
 
       LoginTask lTask = new LoginTask(aggInfo, false);
       lTask.blockingExecute();
@@ -114,7 +134,17 @@ public class TableTaskTest extends TestCase{
     
     try {
       WinkClient wc = new WinkClient();
-      wc.init(aggInfo.getHostUrl(), aggInfo.getUserName(), aggInfo.getPassword());
+      
+      String agg_url = aggInfo.getHostUrl();
+      agg_url = agg_url.substring(0, agg_url.length()-1);
+      
+      URL url = new URL(agg_url);
+      String host = url.getHost();
+      
+      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      
+      // HACK!
+      wc.getUsers(agg_url);
       
       LoginTask lTask = new LoginTask(aggInfo, false);
       lTask.blockingExecute();
@@ -167,7 +197,17 @@ public class TableTaskTest extends TestCase{
     
     try {
       WinkClient wc = new WinkClient();
-      wc.init(aggInfo.getHostUrl(), aggInfo.getUserName(), aggInfo.getPassword());
+      
+      String agg_url = aggInfo.getHostUrl();
+      agg_url = agg_url.substring(0, agg_url.length()-1);
+      
+      URL url = new URL(agg_url);
+      String host = url.getHost();
+      
+      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      
+      // HACK!
+      wc.getUsers(agg_url);
       
       LoginTask lTask = new LoginTask(aggInfo, false);
       lTask.blockingExecute();
@@ -220,7 +260,17 @@ public class TableTaskTest extends TestCase{
     
     try {
       WinkClient wc = new WinkClient();
-      wc.init(aggInfo.getHostUrl(), aggInfo.getUserName(), aggInfo.getPassword());
+      
+      String agg_url = aggInfo.getHostUrl();
+      agg_url = agg_url.substring(0, agg_url.length()-1);
+      
+      URL url = new URL(agg_url);
+      String host = url.getHost();
+      
+      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      
+      // HACK!
+      wc.getUsers(agg_url);
       
       LoginTask lTask = new LoginTask(aggInfo, false);
       lTask.blockingExecute();

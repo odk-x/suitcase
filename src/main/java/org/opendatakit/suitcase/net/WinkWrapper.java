@@ -12,6 +12,7 @@ import org.opendatakit.wink.client.WinkClient;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.zip.DataFormatException;
@@ -44,8 +45,18 @@ public class WinkWrapper {
     if (!hasInit) {
       this.aggInfo = aggInfo;
       this.wc = new WinkClient();
+      
+      String agg_url = aggInfo.getHostUrl();
+      if (agg_url.endsWith("/")) {
+        agg_url = agg_url.substring(0, agg_url.length()-1);
+      }
+      
+      URL url = new URL(agg_url);
+      String host = url.getHost();
 
-      wc.init(this.aggInfo.getHostUrl(), this.aggInfo.getUserName(), this.aggInfo.getPassword());
+      this.wc.init(host, this.aggInfo.getUserName(), this.aggInfo.getPassword());
+      
+      this.wc.getUsers(agg_url);
       updateTableList();
 
       hasInit = true;

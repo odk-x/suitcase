@@ -21,6 +21,7 @@ import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.aggregate.odktables.rest.RFC4180CsvReader;
 import org.opendatakit.aggregate.odktables.rest.entity.DataKeyValue;
 import org.opendatakit.aggregate.odktables.rest.entity.Row;
+import org.opendatakit.aggregate.odktables.rest.entity.RowFilterScope;
 import org.opendatakit.aggregate.odktables.rest.entity.RowOutcome;
 import org.opendatakit.aggregate.odktables.rest.entity.RowOutcome.OutcomeType;
 import org.opendatakit.aggregate.odktables.rest.entity.RowOutcomeList;
@@ -201,7 +202,7 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
       case FORCE_UPDATE_OP:
         Row forceUpdatedRow = Row.forUpdate(rowId, rowETag, rowFormId, rowLocale, rowSavepointType,
             rowSavepointTimestamp, rowSavepointCreator,
-            Scope.asScope(rowFilterType, rowFilterValue), dkvl);
+            RowFilterScope.asRowFilter(rowFilterType, rowFilterValue), dkvl);
         if (existingRowETag != null) {
           forceUpdatedRow.setRowETag(existingRowETag);
         }
@@ -212,7 +213,7 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
       case UPDATE_OP:
         Row updatedRow = Row.forUpdate(rowId, rowETag, rowFormId, rowLocale, rowSavepointType,
             rowSavepointTimestamp, rowSavepointCreator,
-            Scope.asScope(rowFilterType, rowFilterValue), dkvl);
+            RowFilterScope.asRowFilter(rowFilterType, rowFilterValue), dkvl);
         if (existingRowETag != null) {
           updatedRow.setRowETag(existingRowETag);
         }
@@ -223,7 +224,7 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
       case NEW_OP:
         Row insertedRow = Row.forInsert(rowId, rowFormId, rowLocale, rowSavepointType,
             rowSavepointTimestamp, rowSavepointCreator,
-            Scope.asScope(rowFilterType, rowFilterValue), dkvl);
+            RowFilterScope.asRowFilter(rowFilterType, rowFilterValue), dkvl);
         if (existingRowETag != null) {
           insertedRow.setRowETag(existingRowETag);
         }
@@ -234,7 +235,7 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
       case DELETE_OP:
         Row deletedRow = Row.forUpdate(rowId, rowETag, rowFormId, rowLocale, rowSavepointType,
             rowSavepointTimestamp, rowSavepointCreator,
-            Scope.asScope(rowFilterType, rowFilterValue), dkvl);
+            RowFilterScope.asRowFilter(rowFilterType, rowFilterValue), dkvl);
         if (existingRowETag != null) {
           deletedRow.setRowETag(existingRowETag);
         }

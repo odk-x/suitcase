@@ -34,7 +34,7 @@ public class UpdateTaskTest extends TestCase{
     //absolutePathOfTestFiles = System.getProperty("test.absolutePathOfTestFiles");
     //batchSize = Integer.valueOf(System.getProperty("test.batchSize"));
     
-    serverUrl = "https://clarlars.appspot.com";
+    serverUrl = "https://test.appspot.com";
     appId = "default";
     absolutePathOfTestFiles = "testfiles/";
     batchSize = 1000;
@@ -55,7 +55,16 @@ public class UpdateTaskTest extends TestCase{
 
     try {
       wc = new WinkClient();
-      wc.init(aggInfo.getHostUrl(), aggInfo.getUserName(), aggInfo.getPassword());
+      
+      String agg_url = aggInfo.getHostUrl();
+      agg_url = agg_url.substring(0, agg_url.length()-1);
+      
+      URL url = new URL(agg_url);
+      String host = url.getHost();
+      
+      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+          
+      wc.getUsers(agg_url);
 
       LoginTask lTask = new LoginTask(aggInfo, false);
       lTask.blockingExecute();
@@ -119,7 +128,15 @@ public class UpdateTaskTest extends TestCase{
 
     try {
       wc = new WinkClient();
-      wc.init(aggInfo.getHostUrl(), aggInfo.getUserName(), aggInfo.getPassword());
+      String agg_url = aggInfo.getHostUrl();
+      agg_url = agg_url.substring(0, agg_url.length()-1);
+      
+      URL url = new URL(agg_url);
+      String host = url.getHost();
+      
+      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+          
+      wc.getUsers(agg_url);
 
       JSONObject result = wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
           testTableId, null, csvFile);
@@ -192,7 +209,15 @@ public class UpdateTaskTest extends TestCase{
 
     try {
       wc = new WinkClient();
-      wc.init(aggInfo.getHostUrl(), aggInfo.getUserName(), aggInfo.getPassword());
+      String agg_url = aggInfo.getHostUrl();
+      agg_url = agg_url.substring(0, agg_url.length()-1);
+      
+      URL url = new URL(agg_url);
+      String host = url.getHost();
+      
+      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+          
+      wc.getUsers(agg_url);
 
       JSONObject result = wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
           testTableId, null, csvFile);
@@ -273,7 +298,15 @@ public class UpdateTaskTest extends TestCase{
 
     try {
       wc = new WinkClient();
-      wc.init(aggInfo.getHostUrl(), aggInfo.getUserName(), aggInfo.getPassword());
+      String agg_url = aggInfo.getHostUrl();
+      agg_url = agg_url.substring(0, agg_url.length()-1);
+      
+      URL url = new URL(agg_url);
+      String host = url.getHost();
+      
+      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+          
+      wc.getUsers(agg_url);
 
       JSONObject result = wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
           testTableId, null, csvFile);
@@ -348,7 +381,15 @@ public class UpdateTaskTest extends TestCase{
     
     try {
       WinkClient wc = new WinkClient();
-      wc.init(aggInfo.getHostUrl(), aggInfo.getUserName(), aggInfo.getPassword());
+      String agg_url = aggInfo.getHostUrl();
+      agg_url = agg_url.substring(0, agg_url.length()-1);
+      
+      URL url = new URL(agg_url);
+      String host = url.getHost();
+      
+      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+          
+      wc.getUsers(agg_url);
       
       LoginTask lTask = new LoginTask(aggInfo, false);
       lTask.blockingExecute();
@@ -395,7 +436,15 @@ public class UpdateTaskTest extends TestCase{
 
     try {
       wc = new WinkClient();
-      wc.init(aggInfo.getHostUrl(), aggInfo.getUserName(), aggInfo.getPassword());
+      String agg_url = aggInfo.getHostUrl();
+      agg_url = agg_url.substring(0, agg_url.length()-1);
+      
+      URL url = new URL(agg_url);
+      String host = url.getHost();
+      
+      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+          
+      wc.getUsers(agg_url);
 
       JSONObject result = wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
           testTableId, null, csvFile);

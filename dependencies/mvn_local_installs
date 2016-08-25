@@ -1,2 +1,2 @@
-mvn install:install-file -Dfile=aggregate-rest-interface-2015-12-17.jar -DgroupId=org.opendatakit -DartifactId=aggregate-rest-interface -Dversion=2015-12-17 -Dpackaging=jar -DupdateReleaseInfo=true
+mvn install:install-file -Dfile=aggregate-rest-interface-2016-07-21.jar -DgroupId=org.opendatakit -DartifactId=aggregate-rest-interface -Dversion=2016-07-21 -Dpackaging=jar -DupdateReleaseInfo=true
 mvn install:install-file -Dfile=wink-1.0-SNAPSHOT-jar-with-dependencies.jar -DgroupId=org.opendatakit -DartifactId=wink -Dversion=1.0-SNAPSHOT -Dpackaging=jar -DupdateReleaseInfo=true
