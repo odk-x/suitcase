@@ -1,4 +1,4 @@
-package model;
+package org.opendatakit.suitcase.model;
 
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;

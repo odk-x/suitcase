@@ -1,10 +1,10 @@
-package net;
+package org.opendatakit.suitcase.net;
 
-import model.AggregateTableInfo;
+import org.opendatakit.suitcase.model.AggregateInfo;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.wink.client.WinkClient;
-import utils.FileUtils;
+import org.opendatakit.suitcase.utils.FileUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,21 +21,17 @@ import java.util.*;
  * !!!ATTENTION!!! One AttachmentManager per table
  */
 public class AttachmentManager {
-  private AggregateTableInfo table;
+  private AggregateInfo aggInfo;
+  private String tableId;
+  private String savePath;
   private Map<String, JSONObject> attachmentManifests;
   private Map<String, Map<String, String>> allAttachments;
-  private WinkClient wc;
-  private String savePath;
   
-  public AttachmentManager(
-      AggregateTableInfo table, WinkClient wc, String savePath) {
-    if (table.getSchemaETag() == null) {
-      throw new IllegalStateException("SchemaETag has not been set!");
-    }
-
-    this.table = table;
-    this.wc = wc;
+  public AttachmentManager(AggregateInfo aggInfo, String tableId, String savePath) {
+    this.aggInfo = aggInfo;
+    this.tableId = tableId;
     this.savePath = savePath;
+
     this.attachmentManifests = new HashMap<>();
     this.allAttachments = new HashMap<>();
   }
@@ -47,40 +43,31 @@ public class AttachmentManager {
    * @param rowId
    */
   public void getListOfRowAttachments(String rowId) {
-    //TODO: download manifest for multiple rows in parallel
-
     if (!this.allAttachments.containsKey(rowId)) {
-      Map<String, String> attachmentsMap = new HashMap<>();
-
       try {
-        JSONObject manifest =
-            wc.getManifestForRow(this.table.getServerUrl(), this.table.getAppId(),
-                this.table.getTableId(), this.table.getSchemaETag(), rowId
-            );
+        JSONObject manifest = WinkWrapper.getInstance().getManifestForRow(tableId, rowId);
         JSONArray attachments = manifest.getJSONArray("files");
-        this.attachmentManifests.put(rowId, manifest);
 
-        if (attachments.size() < 1) {
-          this.attachmentManifests.put(rowId, null);
-        } else {
+        if (attachments.size() > 0) {
+          attachmentManifests.put(rowId, manifest);
+
+          Map<String, String> attachmentsMap = new HashMap<>();
           for (int i = 0; i < attachments.size(); i++) {
             JSONObject attachmentJson = attachments.getJSONObject(i);
             attachmentsMap.put
                 (attachmentJson.optString("filename"), attachmentJson.optString("downloadUrl"));
           }
+          allAttachments.put(rowId, attachmentsMap);
         }
       } catch (Exception e) {
         System.out.println("Attachments Manifest Missing!");
-        this.attachmentManifests.put(rowId, null);
       }
-
-      this.allAttachments.put(rowId, attachmentsMap);
     }
   }
 
   /**
    * Retrieves URL for attachment.
-   * If a localUrl is requested, url is inferred from filename and table info
+   * If a localUrl is requested, url is inferred from filename and aggInfo info
    * If a row lacks attachment manifest, null is returned.
    * When allAttachment lacks record of requested rowId, IllegalStateException will be thrown.
    * When allAttachment lacks record of requested filename, IllegalArgumentException will be thrown.
@@ -128,16 +115,14 @@ public class AttachmentManager {
     if (this.attachmentManifests.containsKey(rowId)) {
       try {
         if (scanRawJsonOnly) {
-          wc.getFileForRow(
-              table.getServerUrl(), table.getAppId(), table.getTableId(), table.getSchemaETag(),
-              rowId, false,
-              getAttachmentLocalPath(rowId, getJsonFilename(rowId)).toAbsolutePath().toString(),
-              getJsonFilename(rowId)
+          WinkWrapper.getInstance().getFileForRow(
+              tableId, rowId, getAttachmentLocalPath(rowId, getScanJsonFilename(rowId)).toString(),
+              getScanJsonFilename(rowId)
           );
         } else {
-          wc.batchGetFilesForRow(
-              table.getServerUrl(), table.getAppId(), table.getTableId(), table.getSchemaETag(),
-              rowId, getAttachmentLocalDir(rowId).toString(), attachmentManifests.get(rowId), -1
+          WinkWrapper.getInstance().batchGetFilesForRow(
+              tableId, rowId, getAttachmentLocalDir(rowId).toString(),
+              attachmentManifests.get(rowId)
           );
         }
       }
@@ -165,21 +150,30 @@ public class AttachmentManager {
     }
 
     try {
-      return Files.newInputStream(getAttachmentLocalPath(rowId, getJsonFilename(rowId)));
+      return Files.newInputStream(getAttachmentLocalPath(rowId, getScanJsonFilename(rowId)));
     } catch (NoSuchFileException e) {
       return null;
     }
   }
 
   /**
-   * Infers local path to attachment directory with rowId and table info.
+   * Overwrites the original save path
+   *
+   * @param path
+   */
+  public void setSavePath(String path) {
+    this.savePath = path;
+  }
+
+  /**
+   * Infers local path to attachment directory with rowId and aggInfo info.
    *
    * @param rowId
    * @return
    */
   private Path getAttachmentLocalDir(String rowId) throws IOException {
     String sanitizedRowId = WinkClient.convertRowIdForInstances(rowId);
-    String insPath = FileUtils.getInstancesPath(table, savePath).toString();
+    String insPath = FileUtils.getInstancesPath(aggInfo, tableId, savePath).toString();
 
     if (Files.notExists(Paths.get(insPath, sanitizedRowId))) {
       Files.createDirectories(Paths.get(insPath, sanitizedRowId));
@@ -189,7 +183,7 @@ public class AttachmentManager {
   }
 
   /**
-   * Infers local path to attachment with rowId, filename and table info.
+   * Infers local path to attachment with rowId, filename and aggInfo info.
    *
    * Warning: Doesn't check if filename is valid (THIS IS INTENDED)
    *
@@ -208,7 +202,7 @@ public class AttachmentManager {
    * @param rowId
    * @return
    */
-  private String getJsonFilename(String rowId) {
+  private String getScanJsonFilename(String rowId) {
     return "raw_" + WinkClient.convertRowIdForInstances(rowId) + ".json";
   }
 }

@@ -1,0 +1,156 @@
+package org.opendatakit.suitcase.ui;
+
+import org.opendatakit.suitcase.model.AggregateInfo;
+import org.opendatakit.suitcase.net.LoginTask;
+import org.opendatakit.suitcase.net.SuitcaseSwingWorker;
+import org.opendatakit.suitcase.net.WinkWrapper;
+import org.opendatakit.suitcase.utils.FieldsValidatorUtils;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.net.MalformedURLException;
+
+public class LoginPanel extends JPanel implements PropertyChangeListener {
+  private class LoginActionListener implements ActionListener {
+    private boolean isAnon;
+    private JButton loginButton;
+    private JButton anonLoginButton;
+
+    public LoginActionListener(boolean isAnon, JButton loginButton, JButton anonLoginButton) {
+      this.isAnon = isAnon;
+      this.loginButton = loginButton;
+      this.anonLoginButton = anonLoginButton;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      sanitizeFields(isAnon);
+      String error = FieldsValidatorUtils.checkLoginFields(
+          sAggregateAddressText.getText(), sAppIdText.getText(), sUserNameText.getText(),
+          String.valueOf(sPasswordText.getPassword()), isAnon
+      );
+
+      if (error != null) {
+        DialogUtils.showError(error, true);
+      } else {
+        loginButton.setEnabled(false);
+        anonLoginButton.setEnabled(false);
+
+        // change label of the login button clicked
+        (isAnon ? anonLoginButton : loginButton).setText(LOGIN_LOADING_LABEL);
+
+        try {
+          buildAggregateInfo();
+
+          LoginTask worker = new LoginTask(aggInfo, true);
+          worker.addPropertyChangeListener(parent.getProgressBar());
+          worker.addPropertyChangeListener(LoginPanel.this);
+          worker.execute();
+        } catch (MalformedURLException e1) {
+          DialogUtils.showError(MessageString.BAD_URL, true);
+          e1.printStackTrace();
+        }
+      }
+    }
+  }
+
+  private static final String LOGIN_LABEL = "Login";
+  private static final String LOGIN_ANON_LABEL = "Anonymous Login";
+  private static final String LOGIN_LOADING_LABEL = "Loading";
+
+  private AggregateInfo aggInfo;
+  private JTextField sAggregateAddressText;
+  private JTextField sAppIdText;
+  private JTextField sUserNameText;
+  private JPasswordField sPasswordText;
+  private JButton sLoginButton;
+  private JButton sAnonLoginButton;
+
+  private MainPanel parent;
+
+  public LoginPanel(MainPanel parent) {
+    super(new GridBagLayout());
+
+    this.parent = parent;
+
+    this.sAggregateAddressText = new JTextField(1);
+    this.sAppIdText = new JTextField(1);
+    this.sUserNameText = new JTextField(1);
+    this.sPasswordText = new JPasswordField(1);
+    this.sLoginButton = new JButton();
+    this.sAnonLoginButton = new JButton();
+
+    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
+    gbc.gridx = 0;
+    gbc.gridy = GridBagConstraints.RELATIVE;
+
+    JPanel inputPanel = new InputPanel(
+        new String[] {"Aggregate Address", "App ID", "Username", "Password"},
+        new JTextField[] {sAggregateAddressText, sAppIdText, sUserNameText, sPasswordText},
+        new String[] {"https://aggregate-server-url.appspot.com", "default", "", ""}
+    );
+    gbc.weighty = 85;
+    gbc.insets = new Insets(80, 50, 0, 50);
+    this.add(inputPanel, gbc);
+
+    JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 20, 0));
+    buildLoginButtonArea(buttonPanel);
+    gbc.weighty = 15;
+    gbc.insets = new Insets(20, LayoutConsts.WINDOW_WIDTH / 4, 80, LayoutConsts.WINDOW_WIDTH / 4);
+    this.add(buttonPanel, gbc);
+  }
+
+  public AggregateInfo getAggregateInfo() {
+    return this.aggInfo;
+  }
+
+  private void buildLoginButtonArea(JPanel buttonsPanel) {
+    // Define buttons
+    sLoginButton.setText(LOGIN_LABEL);
+    sLoginButton.addActionListener(new LoginActionListener(false, sLoginButton, sAnonLoginButton));
+
+    sAnonLoginButton.setText(LOGIN_ANON_LABEL);
+    sAnonLoginButton.addActionListener(new LoginActionListener(true, sLoginButton, sAnonLoginButton));
+
+    buttonsPanel.add(sLoginButton);
+    buttonsPanel.add(sAnonLoginButton);
+  }
+
+  private void sanitizeFields(boolean anonymous) {
+    sAggregateAddressText.setText(sAggregateAddressText.getText().trim());
+    sAppIdText.setText(sAppIdText.getText().trim());
+    sUserNameText.setText(sUserNameText.getText().trim());
+
+    if (anonymous) {
+      sUserNameText.setText("");
+      sPasswordText.setText("");
+    }
+  }
+
+  private void buildAggregateInfo() throws MalformedURLException {
+    this.aggInfo = new AggregateInfo(
+        sAggregateAddressText.getText(), sAppIdText.getText(), sUserNameText.getText(),
+        String.valueOf(sPasswordText.getPassword())
+    );
+  }
+
+  @Override
+  public void propertyChange(PropertyChangeEvent evt) {
+    if (evt.getNewValue() != null && evt.getPropertyName().equals(SuitcaseSwingWorker.DONE_PROPERTY)) {
+      // restore buttons
+      sLoginButton.setText(LOGIN_LABEL);
+      sLoginButton.setEnabled(true);
+      sAnonLoginButton.setText(LOGIN_ANON_LABEL);
+      sAnonLoginButton.setEnabled(true);
+
+      // if login is successful, let parent switch to the next card
+      if (WinkWrapper.getInstance().isInitialized()) {
+        ((CardLayout) getParent().getLayout()).next(getParent());
+      }
+    }
+  }
+}

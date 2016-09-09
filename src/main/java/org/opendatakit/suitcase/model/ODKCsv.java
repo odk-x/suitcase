@@ -1,6 +1,6 @@
-package model;
+package org.opendatakit.suitcase.model;
 
-import net.AttachmentManager;
+import org.opendatakit.suitcase.net.AttachmentManager;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
@@ -11,7 +11,7 @@ import java.util.*;
 
 import static org.opendatakit.wink.client.WinkClient.*;
 
-//!!!ATTENTION!!! One per table
+//!!!ATTENTION!!! One per aggInfo
 public class ODKCsv implements Iterable<String[]> {
   public class ODKCSVIterator implements Iterator<String[]> {
     private int cursor;
@@ -27,7 +27,7 @@ public class ODKCsv implements Iterable<String[]> {
 
     @Override
     public String[] next() {
-      return next(false, false, false);
+      return next(new CsvConfig());
     }
 
     @Override
@@ -35,7 +35,7 @@ public class ODKCsv implements Iterable<String[]> {
       throw new UnsupportedOperationException();
     }
 
-    public String[] next(boolean scanFormatting, boolean localLink, boolean extraMeta) {
+    public String[] next(CsvConfig config) {
       if (!hasNext()) {
         throw new NoSuchElementException();
       }
@@ -43,7 +43,7 @@ public class ODKCsv implements Iterable<String[]> {
       String[] nextLine = null;
 
       try {
-        nextLine = get(cursor++, scanFormatting, localLink, extraMeta);
+        nextLine = get(cursor++, config);
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -77,19 +77,19 @@ public class ODKCsv implements Iterable<String[]> {
     List<String> frontList = new ArrayList<>();
     List<String> endList = new ArrayList<>();
 
-    frontList.add(rowDefId);
-    frontList.add(rowDefFormId);
-    frontList.add(rowDefLocale);
-    frontList.add(rowDefSavepointType);
-    frontList.add(rowDefSavepointTimestamp);
-    frontList.add(rowDefSavepointCreator);
+    frontList.add(ID_ROW_DEF);
+    frontList.add(FORM_ID_ROW_DEF);
+    frontList.add(LOCALE_ROW_DEF);
+    frontList.add(SAVEPOINT_TYPE_ROW_DEF);
+    frontList.add(SAVEPOINT_TIMESTAMP_ROW_DEF);
+    frontList.add(SAVEPOINT_CREATOR_ROW_DEF);
     frontList.add("_create_user");
     frontList.add("_last_update_user");
     METADATA_POSITION.put(Position.FRONT, frontList);
 
-    endList.add(rowDefRowETag);
-    endList.add(rowDefFilterType);
-    endList.add(rowDefFilterValue);
+    endList.add(ROW_ETAG_ROW_DEF);
+    endList.add(FILTER_TYPE_ROW_DEF);
+    endList.add(FILTER_VALUE_ROW_DEF);
     METADATA_POSITION.put(Position.END, endList);
   }
 
@@ -99,15 +99,15 @@ public class ODKCsv implements Iterable<String[]> {
   static {
     METADATA_JSON_NAME = new HashMap<>();
 
-    METADATA_JSON_NAME.put(rowDefId, jsonId);
-    METADATA_JSON_NAME.put(rowDefFormId, jsonFormId);
-    METADATA_JSON_NAME.put(rowDefLocale, jsonLocale);
-    METADATA_JSON_NAME.put(rowDefSavepointType, jsonSavepointType);
-    METADATA_JSON_NAME.put(rowDefSavepointTimestamp, jsonSavepointTimestamp);
-    METADATA_JSON_NAME.put(rowDefSavepointCreator, jsonSavepointCreator);
-    METADATA_JSON_NAME.put(rowDefRowETag, jsonRowETag);
-    METADATA_JSON_NAME.put(rowDefFilterType, jsonFilterScope + ": type");
-    METADATA_JSON_NAME.put(rowDefFilterValue, jsonFilterScope + ": value");
+    METADATA_JSON_NAME.put(ID_ROW_DEF, ID_JSON);
+    METADATA_JSON_NAME.put(FORM_ID_ROW_DEF, FORM_ID_JSON);
+    METADATA_JSON_NAME.put(LOCALE_ROW_DEF, LOCALE_JSON);
+    METADATA_JSON_NAME.put(SAVEPOINT_TYPE_ROW_DEF, SAVEPOINT_TYPE_JSON);
+    METADATA_JSON_NAME.put(SAVEPOINT_TIMESTAMP_ROW_DEF, SAVEPOINT_TIMESTAMP_JSON);
+    METADATA_JSON_NAME.put(SAVEPOINT_CREATOR_ROW_DEF, SAVEPOINT_CREATOR_JSON);
+    METADATA_JSON_NAME.put(ROW_ETAG_ROW_DEF, ROW_ETAG_JSON);
+    METADATA_JSON_NAME.put(FILTER_TYPE_ROW_DEF, FILTER_SCOPE_JSON + ": type");
+    METADATA_JSON_NAME.put(FILTER_VALUE_ROW_DEF, FILTER_SCOPE_JSON + ": value");
     METADATA_JSON_NAME.put("_create_user", "createUser");
     METADATA_JSON_NAME.put("_last_update_user", "lastUpdateUser");
   }
@@ -119,67 +119,80 @@ public class ODKCsv implements Iterable<String[]> {
   //Due to optimization and how Scan is designed, 1 column is always filtered
   private static final int NUM_FILTERED = 1; //TODO: generalize this?
 
+  private AttachmentManager attMngr;
+  private AggregateInfo aggInfo;
+  private String tableId;
+
   private List<JSONArray> jsonRows;
   private String[] completeCSVHeader;
   //Header of row data only
   private String[] completeDataHeader;
   private int size;
   private Map<String, Action> colAction;
-  private AttachmentManager attMngr;
-  private AggregateTableInfo table;
-
-  /**
-   * Initialize an empty ODKCsv
-   *
-   * @param attMngr
-   * @param table
-   */
-  public ODKCsv(AttachmentManager attMngr, AggregateTableInfo table) {
-    this.size = 0;
-    this.attMngr = attMngr;
-    this.jsonRows = new ArrayList<>();
-    this.table = table;
-  }
 
   /**
    * Initialize ODKCsv with rows
    *
    * @param rows
    * @param attMngr
-   * @param table
+   * @param aggInfo
    * @throws JSONException
    */
-  public ODKCsv(JSONArray rows, AttachmentManager attMngr, AggregateTableInfo table)
+  public ODKCsv(JSONArray rows, AttachmentManager attMngr, AggregateInfo aggInfo, String tableId)
       throws JSONException {
-    if (rows == null) {
-      throw new IllegalArgumentException("invalid json");
+    if (attMngr == null) {
+      throw new IllegalArgumentException("AttachmentManager cannot be null");
+    }
+    if (aggInfo == null) {
+      throw new IllegalArgumentException("AggregateInfo cannot be null");
+    }
+    if (tableId == null || tableId.isEmpty()) {
+      throw new IllegalArgumentException("Table Id cannot be null or empty");
+    }
+    if (!aggInfo.tableIdExists(tableId)) {
+      throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
 
-    this.size = rows.size();
-
-    this.jsonRows = new ArrayList<>();
-    this.jsonRows.add(rows);
-
-    this.completeDataHeader = extractDataHeader(rows.getJSONObject(0));
-    this.completeCSVHeader = buildCSVHeader();
-    this.colAction = buildActionMap();
     this.attMngr = attMngr;
-    this.table = table;
+    this.aggInfo = aggInfo;
+    this.tableId = tableId;
+
+    this.size = 0;
+    this.jsonRows = new ArrayList<>();
+
+    if (rows != null) {
+      this.size = rows.size();
+      this.jsonRows.add(rows);
+
+      this.completeDataHeader = extractDataHeader(rows.getJSONObject(0));
+      this.completeCSVHeader = buildCSVHeader();
+      this.colAction = buildActionMap();
+    }
+  }
+
+  /**
+   * Initialize an empty ODKCsv
+   *
+   * @param attMngr
+   * @param aggInfo
+   */
+  public ODKCsv(AttachmentManager attMngr, AggregateInfo aggInfo, String tableId)
+      throws JSONException {
+    this(null, attMngr, aggInfo, tableId);
   }
 
   /**
    * Returns header of csv
    *
-   * @param scanFormatting True to retrieve header with Scan formatting
-   * @param extraMeta True to retrieve header with extra metadata
+   * @param config
    * @return
    */
-  public String[] getHeader(boolean scanFormatting, boolean extraMeta) {
+  public String[] getHeader(CsvConfig config) {
     if (this.size < 1) {
       throw new IllegalStateException();
     }
 
-    if (!scanFormatting && extraMeta) {
+    if (!config.isScanFormatting() && config.isExtraMetadata()) {
       return this.completeCSVHeader;
     }
 
@@ -194,17 +207,17 @@ public class ODKCsv implements Iterable<String[]> {
         header.add(col);
         break;
       case SCAN_RAW:
-        if (scanFormatting) {
+        if (config.isScanFormatting()) {
           header.add(SCAN_RAW_PREFIX + header.get(header.size() - 1));
         }
         //falls through
       case FILTER:
-        if (!scanFormatting) {
+        if (!config.isScanFormatting()) {
           header.add(col);
         }
         break;
       case EXTRA:
-        if (extraMeta) {
+        if (config.isExtraMetadata()) {
           header.add(col);
         }
         break;
@@ -245,12 +258,11 @@ public class ODKCsv implements Iterable<String[]> {
    * Retrieves 1 row, including data and metadata
    *
    * @param rowIndex
-   * @param scanFormatting
-   * @param localLink
+   * @param config
    * @return
    * @throws Exception
    */
-  public String[] get(int rowIndex, boolean scanFormatting, boolean localLink, boolean extraMeta)
+  public String[] get(int rowIndex, CsvConfig config)
       throws Exception {
     if (rowIndex >= size) {
       throw new NoSuchElementException();
@@ -264,9 +276,9 @@ public class ODKCsv implements Iterable<String[]> {
     }
 
     JSONObject row = this.jsonRows.get(listIndex).getJSONObject(rowIndex);
-    String[] front = getMetadata(row, Position.FRONT, extraMeta);
-    String[] middle = getData(row, scanFormatting, localLink);
-    String[] end = getMetadata(row, Position.END, extraMeta);
+    String[] front = getMetadata(row, Position.FRONT, config);
+    String[] middle = getData(row, config);
+    String[] end = getMetadata(row, Position.END, config);
 
     //TODO: try to avoid copying arrays
     String[] sum = new String[front.length + middle.length + end.length];
@@ -281,6 +293,14 @@ public class ODKCsv implements Iterable<String[]> {
     return this.size;
   }
 
+  public String getTableId() {
+    return this.tableId;
+  }
+
+//  public void setAttachmentManager(AttachmentManager mngr) {
+//    this.attMngr = mngr;
+//  }
+
   /**
    * Extract data header from 1 row of JSON
    *
@@ -289,7 +309,7 @@ public class ODKCsv implements Iterable<String[]> {
    * @throws JSONException
    */
   private String[] extractDataHeader(JSONObject oneRow) throws JSONException {
-    JSONArray orderedColumns = oneRow.getJSONArray(orderedColumnsDef);
+    JSONArray orderedColumns = oneRow.getJSONArray(ORDERED_COLUMNS_DEF);
     String[] columns = new String[orderedColumns.size()];
 
     for (int i = 0; i < columns.length; i++) {
@@ -353,11 +373,11 @@ public class ODKCsv implements Iterable<String[]> {
    *
    * @param row
    * @param pos
-   * @param extraMeta
+   * @param config
    * @return
    * @throws JSONException
    */
-  private String[] getMetadata(JSONObject row, Position pos, boolean extraMeta) throws
+  private String[] getMetadata(JSONObject row, Position pos, CsvConfig config) throws
       JSONException {
     List<String> metadataList = METADATA_POSITION.get(pos);
 
@@ -366,10 +386,10 @@ public class ODKCsv implements Iterable<String[]> {
     for (String colName : metadataList) {
       String jsonName = METADATA_JSON_NAME.get(colName);
 
-      if (jsonName.startsWith(jsonFilterScope)) {
+      if (jsonName.startsWith(FILTER_SCOPE_JSON)) {
         metadata
-            .add(row.getJSONObject(jsonFilterScope).optString(jsonName.split(":")[1].trim(), NULL));
-      } else if (extraMeta || (this.colAction.get(colName) != Action.EXTRA)) {
+            .add(row.getJSONObject(FILTER_SCOPE_JSON).optString(jsonName.split(":")[1].trim(), NULL));
+      } else if (config.isExtraMetadata() || (this.colAction.get(colName) != Action.EXTRA)) {
         metadata.add(row.optString(jsonName, NULL));
       }
       //everything else ignored
@@ -382,30 +402,31 @@ public class ODKCsv implements Iterable<String[]> {
    * Retrieves data for 1 row
    *
    * @param row
-   * @param scanFormatting
-   * @param localLink
+   * @param config
    * @return
    * @throws Exception
    */
-  private String[] getData(JSONObject row, boolean scanFormatting, boolean localLink)
+  private String[] getData(JSONObject row, CsvConfig config)
       throws Exception {
-    String rowId = row.optString(jsonId);
+    String rowId = row.optString(ID_JSON);
 
     ScanJson scanRaw = null;
-    if (scanFormatting || localLink) {
+    if (config.isScanFormatting() || config.isDownloadAttachment()) {
       this.attMngr.getListOfRowAttachments(rowId);
-      if (scanFormatting) {
+
+      if (config.isScanFormatting()) {
         this.attMngr.downloadAttachments(rowId, true);
         scanRaw = new ScanJson(this.attMngr.getScanRawJsonStream(rowId));
       }
     }
 
     int dataLength = this.completeDataHeader.length;
-    if (scanFormatting)
+    if (config.isScanFormatting()) {
       dataLength -= NUM_FILTERED;
+    }
     String[] data = new String[dataLength];
 
-    JSONArray columns = row.getJSONArray(orderedColumnsDef);
+    JSONArray columns = row.getJSONArray(ORDERED_COLUMNS_DEF);
     int offset = 0;
     for (int i = 0; i < this.completeDataHeader.length; i++) {
       String colName = this.completeDataHeader[i];
@@ -417,7 +438,7 @@ public class ODKCsv implements Iterable<String[]> {
         data[i - offset] = value;
         break;
       case FILTER:
-        if (!scanFormatting) {
+        if (!config.isScanFormatting()) {
           data[i - offset] = value;
         } else {
           offset++;
@@ -425,10 +446,10 @@ public class ODKCsv implements Iterable<String[]> {
         }
         break;
       case LINK:
-        data[i - offset] = makeLink(value, row, localLink);
+        data[i - offset] = makeLink(value, row, config.isDownloadAttachment());
         break;
       case SCAN_RAW:
-        if (scanFormatting) {
+        if (config.isScanFormatting()) {
           value = scanRaw.getValue(this.completeDataHeader[i - 1]);
         }
         data[i - offset] = value;
@@ -436,7 +457,7 @@ public class ODKCsv implements Iterable<String[]> {
       }
     }
 
-    if (localLink) {
+    if (config.isDownloadAttachment()) {
       this.attMngr.downloadAttachments(rowId, false);
     }
 
@@ -456,16 +477,17 @@ public class ODKCsv implements Iterable<String[]> {
     String template = "=HYPERLINK(\"%s\", \"Ctrl + Click to view\")";
     String attachmentUrlStr;
     if (localLink) {
-      URL attachmentUrl = this.attMngr.getAttachmentUrl(row.optString(jsonId), fileName, true);
+      URL attachmentUrl = this.attMngr.getAttachmentUrl(row.optString(ID_JSON), fileName, true);
       if (attachmentUrl == null) {
         return "File is missing on Aggregate server.";
       }
       attachmentUrlStr = attachmentUrl.toString();
     } else {
       attachmentUrlStr =
-          this.table.getServerUrl() + "/" + "tables" + "/" + this.table.getAppId() + "/" +
-              this.table.getTableId() + "/ref/" + this.table.getSchemaETag() + "/attachments/" +
-              row.optString(jsonId) + "/file/" + fileName;
+          this.aggInfo.getServerUrl() + "/" + "tables" + "/" + this.aggInfo.getAppId() + "/" +
+              this.tableId + "/ref/" +
+              this.aggInfo.getSchemaETag(this.tableId) + "/attachments/" +
+              row.optString(ID_JSON) + "/file/" + fileName;
     }
 
     return String.format(template, attachmentUrlStr);
