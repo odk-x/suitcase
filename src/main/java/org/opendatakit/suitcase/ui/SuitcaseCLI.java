@@ -3,10 +3,8 @@ package org.opendatakit.suitcase.ui;
 import org.opendatakit.suitcase.model.AggregateInfo;
 import org.opendatakit.suitcase.model.CsvConfig;
 import org.opendatakit.suitcase.model.ODKCsv;
-
 import org.apache.commons.cli.*;
 import org.apache.wink.json4j.JSONException;
-
 import org.opendatakit.suitcase.net.*;
 import org.opendatakit.suitcase.utils.FieldsValidatorUtils;
 import org.opendatakit.suitcase.utils.FileUtils;
@@ -17,7 +15,7 @@ import static org.opendatakit.suitcase.ui.MessageString.*;
 
 public class SuitcaseCLI {
   private enum Operation {
-    DOWNLOAD, UPLOAD, UPDATE, RESET, INFO
+    DOWNLOAD, UPLOAD, UPDATE, RESET, INFO, TABLE_OP, PERMISSION
   }
 
   private static final String[] REQUIRED_ARGS = new String[]{"aggregateUrl", "tableId", "appId"};
@@ -30,6 +28,7 @@ public class SuitcaseCLI {
   private String tableId;
   private String version;
   private String path;
+  private String tableOp;
   private boolean downloadAttachment;
   private boolean scanFormatting;
   private boolean extraMetadata;
@@ -95,6 +94,28 @@ public class SuitcaseCLI {
         new UpdateTask(aggInfo, path, version, tableId, null, false).blockingExecute();
       }
       break;
+      
+    case TABLE_OP:
+      error = FieldsValidatorUtils.checkTableOpFields(tableId, path, version, tableOp);
+
+      if (error != null) {
+        DialogUtils.showError(error, false);
+      } else {
+        new TableTask(aggInfo, tableId, path, version, tableOp, false).blockingExecute();
+      }
+      break;
+    
+    case PERMISSION:
+      error = FieldsValidatorUtils.checkPermissionFields(version, path);
+
+      if (error != null) {
+        DialogUtils.showError(error, false);
+      } else {
+        new PermissionTask(aggInfo, path, version, false).blockingExecute();
+      }
+      
+      break;
+      
     }
   }
 
@@ -107,6 +128,8 @@ public class SuitcaseCLI {
     operation.addOption(new Option("upload", false, "Upload csv"));
     operation.addOption(new Option("reset", false, "Reset server"));
     operation.addOption(new Option("update", false, "Update tableId using csv specified by path"));
+    operation.addOption(new Option("tableop", true, "Create, delete, or clear tableId using csv specified by path"));
+    operation.addOption(new Option("permission", false, "Upload user permissions using csv specified by path"));
     operation.addOption(new Option("h", "help", false, "print this message"));
     operation.addOption(new Option("v", "version", false, "prints version information"));
     operation.setRequired(true);
@@ -127,6 +150,7 @@ public class SuitcaseCLI {
 
     // not required for download, check later
     opt.addOption("dataVersion", true, "version of data, usually 1 or 2");
+    
 
     //csv options
     opt.addOption("a", "attachment", false, "download attachments");
@@ -176,12 +200,17 @@ public class SuitcaseCLI {
         operation = Operation.RESET;
       } else if (line.hasOption("update")){
         operation = Operation.UPDATE;
-      } else {
+      } else if (line.hasOption("tableop")) {
+        operation = Operation.TABLE_OP;
+      } else if (line.hasOption("permission")) {
+        operation = Operation.PERMISSION;
+      }
+      else {
         operation = Operation.DOWNLOAD;
       }
 
       if (operation != Operation.DOWNLOAD && !line.hasOption("dataVersion")) {
-        throw new ParseException("Data version is required for upload, update and reset");
+        throw new ParseException("Data version is required for upload, update, tableop, permission and reset");
       }
 
       for (String arg : REQUIRED_ARGS) {
@@ -193,6 +222,7 @@ public class SuitcaseCLI {
       //Aggregate related
       String username = line.getOptionValue("username", "");
       String password = line.getOptionValue("password", "");
+      tableOp = line.getOptionValue("tableop", null);
 
       // validate fields before creating AggregateInfo object
       String error = FieldsValidatorUtils.checkLoginFields(

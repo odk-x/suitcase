@@ -112,4 +112,32 @@ public class FieldsValidatorUtils {
 
     return errorMsgBuilder.length() > 0 ? errorMsgBuilder.toString().trim() : null;
   }
+  
+  public static String checkTableOpFields(String tableId, String version, String dataPath, String tableOp) {
+    StringBuilder errorMsgBuilder = new StringBuilder();
+
+    if (tableId.isEmpty()) {
+      errorMsgBuilder.append(TABLE_ID_EMPTY).append(NEW_LINE);
+    }
+    
+    if (version.isEmpty()) {
+      errorMsgBuilder.append(VERSION_EMPTY).append(NEW_LINE);
+    }
+
+    return errorMsgBuilder.length() > 0 ? errorMsgBuilder.toString().trim() : null;
+  }
+  
+  public static String checkPermissionFields(String version, String dataPath) {
+    StringBuilder errorMsgBuilder = new StringBuilder();
+
+    if (dataPath.isEmpty()) {
+      errorMsgBuilder.append(DATA_PATH_EMPTY).append(NEW_LINE);
+    }
+    
+    if (version.isEmpty()) {
+      errorMsgBuilder.append(VERSION_EMPTY).append(NEW_LINE);
+    }
+
+    return errorMsgBuilder.length() > 0 ? errorMsgBuilder.toString().trim() : null;
+  }
 }

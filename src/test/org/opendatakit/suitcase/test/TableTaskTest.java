@@ -47,14 +47,12 @@ public class TableTaskTest extends TestCase{
       String host = url.getHost();
       
       wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
-          
-      wc.getUsers(agg_url);
       
       LoginTask lTask = new LoginTask(aggInfo, false);
       lTask.blockingExecute();
       
       //AggregateInfo aggInfo, String tableId, String dataPath, String operation
-      TableTask tTask = new TableTask(aggInfo, testTableId, dataPath, version, operation);
+      TableTask tTask = new TableTask(aggInfo, testTableId, dataPath, version, operation, false);
       tTask.blockingExecute();
       
       String schemaETag = wc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
@@ -91,9 +89,6 @@ public class TableTaskTest extends TestCase{
       String host = url.getHost();
       
       wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
-      
-      // HACK!
-      wc.getUsers(agg_url);
 
       LoginTask lTask = new LoginTask(aggInfo, false);
       lTask.blockingExecute();
@@ -110,7 +105,7 @@ public class TableTaskTest extends TestCase{
 
       // AggregateInfo aggInfo, String tableId, String dataPath, String
       // operation
-      TableTask tTask = new TableTask(aggInfo, testTableId, dataPath, version, operation);
+      TableTask tTask = new TableTask(aggInfo, testTableId, dataPath, version, operation, false);
 
       tTask.blockingExecute();
 
@@ -143,9 +138,6 @@ public class TableTaskTest extends TestCase{
       
       wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
       
-      // HACK!
-      wc.getUsers(agg_url);
-      
       LoginTask lTask = new LoginTask(aggInfo, false);
       lTask.blockingExecute();
       
@@ -166,7 +158,7 @@ public class TableTaskTest extends TestCase{
       
       assertEquals(rows.size(), 5);
       
-      TableTask tTask = new TableTask(aggInfo, testTableId, dataPath, version, operation);
+      TableTask tTask = new TableTask(aggInfo, testTableId, dataPath, version, operation, false);
       tTask.blockingExecute();
       
       rowsObj = wc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
@@ -206,9 +198,6 @@ public class TableTaskTest extends TestCase{
       
       wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
       
-      // HACK!
-      wc.getUsers(agg_url);
-      
       LoginTask lTask = new LoginTask(aggInfo, false);
       lTask.blockingExecute();
       
@@ -229,7 +218,7 @@ public class TableTaskTest extends TestCase{
       
       assertEquals(rows.size(), 5);
       
-      TableTask tTask = new TableTask(aggInfo, testTableId, null, version, operation);
+      TableTask tTask = new TableTask(aggInfo, testTableId, null, version, operation, false);
       tTask.blockingExecute();
       
       rowsObj = wc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
@@ -269,9 +258,6 @@ public class TableTaskTest extends TestCase{
       
       wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
       
-      // HACK!
-      wc.getUsers(agg_url);
-      
       LoginTask lTask = new LoginTask(aggInfo, false);
       lTask.blockingExecute();
       
@@ -292,7 +278,62 @@ public class TableTaskTest extends TestCase{
       
       assertEquals(rows.size(), 1000);
       
-      TableTask tTask = new TableTask(aggInfo, testTableId, null, version, operation);
+      TableTask tTask = new TableTask(aggInfo, testTableId, null, version, operation, false);
+      tTask.blockingExecute();
+      
+      rowsObj = wc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
+      rows = rowsObj.getJSONArray(WinkClient.ROWS_STR_JSON);
+      
+      assertEquals(rows.size(), 0);
+      
+      // Then delete table definition
+      wc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
+      
+      JSONObject obj = wc.getTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
+      assertNull(obj);
+      
+      wc.close();
+      
+    } catch (Exception e) {
+      System.out.println("TableTaskTest: Exception thrown in testClearLargeTableData_ExpectPass");
+      e.printStackTrace();
+      fail();
+    } 
+  }
+  
+  public void testClearEmptyTable_ExpectPass() {
+    String testTableId = "test6";
+    String operation = "clear";
+    String defPath = "testfiles/cookstoves/data_definition.csv";
+    
+    try {
+      WinkClient wc = new WinkClient();
+      
+      String agg_url = aggInfo.getHostUrl();
+      agg_url = agg_url.substring(0, agg_url.length()-1);
+      
+      URL url = new URL(agg_url);
+      String host = url.getHost();
+      
+      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      
+      LoginTask lTask = new LoginTask(aggInfo, false);
+      lTask.blockingExecute();
+      
+      //AggregateInfo aggInfo, String tableId, String dataPath, String operation
+      wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, null, defPath);
+      
+      String schemaETag = wc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
+      JSONObject tableDefObj = wc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
+    
+      assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(defPath, tableDefObj));
+      
+      JSONObject rowsObj = wc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
+      JSONArray rows = rowsObj.getJSONArray(WinkClient.ROWS_STR_JSON);
+      
+      assertEquals(rows.size(), 0);
+      
+      TableTask tTask = new TableTask(aggInfo, testTableId, null, version, operation, false);
       tTask.blockingExecute();
       
       rowsObj = wc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);

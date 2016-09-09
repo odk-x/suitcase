@@ -56,7 +56,6 @@ public class WinkWrapper {
 
       this.wc.init(host, this.aggInfo.getUserName(), this.aggInfo.getPassword());
       
-      this.wc.getUsers(agg_url);
       updateTableList();
 
       hasInit = true;
@@ -133,8 +132,52 @@ public class WinkWrapper {
     return 0;
   }
 
+  public int uploadPermissionCSV(String csvFilePath) throws IOException {
+    int rspCode = 0;
+    
+    if (csvFilePath == null || csvFilePath.length() == 0) {
+      throw new IllegalArgumentException("uploadPermissionCSV: CSV file path cannot be null");
+    }
+
+    File csvFile = new File(csvFilePath);
+    if (!csvFile.exists() || !csvFile.isFile()) {
+      throw new IllegalArgumentException("uploadPermissionCSV: CSV file must exist and be a valid file");
+    }
+
+    try {
+      String agg_url = aggInfo.getHostUrl();
+      if (agg_url.endsWith("/")) {
+        agg_url = agg_url.substring(0, agg_url.length() - 1);
+      }
+      rspCode = wc.uploadPermissionCSV(aggInfo.getHostUrl(), aggInfo.getAppId(), csvFilePath);
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    } 
+
+    return rspCode;
+  }
+
   public int deleteTableDefinition(String tableId) throws IOException {
     return deleteTableDefinition(tableId, null);
+  }
+  
+  public JSONObject getTableDefinition(String tableId) throws ClientProtocolException, 
+      IOException, JSONException {
+    JSONObject tableDef = null;
+    
+    if (tableId == null || tableId.length() == 0) {
+      throw new IllegalArgumentException("tableId cannot be null");
+    }
+    
+    if (!aggInfo.tableIdExists(tableId)) {
+      throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
+    }
+    
+    String schemaETag = aggInfo.getSchemaETag(tableId);
+    
+    tableDef = wc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag);
+   
+    return tableDef;
   }
 
   public int deleteTableDefinition(String tableId, String schemaETag) throws IOException {

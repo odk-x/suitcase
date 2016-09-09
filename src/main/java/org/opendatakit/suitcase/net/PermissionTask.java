@@ -22,8 +22,9 @@ import org.opendatakit.wink.client.WinkClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class TableTask extends SuitcaseSwingWorker<Void> {
-  private static final String IN_PROGRESS_STRING = "Updating Table...";
+public class PermissionTask extends SuitcaseSwingWorker<Void> {
+  
+  private static final String IN_PROGRESS_STRING = "Updating Permissions...";
   private static final int PUSH_FINISH_WAIT = 5000;
 
   public final static String CREATE_OP = "CREATE";
@@ -35,20 +36,15 @@ public class TableTask extends SuitcaseSwingWorker<Void> {
   String csvExt = ".csv";
 
   private AggregateInfo aggInfo = null;
-  private String operation = null;
-  private String tableId = null;
   private String dataPath = null;
   private String version = null;
   private boolean isGUI;
 
-  public TableTask(AggregateInfo aggInfo, String tableId, String dataPath, String version,
-      String operation, boolean isGUI) {
+  public PermissionTask(AggregateInfo aggInfo, String dataPath, String version, boolean isGUI) {
     super();
     this.aggInfo = aggInfo;
-    this.tableId = tableId;
     this.dataPath = dataPath;
     this.version = version;
-    this.operation = operation;
     this.isGUI = isGUI;
   }
 
@@ -58,74 +54,18 @@ public class TableTask extends SuitcaseSwingWorker<Void> {
 
     WinkWrapper winkWrapper = WinkWrapper.getInstance();
 
-    // We always want to update the table list as
-    // things could have changed
-    winkWrapper.updateTableList();
-
     String className = this.getClass().getSimpleName();
     if (aggInfo == null) {
       System.out.println("aggInfo must be specified " + className);
     }
 
-    if (tableId == null || tableId.length() == 0) {
-      System.out.println("tableId must be specified " + className);
-    }
-    
-    if (operation == null || operation.length() == 0) {
-      System.out.println("operation must be specified " + className);
+    if (dataPath == null || dataPath.length() == 0) {
+      System.out.println("dataPath must be specified for " + CREATE_OP + "operation with "
+          + className);
+      return null;
     }
 
-    String op = operation.toUpperCase();
-
-    switch (op) {
-    case CREATE_OP:
-      if (dataPath == null || dataPath.length() == 0) {
-        System.out.println("dataPath must be specified for " + CREATE_OP + "operation with "
-            + className);
-        return null;
-      }
-
-      wrapper.createTable(tableId, dataPath);
-      break;
-
-    case DELETE_OP:
-      wrapper.deleteTableDefinition(tableId);
-      break;
-
-    case CLEAR_OP:
-      JSONObject rows;
-      String cursor = null;
-
-      ArrayList<Row> rowList = new ArrayList<Row>();
-      ObjectMapper mapper = new ObjectMapper();
-
-      do {
-        rows = wrapper.getRows(tableId, cursor);
-
-        RowResourceList rowResListObj = mapper.readValue(rows.toString(), RowResourceList.class);
-        ArrayList<RowResource> rowResArrayList = rowResListObj.getRows();
-        
-        for (int i = 0; i < rowResArrayList.size(); i++) {
-          RowResource rowRes = rowResArrayList.get(i);
-
-          Row row = Row.forUpdate(rowRes.getRowId(), rowRes.getRowETag(), rowRes.getFormId(), rowRes.getLocale(), 
-              rowRes.getSavepointType(), rowRes.getSavepointTimestamp(), rowRes.getSavepointCreator(), rowRes.getRowFilterScope(), 
-              rowRes.getValues());
-          row.setDeleted(true);
-          rowList.add(row);
-        }
-        cursor = rows.optString(WinkClient.WEB_SAFE_RESUME_CURSOR_JSON);
-      } while (rows.getBoolean(WinkClient.HAS_MORE_RESULTS_JSON));
-      
-      if (rowList.size() > 0) {
-        wrapper.deleteRowsUsingBulkUpload(tableId, rowList);
-      }
-
-      break;
-
-    default:
-      break;
-    }
+    wrapper.uploadPermissionCSV(dataPath);
 
     Thread.sleep(PUSH_FINISH_WAIT);
     winkWrapper.updateTableList();
@@ -165,5 +105,6 @@ public class TableTask extends SuitcaseSwingWorker<Void> {
       setIndeterminate(false);
     }
   }
+
 
 }

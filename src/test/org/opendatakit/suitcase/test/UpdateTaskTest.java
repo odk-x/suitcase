@@ -63,8 +63,6 @@ public class UpdateTaskTest extends TestCase{
       String host = url.getHost();
       
       wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
-          
-      wc.getUsers(agg_url);
 
       LoginTask lTask = new LoginTask(aggInfo, false);
       lTask.blockingExecute();
@@ -135,8 +133,6 @@ public class UpdateTaskTest extends TestCase{
       String host = url.getHost();
       
       wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
-          
-      wc.getUsers(agg_url);
 
       JSONObject result = wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
           testTableId, null, csvFile);
@@ -216,8 +212,6 @@ public class UpdateTaskTest extends TestCase{
       String host = url.getHost();
       
       wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
-          
-      wc.getUsers(agg_url);
 
       JSONObject result = wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
           testTableId, null, csvFile);
@@ -305,8 +299,6 @@ public class UpdateTaskTest extends TestCase{
       String host = url.getHost();
       
       wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
-          
-      wc.getUsers(agg_url);
 
       JSONObject result = wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
           testTableId, null, csvFile);
@@ -388,8 +380,6 @@ public class UpdateTaskTest extends TestCase{
       String host = url.getHost();
       
       wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
-          
-      wc.getUsers(agg_url);
       
       LoginTask lTask = new LoginTask(aggInfo, false);
       lTask.blockingExecute();
@@ -443,8 +433,6 @@ public class UpdateTaskTest extends TestCase{
       String host = url.getHost();
       
       wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
-          
-      wc.getUsers(agg_url);
 
       JSONObject result = wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
           testTableId, null, csvFile);
@@ -516,6 +504,86 @@ public class UpdateTaskTest extends TestCase{
 
     } catch (Exception e) {
       System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskAllOperationsInFile_ExpectPass");
+      e.printStackTrace();
+      fail();
+    }
+  }
+  
+  // This test must be run with admin privileges!
+  public void testUpdateTaskAddWithUsers_ExpectPass() {
+    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
+    String dataPath = absolutePathOfTestFiles + "plot/plot-add-user.csv";
+    String userPath = absolutePathOfTestFiles + "permissions/perm-file.csv";
+    String testTableId = "test7";
+    String tableSchemaETag = null;
+    WinkClient wc = null;
+
+    try {
+      wc = new WinkClient();
+      
+      String agg_url = aggInfo.getHostUrl();
+      agg_url = agg_url.substring(0, agg_url.length()-1);
+      
+      URL url = new URL(agg_url);
+      String host = url.getHost();
+      
+      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+
+      LoginTask lTask = new LoginTask(aggInfo, false);
+      lTask.blockingExecute();
+      
+      // First check if this server allows permissions
+      int rspCode = wc.uploadPermissionCSV(agg_url, appId, userPath);
+      
+      // This server does not use user permissions
+      if (rspCode != 200) {
+        return;
+      }
+
+      JSONObject result = wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+          testTableId, null, csvFile);
+      System.out.println("testUpdateTaskAddWithUsers_ExpectPass: result is " + result);
+
+      if (result.containsKey(WinkClient.TABLE_ID_JSON)) {
+        String tableId = result.getString(WinkClient.TABLE_ID_JSON);
+        assertEquals(tableId, testTableId);
+        tableSchemaETag = result.getString(WinkClient.SCHEMA_ETAG_JSON);
+      }
+
+      // Get the table definition
+      JSONObject tableDef = wc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+          testTableId, tableSchemaETag);
+
+      // Make sure it is the same as the csv definition
+      assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
+
+      UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, null, false);
+      updateTask.blockingExecute();
+
+      JSONObject res = wc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+          tableSchemaETag, null, null, null);
+
+      JSONArray rows = res.getJSONArray("rows");
+
+      assertEquals(rows.size(), 1);
+
+      JSONObject jsonRow = rows.getJSONObject(0);
+
+      // Now check that the row was created with the right rowId
+      assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
+
+      // Now delete the table
+      wc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+          tableSchemaETag);
+
+      // Check that table no longer exists
+      JSONObject obj = wc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
+
+      wc.close();
+
+    } catch (Exception e) {
+      System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskAddWithUsers_ExpectPass");
       e.printStackTrace();
       fail();
     }
