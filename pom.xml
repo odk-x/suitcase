@@ -6,7 +6,7 @@
 
     <groupId>org.opendatakit</groupId>
     <artifactId>suitcase</artifactId>
-    <version>2.0</version>
+    <version>2.0 rev 206</version>
 
     <properties>
         <!--This is trunk-7de9932ac013a6be2cd0edabfa564f052e6caf00-->
