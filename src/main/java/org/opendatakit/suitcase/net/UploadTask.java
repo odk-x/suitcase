@@ -33,11 +33,11 @@ public class UploadTask extends SuitcaseSwingWorker<Void> {
   protected Void doInBackground() throws Exception {
     setString(IN_PROGRESS_STRING);
 
-    WinkWrapper wink = WinkWrapper.getInstance();
-    wink.pushAllData(dataPath, version);
+    SyncWrapper syncWrapper = SyncWrapper.getInstance();
+    syncWrapper.pushAllData(dataPath, version);
 
     Thread.sleep(PUSH_FINISH_WAIT);
-    wink.updateTableList();
+    syncWrapper.updateTableList();
 
     return null;
   }

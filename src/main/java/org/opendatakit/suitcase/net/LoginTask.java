@@ -23,10 +23,10 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
 
   @Override
   protected Void doInBackground() throws Exception {
-    WinkWrapper wink = WinkWrapper.getInstance();
+    SyncWrapper syncWrapper = SyncWrapper.getInstance();
 
-    wink.reset();
-    wink.init(aggInfo);
+    syncWrapper.reset();
+    syncWrapper.init(aggInfo);
 
     return null;
   }

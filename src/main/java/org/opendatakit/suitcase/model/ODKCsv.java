@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
-import static org.opendatakit.wink.client.WinkClient.*;
+import static org.opendatakit.sync.client.SyncClient.*;
 
 //!!!ATTENTION!!! One per aggInfo
 public class ODKCsv implements Iterable<String[]> {

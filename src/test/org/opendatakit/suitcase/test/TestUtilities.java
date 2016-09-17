@@ -8,7 +8,7 @@ import java.io.InputStreamReader;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.aggregate.odktables.rest.RFC4180CsvReader;
-import org.opendatakit.wink.client.WinkClient;
+import org.opendatakit.sync.client.SyncClient;
 
 public final class TestUtilities {
   
@@ -25,14 +25,14 @@ public final class TestUtilities {
       // Skip the first line - it's just headers
       reader.readNext();
 
-      if (tableDef.containsKey(WinkClient.ORDERED_COLUMNS_DEF)) {
-        JSONArray cols = tableDef.getJSONArray(WinkClient.ORDERED_COLUMNS_DEF);
+      if (tableDef.containsKey(SyncClient.ORDERED_COLUMNS_DEF)) {
+        JSONArray cols = tableDef.getJSONArray(SyncClient.ORDERED_COLUMNS_DEF);
         String[] csvDef;
         while ((csvDef = reader.readNext()) != null) {
           same = false;
           for (int i = 0; i < cols.size(); i++) {
             JSONObject col = cols.getJSONObject(i);
-            String testElemKey = col.getString(WinkClient.ELEM_KEY_JSON);
+            String testElemKey = col.getString(SyncClient.ELEM_KEY_JSON);
             if (csvDef[0].equals(testElemKey)) {
               same = true;
               // Remove the index so we don't keep
@@ -57,7 +57,7 @@ public final class TestUtilities {
     boolean same = false;
 
     try {
-      if (RowId.equals(rowRes.getString(WinkClient.ID_JSON))) {
+      if (RowId.equals(rowRes.getString(SyncClient.ID_JSON))) {
         same = true;
       }
     } catch (Exception e) {
@@ -75,8 +75,8 @@ public final class TestUtilities {
     }
 
     try {
-      if (rowRes.has(WinkClient.ORDERED_COLUMNS_DEF)) {
-        JSONArray ordCols = rowRes.getJSONArray(WinkClient.ORDERED_COLUMNS_DEF);
+      if (rowRes.has(SyncClient.ORDERED_COLUMNS_DEF)) {
+        JSONArray ordCols = rowRes.getJSONArray(SyncClient.ORDERED_COLUMNS_DEF);
         for (int i = 0; i < ordCols.length(); i++) {
           JSONObject col = ordCols.getJSONObject(i);
           String colStr = col.has(COLUMN_STRING) && !col.isNull(COLUMN_STRING) ? col.getString(COLUMN_STRING) : null;

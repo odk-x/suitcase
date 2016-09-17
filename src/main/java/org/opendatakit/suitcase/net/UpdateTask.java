@@ -26,7 +26,7 @@ import org.opendatakit.aggregate.odktables.rest.entity.RowOutcome;
 import org.opendatakit.aggregate.odktables.rest.entity.RowOutcome.OutcomeType;
 import org.opendatakit.aggregate.odktables.rest.entity.RowOutcomeList;
 import org.opendatakit.aggregate.odktables.rest.entity.Scope;
-import org.opendatakit.wink.client.WinkClient;
+import org.opendatakit.sync.client.SyncClient;
 import org.opendatakit.suitcase.ui.DialogUtils;
 import org.opendatakit.suitcase.ui.SuitcaseProgressBar;
 import org.opendatakit.suitcase.utils.FileUtils;
@@ -70,11 +70,11 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
   protected Void doInBackground() throws Exception {
     setString(IN_PROGRESS_STRING);
 
-    WinkWrapper wink = WinkWrapper.getInstance();
+    SyncWrapper syncWrapper = SyncWrapper.getInstance();
 
     // We always want to update the table list as
     // things could have changed during the update
-    wink.updateTableList();
+    syncWrapper.updateTableList();
 
     // If tableId is not passed in then do nothing
     if (tableId == null) {
@@ -136,20 +136,20 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
     rowFilterType = firstLine[rowFilterTypeIdx];
     rowFilterValue = firstLine[rowFilterValueIdx];
 
-    if ((!operation.equals(OP_STR)) || (!rowId.equals(WinkClient.ID_ROW_DEF))
-        || (!rowFormId.equals(WinkClient.FORM_ID_ROW_DEF))
-        || (!rowLocale.equals(WinkClient.LOCALE_ROW_DEF))
-        || (!rowSavepointType.equals(WinkClient.SAVEPOINT_TYPE_ROW_DEF))
-        || (!rowSavepointTimestamp.equals(WinkClient.SAVEPOINT_TIMESTAMP_ROW_DEF))
-        || (!rowSavepointCreator.equals(WinkClient.SAVEPOINT_CREATOR_ROW_DEF))) {
+    if ((!operation.equals(OP_STR)) || (!rowId.equals(SyncClient.ID_ROW_DEF))
+        || (!rowFormId.equals(SyncClient.FORM_ID_ROW_DEF))
+        || (!rowLocale.equals(SyncClient.LOCALE_ROW_DEF))
+        || (!rowSavepointType.equals(SyncClient.SAVEPOINT_TYPE_ROW_DEF))
+        || (!rowSavepointTimestamp.equals(SyncClient.SAVEPOINT_TIMESTAMP_ROW_DEF))
+        || (!rowSavepointCreator.equals(SyncClient.SAVEPOINT_CREATOR_ROW_DEF))) {
 
       throw new IllegalArgumentException(
           "The number of columns in CSV does not contain the first set of metadata columns");
     }
 
-    if ((!rowETag.equals(WinkClient.ROW_ETAG_ROW_DEF))
-        || (!rowFilterType.equals(WinkClient.FILTER_TYPE_ROW_DEF))
-        || (!rowFilterValue.equals(WinkClient.FILTER_VALUE_ROW_DEF))) {
+    if ((!rowETag.equals(SyncClient.ROW_ETAG_ROW_DEF))
+        || (!rowFilterType.equals(SyncClient.FILTER_TYPE_ROW_DEF))
+        || (!rowFilterValue.equals(SyncClient.FILTER_VALUE_ROW_DEF))) {
       throw new IllegalArgumentException(
           "The number of columns in CSV does not contain the last set of metadata columns");
     }
@@ -161,11 +161,11 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
     String cursor = null;
     JSONArray rowResArray = new JSONArray();
     do {
-      rows = wink.getRows(tableId, cursor);
-      cursor = rows.optString(WinkClient.WEB_SAFE_RESUME_CURSOR_JSON);
-      JSONArray rowsArray = rows.getJSONArray(WinkClient.ROWS_STR_JSON);
+      rows = syncWrapper.getRows(tableId, cursor);
+      cursor = rows.optString(SyncClient.WEB_SAFE_RESUME_CURSOR_JSON);
+      JSONArray rowsArray = rows.getJSONArray(SyncClient.ROWS_STR_JSON);
       rowResArray.addAll(rowsArray);
-    } while (rows.getBoolean(WinkClient.HAS_MORE_RESULTS_JSON));
+    } while (rows.getBoolean(SyncClient.HAS_MORE_RESULTS_JSON));
 
     setupRowIdToRowETagMap(rowIdToRowETag, rowResArray);
 
@@ -262,8 +262,8 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
     // Handle the new rows
     String dataETag = null;
     if (newRowArrayList.size() > 0) {
-      dataETag = wink.getDataETag(tableId, schemaETag);
-      outcomeList = handleRowBatches(wink, dataPath, tableId, newRowArrayList);
+      dataETag = syncWrapper.getDataETag(tableId, schemaETag);
+      outcomeList = handleRowBatches(syncWrapper, dataPath, tableId, newRowArrayList);
       if (outcomeList != null && outcomeList.size() > 0) {
         handleRowOutcomeList(outcomeList);
       }
@@ -271,8 +271,8 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
 
     // Handle the deleted rows
     if (deletedRowArrayList.size() > 0) {
-      dataETag = wink.getDataETag(tableId, schemaETag);
-      outcomeList = handleRowBatches(wink, dataPath, tableId, deletedRowArrayList);
+      dataETag = syncWrapper.getDataETag(tableId, schemaETag);
+      outcomeList = handleRowBatches(syncWrapper, dataPath, tableId, deletedRowArrayList);
       if (outcomeList != null && outcomeList.size() > 0) {
         handleRowOutcomeList(outcomeList);
       }
@@ -280,8 +280,8 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
 
     // Handle the updated rows
     if (updatedRowArrayList.size() > 0) {
-      dataETag = wink.getDataETag(tableId, schemaETag);
-      outcomeList = handleRowBatches(wink, dataPath, tableId, updatedRowArrayList);
+      dataETag = syncWrapper.getDataETag(tableId, schemaETag);
+      outcomeList = handleRowBatches(syncWrapper, dataPath, tableId, updatedRowArrayList);
       if (outcomeList != null && outcomeList.size() > 0) {
         handleRowOutcomeList(outcomeList);
       }
@@ -289,8 +289,8 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
 
     // Handle the force-updated rows
     if (forceUpdatedRowArrayList.size() > 0) {
-      dataETag = wink.getDataETag(tableId, schemaETag);
-      outcomeList = handleRowBatches(wink, dataPath, tableId, forceUpdatedRowArrayList);
+      dataETag = syncWrapper.getDataETag(tableId, schemaETag);
+      outcomeList = handleRowBatches(syncWrapper, dataPath, tableId, forceUpdatedRowArrayList);
       if (outcomeList != null && outcomeList.size() > 0) {
         // Re-run processing on any row that is not successful
         ArrayList<Row> forceUpdatedRowArrayList2 = new ArrayList<Row>();
@@ -302,8 +302,8 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
         }
         
         if (forceUpdatedRowArrayList2.size() > 0) {
-          dataETag = wink.getDataETag(tableId, schemaETag);
-          outcomeList = handleRowBatches(wink, dataPath, tableId, forceUpdatedRowArrayList2);
+          dataETag = syncWrapper.getDataETag(tableId, schemaETag);
+          outcomeList = handleRowBatches(syncWrapper, dataPath, tableId, forceUpdatedRowArrayList2);
         }
 
         // Then handleRowOutcomeList
@@ -312,12 +312,12 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
     }
 
     Thread.sleep(PUSH_FINISH_WAIT);
-    wink.updateTableList();
+    syncWrapper.updateTableList();
 
     return null;
   }
 
-  protected ArrayList<RowOutcome> handleRowBatches(WinkWrapper wink, String dataPath, String tableId,
+  protected ArrayList<RowOutcome> handleRowBatches(SyncWrapper syncWrapper, String dataPath, String tableId,
       ArrayList<Row> rows) throws Exception {
 
     ArrayList<Row> batchedRows = new ArrayList<Row>();
@@ -328,7 +328,7 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
       batchedRows.add(rows.get(i));
 
       if (batchedRows.size() > MAX_BATCH_SIZE) {
-        rowOutcomeList = wink.alterRowsUsingSingleBatch(tableId, batchedRows);
+        rowOutcomeList = syncWrapper.alterRowsUsingSingleBatch(tableId, batchedRows);
         if (rowOutcomeList != null) {
           outcomes.addAll(rowOutcomeList.getRows());
         }
@@ -339,7 +339,7 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
     }
 
     if (batchedRows.size() > 0) {
-      rowOutcomeList = wink.alterRowsUsingSingleBatch(tableId, batchedRows);
+      rowOutcomeList = syncWrapper.alterRowsUsingSingleBatch(tableId, batchedRows);
       if (rowOutcomeList != null) {
         outcomes.addAll(rowOutcomeList.getRows());
       }
@@ -384,11 +384,11 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
     try {
       for (int i = 0; i < rowsArray.size(); i++) {
         JSONObject rowObj = rowsArray.getJSONObject(i);
-        String rowId = rowObj.has(WinkClient.ID_JSON) && !rowObj.isNull(WinkClient.ID_JSON) ? rowObj
-            .getString(WinkClient.ID_JSON) : null;
-        String rowETag = rowObj.has(WinkClient.ROW_ETAG_JSON)
-            && !rowObj.isNull(WinkClient.ROW_ETAG_JSON) ? rowObj
-            .getString(WinkClient.ROW_ETAG_JSON) : null;
+        String rowId = rowObj.has(SyncClient.ID_JSON) && !rowObj.isNull(SyncClient.ID_JSON) ? rowObj
+            .getString(SyncClient.ID_JSON) : null;
+        String rowETag = rowObj.has(SyncClient.ROW_ETAG_JSON)
+            && !rowObj.isNull(SyncClient.ROW_ETAG_JSON) ? rowObj
+            .getString(SyncClient.ROW_ETAG_JSON) : null;
         if (rowId != null && rowETag != null) {
           idToETagMap.put(rowId, rowETag);
         }

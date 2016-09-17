@@ -3,7 +3,7 @@ package org.opendatakit.suitcase.ui;
 import org.opendatakit.suitcase.model.AggregateInfo;
 import org.opendatakit.suitcase.net.LoginTask;
 import org.opendatakit.suitcase.net.SuitcaseSwingWorker;
-import org.opendatakit.suitcase.net.WinkWrapper;
+import org.opendatakit.suitcase.net.SyncWrapper;
 import org.opendatakit.suitcase.utils.FieldsValidatorUtils;
 
 import javax.swing.*;
@@ -148,7 +148,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
       sAnonLoginButton.setEnabled(true);
 
       // if login is successful, let parent switch to the next card
-      if (WinkWrapper.getInstance().isInitialized()) {
+      if (SyncWrapper.getInstance().isInitialized()) {
         ((CardLayout) getParent().getLayout()).next(getParent());
       }
     }

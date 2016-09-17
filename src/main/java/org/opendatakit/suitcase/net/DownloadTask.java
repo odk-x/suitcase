@@ -6,7 +6,7 @@ import org.opendatakit.suitcase.model.ODKCsv;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.aggregate.odktables.rest.RFC4180CsvWriter;
-import org.opendatakit.wink.client.WinkClient;
+import org.opendatakit.sync.client.SyncClient;
 import org.opendatakit.suitcase.ui.DialogUtils;
 import org.opendatakit.suitcase.ui.ProgressBarStatus;
 import org.opendatakit.suitcase.ui.SuitcaseProgressBar;
@@ -52,7 +52,7 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
     // then create directory structure when needed
     FileUtils.createDirectory(aggInfo, csvConfig, csv.getTableId(), savePath);
 
-    WinkWrapper wink = WinkWrapper.getInstance();
+    SyncWrapper syncWrapper = SyncWrapper.getInstance();
 
     // retrieve data from Aggregate and store in csv
     if (csv.getSize() == 0) {
@@ -62,10 +62,10 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
       String cursor = null;
 
       do {
-        rows = wink.getRows(csv.getTableId(), cursor);
-        cursor = rows.optString(WinkClient.WEB_SAFE_RESUME_CURSOR_JSON);
-        csv.tryAdd(rows.getJSONArray(WinkClient.ROWS_STR_JSON));
-      } while (rows.getBoolean(WinkClient.HAS_MORE_RESULTS_JSON));
+        rows = syncWrapper.getRows(csv.getTableId(), cursor);
+        cursor = rows.optString(SyncClient.WEB_SAFE_RESUME_CURSOR_JSON);
+        csv.tryAdd(rows.getJSONArray(SyncClient.ROWS_STR_JSON));
+      } while (rows.getBoolean(SyncClient.HAS_MORE_RESULTS_JSON));
     }
 
     // write out csv to file

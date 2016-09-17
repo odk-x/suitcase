@@ -30,14 +30,14 @@ public class ResetTask extends SuitcaseSwingWorker<Void> {
   protected Void doInBackground() throws Exception {
     setString(IN_PROGRESS_STRING);
 
-    WinkWrapper wink = WinkWrapper.getInstance();
+    SyncWrapper syncWrapper = SyncWrapper.getInstance();
 
     // first delete all app level files
     publish(new ProgressBarStatus(0, "Stage 1/3: Delete app level files", false));
-    JSONArray appFiles = wink.getManifestForAppLevelFiles(version).getJSONArray("files");
+    JSONArray appFiles = syncWrapper.getManifestForAppLevelFiles(version).getJSONArray("files");
     for (int i = 0; i < appFiles.size(); i++) {
       String filename = appFiles.getJSONObject(i).getString("filename");
-      wink.deleteFile(filename, version);
+      syncWrapper.deleteFile(filename, version);
 
       int progress = (int) ((double) i / appFiles.size() * 100);
       publish(new ProgressBarStatus(progress, "Stage 1/3: Deleted " + filename, null));
@@ -45,7 +45,7 @@ public class ResetTask extends SuitcaseSwingWorker<Void> {
 
     // then delete all table definitions
     publish(new ProgressBarStatus(0, "Stage 2/3: Delete table definitions", false));
-    Set<String> tables = wink.updateTableList();
+    Set<String> tables = syncWrapper.updateTableList();
     int tableCounter = 0;
     for (String table : tables) {
       // for large data sets deletion might timeout
@@ -53,7 +53,7 @@ public class ResetTask extends SuitcaseSwingWorker<Void> {
 
       int retryCounter = 1;
       int status;
-      while ((status = wink.deleteTableDefinition(table)) == 500) {
+      while ((status = syncWrapper.deleteTableDefinition(table)) == 500) {
         int progress = (int) ((double) tableCounter / tables.size() * 100);
         String msg = "Stage 2/3: Deleting " + table + " retry #" + retryCounter++;
         publish(new ProgressBarStatus(progress, msg, null));
@@ -66,10 +66,10 @@ public class ResetTask extends SuitcaseSwingWorker<Void> {
 
     publish(new ProgressBarStatus(0, "Stage 3/3: Delete tables that are in bad states", true));
     // the table id and schemaETag can be anything
-    while ((wink.deleteTableDefinition("table", "etag")) == 500);
+    while ((syncWrapper.deleteTableDefinition("table", "etag")) == 500);
 
     Thread.sleep(RESET_FINISH_WAIT);
-    wink.updateTableList();
+    syncWrapper.updateTableList();
 
     return null;
   }

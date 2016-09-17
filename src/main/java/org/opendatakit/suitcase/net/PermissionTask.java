@@ -18,7 +18,7 @@ import org.opendatakit.aggregate.odktables.rest.entity.RowResourceList;
 import org.opendatakit.suitcase.model.AggregateInfo;
 import org.opendatakit.suitcase.ui.DialogUtils;
 import org.opendatakit.suitcase.ui.SuitcaseProgressBar;
-import org.opendatakit.wink.client.WinkClient;
+import org.opendatakit.sync.client.SyncClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -31,7 +31,7 @@ public class PermissionTask extends SuitcaseSwingWorker<Void> {
   public final static String DELETE_OP = "DELETE";
   public final static String CLEAR_OP = "CLEAR";
 
-  WinkWrapper wrapper = WinkWrapper.getInstance();
+  SyncWrapper wrapper = SyncWrapper.getInstance();
   String intermediateTemp = "temp";
   String csvExt = ".csv";
 
@@ -52,7 +52,7 @@ public class PermissionTask extends SuitcaseSwingWorker<Void> {
   protected Void doInBackground() throws Exception {
     setString(IN_PROGRESS_STRING);
 
-    WinkWrapper winkWrapper = WinkWrapper.getInstance();
+    SyncWrapper syncWrapper = SyncWrapper.getInstance();
 
     String className = this.getClass().getSimpleName();
     if (aggInfo == null) {
@@ -68,7 +68,7 @@ public class PermissionTask extends SuitcaseSwingWorker<Void> {
     wrapper.uploadPermissionCSV(dataPath);
 
     Thread.sleep(PUSH_FINISH_WAIT);
-    winkWrapper.updateTableList();
+    syncWrapper.updateTableList();
 
     return null;
 
