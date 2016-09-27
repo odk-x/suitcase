@@ -40,7 +40,7 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
   }
 
   @Override
-  protected Void doInBackground() throws Exception {
+  protected Void doInBackground() throws IOException, JSONException {
     //assume csv has already been initialized by caller of this worker
 
     // check existing data, skip check for CLI
@@ -106,6 +106,7 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
       e.printStackTrace();
       DialogUtils.showError(GENERIC_ERR, isGUI);
       setString(SuitcaseProgressBar.PB_ERROR);
+      returnCode = SuitcaseSwingWorker.errorCode;
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();
 
@@ -121,6 +122,7 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
       cause.printStackTrace();
       DialogUtils.showError(errMsg, isGUI);
       setString(SuitcaseProgressBar.PB_ERROR);
+      returnCode = SuitcaseSwingWorker.errorCode;
     } finally {
       setIndeterminate(false);
     }

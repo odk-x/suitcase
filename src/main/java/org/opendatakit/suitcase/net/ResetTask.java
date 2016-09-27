@@ -27,7 +27,7 @@ public class ResetTask extends SuitcaseSwingWorker<Void> {
   }
 
   @Override
-  protected Void doInBackground() throws Exception {
+  protected Void doInBackground() throws JSONException, IOException, InterruptedException {
     setString(IN_PROGRESS_STRING);
 
     SyncWrapper syncWrapper = SyncWrapper.getInstance();
@@ -84,6 +84,7 @@ public class ResetTask extends SuitcaseSwingWorker<Void> {
       e.printStackTrace();
       DialogUtils.showError(GENERIC_ERR, isGUI);
       setString(SuitcaseProgressBar.PB_ERROR);
+      returnCode = SuitcaseSwingWorker.errorCode;
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();
 
@@ -99,6 +100,7 @@ public class ResetTask extends SuitcaseSwingWorker<Void> {
       cause.printStackTrace();
       DialogUtils.showError(errMsg, isGUI);
       setString(SuitcaseProgressBar.PB_ERROR);
+      returnCode = SuitcaseSwingWorker.errorCode;
     } finally {
       setIndeterminate(false);
     }

@@ -15,6 +15,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.opendatakit.suitcase.model.AggregateInfo;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
@@ -25,7 +26,6 @@ import org.opendatakit.aggregate.odktables.rest.entity.RowFilterScope;
 import org.opendatakit.aggregate.odktables.rest.entity.RowOutcome;
 import org.opendatakit.aggregate.odktables.rest.entity.RowOutcome.OutcomeType;
 import org.opendatakit.aggregate.odktables.rest.entity.RowOutcomeList;
-import org.opendatakit.aggregate.odktables.rest.entity.Scope;
 import org.opendatakit.sync.client.SyncClient;
 import org.opendatakit.suitcase.ui.DialogUtils;
 import org.opendatakit.suitcase.ui.SuitcaseProgressBar;
@@ -67,7 +67,7 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
   }
 
   @Override
-  protected Void doInBackground() throws Exception {
+  protected Void doInBackground() throws IOException, JSONException, InterruptedException {
     setString(IN_PROGRESS_STRING);
 
     SyncWrapper syncWrapper = SyncWrapper.getInstance();
@@ -318,7 +318,7 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
   }
 
   protected ArrayList<RowOutcome> handleRowBatches(SyncWrapper syncWrapper, String dataPath, String tableId,
-      ArrayList<Row> rows) throws Exception {
+      ArrayList<Row> rows) throws ClientProtocolException, IOException, JSONException {
 
     ArrayList<Row> batchedRows = new ArrayList<Row>();
     RowOutcomeList rowOutcomeList = null;
@@ -408,6 +408,7 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
       e.printStackTrace();
       DialogUtils.showError(GENERIC_ERR, isGUI);
       setString(SuitcaseProgressBar.PB_ERROR);
+      returnCode = SuitcaseSwingWorker.errorCode;
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();
 
@@ -425,6 +426,7 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
       DialogUtils.showError(errMsg, isGUI);
       setString(SuitcaseProgressBar.PB_ERROR);
       cause.printStackTrace();
+      returnCode = SuitcaseSwingWorker.errorCode; 
     } finally {
       setIndeterminate(false);
     }

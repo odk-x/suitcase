@@ -30,7 +30,8 @@ public class UploadTask extends SuitcaseSwingWorker<Void> {
   }
 
   @Override
-  protected Void doInBackground() throws Exception {
+  protected Void doInBackground() throws JSONException, IOException, 
+    DataFormatException, InterruptedException {
     setString(IN_PROGRESS_STRING);
 
     SyncWrapper syncWrapper = SyncWrapper.getInstance();
@@ -52,6 +53,7 @@ public class UploadTask extends SuitcaseSwingWorker<Void> {
       e.printStackTrace();
       DialogUtils.showError(GENERIC_ERR, isGUI);
       setString(SuitcaseProgressBar.PB_ERROR);
+      returnCode = SuitcaseSwingWorker.errorCode;
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();
 
@@ -69,6 +71,7 @@ public class UploadTask extends SuitcaseSwingWorker<Void> {
       DialogUtils.showError(errMsg, isGUI);
       setString(SuitcaseProgressBar.PB_ERROR);
       cause.printStackTrace();
+      returnCode = SuitcaseSwingWorker.errorCode;  
     } finally {
       setIndeterminate(false);
     }

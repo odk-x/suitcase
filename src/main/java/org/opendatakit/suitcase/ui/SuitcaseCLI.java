@@ -14,6 +14,8 @@ import java.net.MalformedURLException;
 import static org.opendatakit.suitcase.ui.MessageString.*;
 
 public class SuitcaseCLI {
+  
+  public static final int PARAM_ERROR_CODE = 1;
   private enum Operation {
     DOWNLOAD, UPLOAD, UPDATE, RESET, INFO, TABLE_OP, PERMISSION
   }
@@ -40,12 +42,14 @@ public class SuitcaseCLI {
     this.cliOptions = buildOptions();
   }
 
-  public void startCLI() {
+  public int startCLI() {
+    int retCode = 0;
     Operation operation = parseArgs(args, cliOptions);
 
     if (operation == null) {
       // this means some error was found when parsing arguments
-      return;
+      retCode = PARAM_ERROR_CODE;
+      return retCode;
     }
 
     String error;
@@ -56,14 +60,15 @@ public class SuitcaseCLI {
       ODKCsv csv = null;
       try {
         csv = new ODKCsv(attMngr, aggInfo, tableId);
-      } catch (JSONException e) { /* should never happen */ }
+      } catch (JSONException e) { /* should never happen */} 
       CsvConfig config = new CsvConfig(downloadAttachment, scanFormatting, extraMetadata);
 
       error = FieldsValidatorUtils.checkDownloadFields(tableId, path, aggInfo);
       if (error != null) {
         DialogUtils.showError(error, false);
+        retCode = PARAM_ERROR_CODE;
       } else {
-        new DownloadTask(aggInfo, csv, config, path, false).blockingExecute();
+        retCode = new DownloadTask(aggInfo, csv, config, path, false).blockingExecute();
       }
       break;
     case UPLOAD:
@@ -71,8 +76,9 @@ public class SuitcaseCLI {
 
       if (error != null) {
         DialogUtils.showError(error, false);
+        retCode = PARAM_ERROR_CODE;
       } else {
-        new UploadTask(aggInfo, path, version, false).blockingExecute();
+        retCode = new UploadTask(aggInfo, path, version, false).blockingExecute();
       }
       break;
     case RESET:
@@ -80,8 +86,9 @@ public class SuitcaseCLI {
 
       if (error != null) {
         DialogUtils.showError(error, false);
+        retCode = PARAM_ERROR_CODE;
       } else {
-        new ResetTask(version, false).blockingExecute();
+        retCode = new ResetTask(version, false).blockingExecute();
       }
       break;
 
@@ -90,8 +97,9 @@ public class SuitcaseCLI {
 
       if (error != null) {
         DialogUtils.showError(error, false);
+        retCode = PARAM_ERROR_CODE;
       } else {
-        new UpdateTask(aggInfo, path, version, tableId, null, false).blockingExecute();
+        retCode = new UpdateTask(aggInfo, path, version, tableId, null, false).blockingExecute();
       }
       break;
       
@@ -100,8 +108,9 @@ public class SuitcaseCLI {
 
       if (error != null) {
         DialogUtils.showError(error, false);
+        retCode = PARAM_ERROR_CODE;
       } else {
-        new TableTask(aggInfo, tableId, path, version, tableOp, false).blockingExecute();
+        retCode = new TableTask(aggInfo, tableId, path, version, tableOp, false).blockingExecute();
       }
       break;
     
@@ -110,13 +119,15 @@ public class SuitcaseCLI {
 
       if (error != null) {
         DialogUtils.showError(error, false);
+        retCode = PARAM_ERROR_CODE;
       } else {
-        new PermissionTask(aggInfo, path, version, false).blockingExecute();
+        retCode = new PermissionTask(aggInfo, path, version, false).blockingExecute();
       }
       
       break;
-      
     }
+    
+    return retCode;
   }
 
   private Options buildOptions() {

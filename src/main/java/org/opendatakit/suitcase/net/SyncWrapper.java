@@ -7,7 +7,11 @@ import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.aggregate.odktables.rest.entity.Row;
 import org.opendatakit.aggregate.odktables.rest.entity.RowOutcomeList;
+import org.opendatakit.aggregate.odktables.rest.entity.TableDefinitionResource;
 import org.opendatakit.sync.client.SyncClient;
+import org.opendatakit.sync.data.ColumnDefinition;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -334,6 +338,35 @@ public class SyncWrapper {
     }
     
     return schemaETag;
+  }
+  
+  public ArrayList<ColumnDefinition> buildColumnDefinitions(String tableId) 
+    throws JSONException, IOException {
+    
+    ArrayList<ColumnDefinition> colDefs = null;
+    
+    if (tableId == null || tableId.length() == 0) {
+      throw new IllegalArgumentException("buildColumnDefinitions: tableId must not be null");
+    }
+    
+    if (!aggInfo.tableIdExists(tableId)) {
+      // Update the list in case things have changed
+      updateTableList();
+      
+      if (aggInfo.tableIdExists(tableId)) {
+        throw new IllegalArgumentException("buildColumnDefinitions: tableId does not exist on server");
+      }
+    }
+    
+    JSONObject tableDefObj = this.getTableDefinition(tableId);
+    
+    ObjectMapper mapper = new ObjectMapper();
+    TableDefinitionResource tableDefRes = mapper.readValue(tableDefObj.toString(), TableDefinitionResource.class);
+    
+    colDefs = ColumnDefinition.buildColumnDefinitions(aggInfo.getAppId(), 
+        tableId, tableDefRes.getColumns());
+    
+    return colDefs;
   }
   
   @Override

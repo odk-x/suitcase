@@ -3,6 +3,7 @@ package org.opendatakit.suitcase.net;
 import org.opendatakit.suitcase.ui.ProgressBarStatus;
 
 import javax.swing.*;
+
 import java.util.List;
 
 public abstract class SuitcaseSwingWorker<T> extends SwingWorker<T, ProgressBarStatus> {
@@ -10,15 +11,19 @@ public abstract class SuitcaseSwingWorker<T> extends SwingWorker<T, ProgressBarS
   public static final String INDETERMINATE_PROPERTY = "indeterminate";
   public static final String PROGRESS_PROPERTY = "progress"; // hardcoded in SwingWorker
   public static final String DONE_PROPERTY = "done";
+  public static final int errorCode = 2;
+  public static final int okCode = 0;
 
   private static final int BLOCKING_EXEC_WAIT = 500;
 
   protected T result;
+  protected int returnCode;
   private boolean isDone;
 
   public SuitcaseSwingWorker() {
     this.result = null;
     this.isDone = false;
+    this.returnCode = okCode;
   }
 
   @Override
@@ -68,7 +73,7 @@ public abstract class SuitcaseSwingWorker<T> extends SwingWorker<T, ProgressBarS
     firePropertyChange(DONE_PROPERTY, null, true);
   }
 
-  public T blockingExecute() {
+  public int blockingExecute() {
     this.execute();
 
     while (!isDone) {
@@ -77,6 +82,6 @@ public abstract class SuitcaseSwingWorker<T> extends SwingWorker<T, ProgressBarS
       } catch (Exception e) {/* ignored */}
     }
 
-    return result;
+    return this.returnCode;
   }
 }

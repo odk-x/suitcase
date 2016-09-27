@@ -10,6 +10,7 @@ import junit.framework.TestCase;
 import org.opendatakit.suitcase.model.AggregateInfo;
 import org.opendatakit.suitcase.net.LoginTask;
 import org.opendatakit.suitcase.net.PermissionTask;
+import org.opendatakit.suitcase.net.SuitcaseSwingWorker;
 import org.opendatakit.sync.client.SyncClient;
 
 public class PermissionTaskTest extends TestCase {
@@ -36,6 +37,7 @@ public class PermissionTaskTest extends TestCase {
     boolean foundUser = false;
     String testUserName = "mailto:testerodk@gmail.com";
     String userIdStr = "user_id";
+    int retCode;
     
     try {
       SyncClient sc = new SyncClient();
@@ -49,10 +51,12 @@ public class PermissionTaskTest extends TestCase {
       sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
       
       LoginTask lTask = new LoginTask(aggInfo, false);
-      lTask.blockingExecute();
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
       PermissionTask pTask = new PermissionTask(aggInfo, dataPath, version, false);
-      pTask.blockingExecute();
+      retCode = pTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
       // Check that user exists
       ArrayList<Map<String, Object>> result = sc.getUsers(agg_url);

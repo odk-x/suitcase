@@ -22,7 +22,7 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
   }
 
   @Override
-  protected Void doInBackground() throws Exception {
+  protected Void doInBackground() throws IOException, JSONException {
     SyncWrapper syncWrapper = SyncWrapper.getInstance();
 
     syncWrapper.reset();
@@ -41,6 +41,7 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
     } catch (InterruptedException e) {
       e.printStackTrace();
       DialogUtils.showError(GENERIC_ERR, isGUI);
+      returnCode = SuitcaseSwingWorker.errorCode;
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();
 
@@ -55,6 +56,7 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
 
       DialogUtils.showError(errMsg, isGUI);
       cause.printStackTrace();
+      returnCode = SuitcaseSwingWorker.errorCode;
     }
   }
 }

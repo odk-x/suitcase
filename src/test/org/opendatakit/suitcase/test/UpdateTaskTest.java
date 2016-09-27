@@ -6,6 +6,7 @@ import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.sync.client.SyncClient;
 import org.opendatakit.suitcase.net.LoginTask;
+import org.opendatakit.suitcase.net.SuitcaseSwingWorker;
 import org.opendatakit.suitcase.net.UpdateTask;
 import org.opendatakit.suitcase.model.AggregateInfo;
 
@@ -34,7 +35,7 @@ public class UpdateTaskTest extends TestCase{
     //absolutePathOfTestFiles = System.getProperty("test.absolutePathOfTestFiles");
     //batchSize = Integer.valueOf(System.getProperty("test.batchSize"));
     
-    serverUrl = "https://test.appspot.com";
+    serverUrl = "";
     appId = "default";
     absolutePathOfTestFiles = "testfiles/";
     batchSize = 1000;
@@ -52,6 +53,7 @@ public class UpdateTaskTest extends TestCase{
     String testTableId = "test1";
     String tableSchemaETag = null;
     SyncClient sc = null;
+    int retCode;
 
     try {
       sc = new SyncClient();
@@ -65,7 +67,8 @@ public class UpdateTaskTest extends TestCase{
       sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
 
       LoginTask lTask = new LoginTask(aggInfo, false);
-      lTask.blockingExecute();
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
           testTableId, null, csvFile);
@@ -85,7 +88,8 @@ public class UpdateTaskTest extends TestCase{
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 
       UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, null, false);
-      updateTask.blockingExecute();
+      retCode = updateTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
           tableSchemaETag, null, null, null);
@@ -123,6 +127,7 @@ public class UpdateTaskTest extends TestCase{
     String testTableId = "test2";
     String tableSchemaETag = null;
     SyncClient sc = null;
+    int retCode;
 
     try {
       sc = new SyncClient();
@@ -152,10 +157,12 @@ public class UpdateTaskTest extends TestCase{
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 
       LoginTask lTask = new LoginTask(aggInfo, false);
-      lTask.blockingExecute();
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       UpdateTask updateTask = new UpdateTask(aggInfo, dataPathAdd, version, testTableId, null, false);
-      updateTask.blockingExecute();
+      retCode = updateTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null,
           null);
@@ -170,7 +177,8 @@ public class UpdateTaskTest extends TestCase{
       assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
 
       UpdateTask taskDelete = new UpdateTask(aggInfo, dataPathDelete, version, testTableId, null, false);
-      taskDelete.blockingExecute();
+      retCode = taskDelete.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null,
           null);
@@ -202,6 +210,7 @@ public class UpdateTaskTest extends TestCase{
     String testTableId = "test3";
     String tableSchemaETag = null;
     SyncClient sc = null;
+    int retCode;
 
     try {
       sc = new SyncClient();
@@ -231,10 +240,12 @@ public class UpdateTaskTest extends TestCase{
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 
       LoginTask lTask = new LoginTask(aggInfo, false);
-      lTask.blockingExecute();
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       UpdateTask updateTask = new UpdateTask(aggInfo, dataPathAdd, version, testTableId, null, false);
-      updateTask.blockingExecute();
+      retCode = updateTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
           tableSchemaETag, null, null, null);
@@ -249,7 +260,8 @@ public class UpdateTaskTest extends TestCase{
       assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
 
       UpdateTask taskUpdate = new UpdateTask(aggInfo, dataPathUpdate, version, testTableId, null, false);
-      taskUpdate.blockingExecute();
+      retCode = taskUpdate.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
           tableSchemaETag, null, null, null);
@@ -289,6 +301,7 @@ public class UpdateTaskTest extends TestCase{
     String testTableId = "test4";
     String tableSchemaETag = null;
     SyncClient sc = null;
+    int retCode;
 
     try {
       sc = new SyncClient();
@@ -318,10 +331,12 @@ public class UpdateTaskTest extends TestCase{
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 
       LoginTask lTask = new LoginTask(aggInfo, false);
-      lTask.blockingExecute();
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       UpdateTask task = new UpdateTask(aggInfo, dataPathAdd, version, testTableId, null, false);
-      task.blockingExecute();
+      retCode = task.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null,
           null);
@@ -336,7 +351,8 @@ public class UpdateTaskTest extends TestCase{
       assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
 
       UpdateTask taskUpdate = new UpdateTask(aggInfo, dataPathUpdate, version, testTableId, null, false);
-      taskUpdate.blockingExecute();
+      retCode = taskUpdate.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null, null);
 
@@ -370,6 +386,7 @@ public class UpdateTaskTest extends TestCase{
     String testTableId = "test5";
     String defPath = "testfiles/cookstoves/data_definition.csv";
     String dataPath = "testfiles/cookstoves/data_small.csv";
+    int retCode;
     
     try {
       SyncClient sc = new SyncClient();
@@ -382,7 +399,8 @@ public class UpdateTaskTest extends TestCase{
       sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
       
       LoginTask lTask = new LoginTask(aggInfo, false);
-      lTask.blockingExecute();
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
       //AggregateInfo aggInfo, String tableId, String dataPath, String operation
       sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, null, defPath);
@@ -394,7 +412,8 @@ public class UpdateTaskTest extends TestCase{
       
       // Need to add rows
       UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, null, false);
-      updateTask.blockingExecute();
+      retCode = updateTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
       JSONObject rowsObj = sc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
       JSONArray rows = rowsObj.getJSONArray(SyncClient.ROWS_STR_JSON);
@@ -423,6 +442,7 @@ public class UpdateTaskTest extends TestCase{
     String testTableId = "test6";
     String tableSchemaETag = null;
     SyncClient sc = null;
+    int retCode;
 
     try {
       sc = new SyncClient();
@@ -451,10 +471,12 @@ public class UpdateTaskTest extends TestCase{
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 
       LoginTask lTask = new LoginTask(aggInfo, false);
-      lTask.blockingExecute();
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       UpdateTask task = new UpdateTask(aggInfo, dataPathAdd, version, testTableId, null, false);
-      task.blockingExecute();
+      retCode = task.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null,
           null);
@@ -464,7 +486,8 @@ public class UpdateTaskTest extends TestCase{
       assertEquals(rows.size(), 5);
 
       UpdateTask taskUpdate = new UpdateTask(aggInfo, dataPathUpdate, version, testTableId, null, false);
-      taskUpdate.blockingExecute();
+      retCode = taskUpdate.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null, null);
 
@@ -517,6 +540,7 @@ public class UpdateTaskTest extends TestCase{
     String testTableId = "test7";
     String tableSchemaETag = null;
     SyncClient sc = null;
+    int retCode;
 
     try {
       sc = new SyncClient();
@@ -530,7 +554,8 @@ public class UpdateTaskTest extends TestCase{
       sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
 
       LoginTask lTask = new LoginTask(aggInfo, false);
-      lTask.blockingExecute();
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
       // First check if this server allows permissions
       int rspCode = sc.uploadPermissionCSV(agg_url, appId, userPath);
@@ -558,7 +583,8 @@ public class UpdateTaskTest extends TestCase{
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 
       UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, null, false);
-      updateTask.blockingExecute();
+      retCode = updateTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
           tableSchemaETag, null, null, null);
