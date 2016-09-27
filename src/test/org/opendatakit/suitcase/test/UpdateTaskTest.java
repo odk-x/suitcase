@@ -402,7 +402,6 @@ public class UpdateTaskTest extends TestCase{
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      //AggregateInfo aggInfo, String tableId, String dataPath, String operation
       sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, null, defPath);
       
       String schemaETag = sc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);

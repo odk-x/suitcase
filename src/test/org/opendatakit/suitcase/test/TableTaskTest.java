@@ -55,7 +55,6 @@ public class TableTaskTest extends TestCase{
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      //AggregateInfo aggInfo, String tableId, String dataPath, String operation
       TableTask tTask = new TableTask(aggInfo, testTableId, dataPath, version, operation, false);
       retCode = tTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
@@ -110,7 +109,6 @@ public class TableTaskTest extends TestCase{
           testTableId, schemaETag);
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(dataPath, tableDefObj));
 
-      // AggregateInfo aggInfo, String tableId, String dataPath, String
       // operation
       TableTask tTask = new TableTask(aggInfo, testTableId, dataPath, version, operation, false);
       retCode = tTask.blockingExecute();
@@ -150,7 +148,6 @@ public class TableTaskTest extends TestCase{
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      //AggregateInfo aggInfo, String tableId, String dataPath, String operation
       sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, null, defPath);
       
       String schemaETag = sc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
@@ -214,7 +211,6 @@ public class TableTaskTest extends TestCase{
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      //AggregateInfo aggInfo, String tableId, String dataPath, String operation
       sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, null, defPath);
       
       String schemaETag = sc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
@@ -278,7 +274,6 @@ public class TableTaskTest extends TestCase{
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      //AggregateInfo aggInfo, String tableId, String dataPath, String operation
       sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, null, defPath);
       
       String schemaETag = sc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
@@ -341,7 +336,6 @@ public class TableTaskTest extends TestCase{
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      //AggregateInfo aggInfo, String tableId, String dataPath, String operation
       sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, null, defPath);
       
       String schemaETag = sc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
