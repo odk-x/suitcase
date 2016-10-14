@@ -7,7 +7,11 @@ import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.aggregate.odktables.rest.entity.Row;
 import org.opendatakit.aggregate.odktables.rest.entity.RowOutcomeList;
-import org.opendatakit.wink.client.WinkClient;
+import org.opendatakit.aggregate.odktables.rest.entity.TableDefinitionResource;
+import org.opendatakit.sync.client.SyncClient;
+import org.opendatakit.sync.data.ColumnDefinition;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -17,34 +21,34 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.zip.DataFormatException;
 
-import static org.opendatakit.wink.client.WinkClient.*;
+import static org.opendatakit.sync.client.SyncClient.*;
 
-public class WinkWrapper {
+public class SyncWrapper {
   
   private static final String FETCH_LIMIT = "1000";
   private static final int DELETE_TABLE_DEF_WAIT = 1000;
   private static final int PUSH_DONE_WAIT = 5000;
 
   private AggregateInfo aggInfo;
-  private WinkClient wc;
+  private SyncClient sc;
   private boolean hasInit;
 
-  private WinkWrapper() {
+  private SyncWrapper() {
     this.hasInit = false;
   }
 
   private static class InstanceHolder {
-    private static final WinkWrapper INSTANCE = new WinkWrapper();
+    private static final SyncWrapper INSTANCE = new SyncWrapper();
   }
 
-  public static WinkWrapper getInstance() {
+  public static SyncWrapper getInstance() {
     return InstanceHolder.INSTANCE;
   }
 
   public void init(AggregateInfo aggInfo) throws IOException, JSONException {
     if (!hasInit) {
       this.aggInfo = aggInfo;
-      this.wc = new WinkClient();
+      this.sc = new SyncClient();
       
       String agg_url = aggInfo.getHostUrl();
       if (agg_url.endsWith("/")) {
@@ -54,7 +58,7 @@ public class WinkWrapper {
       URL url = new URL(agg_url);
       String host = url.getHost();
 
-      this.wc.init(host, this.aggInfo.getUserName(), this.aggInfo.getPassword());
+      this.sc.init(host, this.aggInfo.getUserName(), this.aggInfo.getPassword());
       
       updateTableList();
 
@@ -72,7 +76,7 @@ public class WinkWrapper {
 
   public Set<String> updateTableList() throws IOException, JSONException {
     JSONArray tables =
-        wc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId()).getJSONArray(TABLES_JSON);
+        sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId()).getJSONArray(TABLES_JSON);
 
     for (int i = 0; i < tables.size(); i++) {
       String tableId = tables.getJSONObject(i).getString(TABLE_ID_JSON);
@@ -86,7 +90,7 @@ public class WinkWrapper {
   public void pushAllData(String dataPath, String version)
       throws JSONException, IOException, DataFormatException {
 //    System.out.println("pushAllData " + aggInfo.getServerUrl() + " " +aggInfo.getAppId() + " " + dataPath +" "+version);
-    wc.pushAllDataToUri(aggInfo.getServerUrl(), aggInfo.getAppId(), dataPath, version);
+    sc.pushAllDataToUri(aggInfo.getServerUrl(), aggInfo.getAppId(), dataPath, version);
 
     try {
       Thread.sleep(PUSH_DONE_WAIT);
@@ -96,11 +100,11 @@ public class WinkWrapper {
   }
 
   public int deleteFile(String filename, String version) throws IOException {
-    return wc.deleteFile(aggInfo.getServerUrl(), aggInfo.getAppId(), filename, version);
+    return sc.deleteFile(aggInfo.getServerUrl(), aggInfo.getAppId(), filename, version);
   }
 
   public JSONObject getManifestForAppLevelFiles(String version) throws IOException, JSONException {
-    return wc.getManifestForAppLevelFiles(aggInfo.getServerUrl(), aggInfo.getAppId(), version);
+    return sc.getManifestForAppLevelFiles(aggInfo.getServerUrl(), aggInfo.getAppId(), version);
   }
   
   public int createTable(String tableId, String csvFilePath) {
@@ -118,7 +122,7 @@ public class WinkWrapper {
     }
 
     try {
-      wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, null, csvFilePath);
+      sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, null, csvFilePath);
     } catch (FileNotFoundException fnfe) {
       fnfe.printStackTrace();
     } catch (DataFormatException dfe) {
@@ -149,7 +153,7 @@ public class WinkWrapper {
       if (agg_url.endsWith("/")) {
         agg_url = agg_url.substring(0, agg_url.length() - 1);
       }
-      rspCode = wc.uploadPermissionCSV(aggInfo.getHostUrl(), aggInfo.getAppId(), csvFilePath);
+      rspCode = sc.uploadPermissionCSV(aggInfo.getHostUrl(), aggInfo.getAppId(), csvFilePath);
     } catch (IOException ioe) {
       ioe.printStackTrace();
     } 
@@ -175,7 +179,7 @@ public class WinkWrapper {
     
     String schemaETag = aggInfo.getSchemaETag(tableId);
     
-    tableDef = wc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag);
+    tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag);
    
     return tableDef;
   }
@@ -194,7 +198,7 @@ public class WinkWrapper {
     }
 
     int result =
-        wc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag);
+        sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag);
 
     try {
       Thread.sleep(DELETE_TABLE_DEF_WAIT);
@@ -212,7 +216,7 @@ public class WinkWrapper {
     
     String schemaETag = verifyTableIdAndSchemaETag(tableId);
 
-    return wc.getManifestForRow(
+    return sc.getManifestForRow(
         aggInfo.getServerUrl(), aggInfo.getAppId(), tableId,
         schemaETag, rowId);
   }
@@ -224,7 +228,7 @@ public class WinkWrapper {
     
     String schemaETag = verifyTableIdAndSchemaETag(tableId);
 
-    return wc.getRows(
+    return sc.getRows(
         aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag,
         cursor, FETCH_LIMIT
     );
@@ -238,7 +242,7 @@ public class WinkWrapper {
     
     String schemaETag = verifyTableIdAndSchemaETag(tableId);
 
-    wc.getFileForRow(
+    sc.getFileForRow(
         aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag,
         rowId, false, savePath, relPathOnServer);
   }
@@ -251,7 +255,7 @@ public class WinkWrapper {
 
     String schemaETag = verifyTableIdAndSchemaETag(tableId);
     
-    wc.batchGetFilesForRow(
+    sc.batchGetFilesForRow(
         aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag,
         rowId, savePath, files, -1);
   }
@@ -260,7 +264,7 @@ public class WinkWrapper {
     String dataETag = null;
     
     try{
-      JSONObject res = wc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, tableSchemaETag, null, null,
+      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, tableSchemaETag, null, null,
           null);
       
       if (res.containsKey(DATA_ETAG_JSON) && !res.isNull(DATA_ETAG_JSON)) {
@@ -288,7 +292,7 @@ public class WinkWrapper {
     
     String dataETag = getDataETag(tableId, schemaETag);
     
-    return wc.alterRowsUsingSingleBatch(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag, dataETag, rowArrayList);
+    return sc.alterRowsUsingSingleBatch(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag, dataETag, rowArrayList);
   }
   
   public void deleteRowsUsingBulkUpload(String tableId, ArrayList<Row> rowArrayList) 
@@ -301,7 +305,7 @@ public class WinkWrapper {
     
     String dataETag = getDataETag(tableId, schemaETag);
     
-    wc.deleteRowsUsingBulkUpload(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, 
+    sc.deleteRowsUsingBulkUpload(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, 
         schemaETag, dataETag, rowArrayList, 0);
     
   }
@@ -334,6 +338,35 @@ public class WinkWrapper {
     }
     
     return schemaETag;
+  }
+  
+  public ArrayList<ColumnDefinition> buildColumnDefinitions(String tableId) 
+    throws JSONException, IOException {
+    
+    ArrayList<ColumnDefinition> colDefs = null;
+    
+    if (tableId == null || tableId.length() == 0) {
+      throw new IllegalArgumentException("buildColumnDefinitions: tableId must not be null");
+    }
+    
+    if (!aggInfo.tableIdExists(tableId)) {
+      // Update the list in case things have changed
+      updateTableList();
+      
+      if (aggInfo.tableIdExists(tableId)) {
+        throw new IllegalArgumentException("buildColumnDefinitions: tableId does not exist on server");
+      }
+    }
+    
+    JSONObject tableDefObj = this.getTableDefinition(tableId);
+    
+    ObjectMapper mapper = new ObjectMapper();
+    TableDefinitionResource tableDefRes = mapper.readValue(tableDefObj.toString(), TableDefinitionResource.class);
+    
+    colDefs = ColumnDefinition.buildColumnDefinitions(aggInfo.getAppId(), 
+        tableId, tableDefRes.getColumns());
+    
+    return colDefs;
   }
   
   @Override

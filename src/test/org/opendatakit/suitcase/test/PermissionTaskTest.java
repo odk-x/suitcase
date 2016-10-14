@@ -10,7 +10,8 @@ import junit.framework.TestCase;
 import org.opendatakit.suitcase.model.AggregateInfo;
 import org.opendatakit.suitcase.net.LoginTask;
 import org.opendatakit.suitcase.net.PermissionTask;
-import org.opendatakit.wink.client.WinkClient;
+import org.opendatakit.suitcase.net.SuitcaseSwingWorker;
+import org.opendatakit.sync.client.SyncClient;
 
 public class PermissionTaskTest extends TestCase {
   
@@ -36,9 +37,10 @@ public class PermissionTaskTest extends TestCase {
     boolean foundUser = false;
     String testUserName = "mailto:testerodk@gmail.com";
     String userIdStr = "user_id";
+    int retCode;
     
     try {
-      WinkClient wc = new WinkClient();
+      SyncClient sc = new SyncClient();
       
       String agg_url = aggInfo.getHostUrl();
       agg_url = agg_url.substring(0, agg_url.length()-1);
@@ -46,16 +48,18 @@ public class PermissionTaskTest extends TestCase {
       URL url = new URL(agg_url);
       String host = url.getHost();
       
-      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
       
       LoginTask lTask = new LoginTask(aggInfo, false);
-      lTask.blockingExecute();
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
       PermissionTask pTask = new PermissionTask(aggInfo, dataPath, version, false);
-      pTask.blockingExecute();
+      retCode = pTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
       // Check that user exists
-      ArrayList<Map<String, Object>> result = wc.getUsers(agg_url);
+      ArrayList<Map<String, Object>> result = sc.getUsers(agg_url);
 
       if (result != null) {
 
@@ -70,7 +74,7 @@ public class PermissionTaskTest extends TestCase {
         assertTrue(foundUser);
       }
 
-      wc.close();
+      sc.close();
     } catch (Exception e) {
       System.out.println("PermissionTaskTest: Exception thrown in testCreateUserPermission_ExpectPass");
       e.printStackTrace();

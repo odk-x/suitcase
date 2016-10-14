@@ -6,21 +6,13 @@ import static org.opendatakit.suitcase.ui.MessageString.IO_READ_ERR;
 import static org.opendatakit.suitcase.ui.MessageString.VISIT_WEB_ERROR;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.zip.DataFormatException;
 
 import org.apache.wink.json4j.JSONException;
-import org.apache.wink.json4j.JSONObject;
-import org.opendatakit.aggregate.odktables.rest.entity.Row;
-import org.opendatakit.aggregate.odktables.rest.entity.RowResource;
-import org.opendatakit.aggregate.odktables.rest.entity.RowResourceList;
 import org.opendatakit.suitcase.model.AggregateInfo;
 import org.opendatakit.suitcase.ui.DialogUtils;
 import org.opendatakit.suitcase.ui.SuitcaseProgressBar;
-import org.opendatakit.wink.client.WinkClient;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class PermissionTask extends SuitcaseSwingWorker<Void> {
   
@@ -31,7 +23,7 @@ public class PermissionTask extends SuitcaseSwingWorker<Void> {
   public final static String DELETE_OP = "DELETE";
   public final static String CLEAR_OP = "CLEAR";
 
-  WinkWrapper wrapper = WinkWrapper.getInstance();
+  SyncWrapper wrapper = SyncWrapper.getInstance();
   String intermediateTemp = "temp";
   String csvExt = ".csv";
 
@@ -49,10 +41,10 @@ public class PermissionTask extends SuitcaseSwingWorker<Void> {
   }
 
   @Override
-  protected Void doInBackground() throws Exception {
+  protected Void doInBackground() throws IOException, InterruptedException, JSONException {
     setString(IN_PROGRESS_STRING);
 
-    WinkWrapper winkWrapper = WinkWrapper.getInstance();
+    SyncWrapper syncWrapper = SyncWrapper.getInstance();
 
     String className = this.getClass().getSimpleName();
     if (aggInfo == null) {
@@ -68,7 +60,7 @@ public class PermissionTask extends SuitcaseSwingWorker<Void> {
     wrapper.uploadPermissionCSV(dataPath);
 
     Thread.sleep(PUSH_FINISH_WAIT);
-    winkWrapper.updateTableList();
+    syncWrapper.updateTableList();
 
     return null;
 
@@ -84,6 +76,7 @@ public class PermissionTask extends SuitcaseSwingWorker<Void> {
       e.printStackTrace();
       DialogUtils.showError(GENERIC_ERR, isGUI);
       setString(SuitcaseProgressBar.PB_ERROR);
+      returnCode = SuitcaseSwingWorker.errorCode;
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();
 
@@ -101,6 +94,7 @@ public class PermissionTask extends SuitcaseSwingWorker<Void> {
       DialogUtils.showError(errMsg, isGUI);
       setString(SuitcaseProgressBar.PB_ERROR);
       cause.printStackTrace();
+      returnCode = SuitcaseSwingWorker.errorCode;
     } finally {
       setIndeterminate(false);
     }

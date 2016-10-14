@@ -7,9 +7,11 @@ import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.suitcase.model.AggregateInfo;
 import org.opendatakit.suitcase.net.LoginTask;
+import org.opendatakit.suitcase.net.SuitcaseSwingWorker;
 import org.opendatakit.suitcase.net.TableTask;
 import org.opendatakit.suitcase.net.UpdateTask;
-import org.opendatakit.wink.client.WinkClient;
+import org.opendatakit.sync.client.SyncClient;
+import org.opendatakit.suitcase.test.TestUtilities;
 
 import junit.framework.TestCase;
 
@@ -24,7 +26,7 @@ public class TableTaskTest extends TestCase{
   
   @Override
   protected void setUp() throws MalformedURLException {
-    serverUrl = "https://test.appspot.com";
+    serverUrl = "";
     appId = "default";
     userName = "";
     password = "";
@@ -36,9 +38,10 @@ public class TableTaskTest extends TestCase{
     String testTableId = "test1";
     String operation = "create";
     String dataPath = "testfiles/plot/definition.csv";
+    int retCode;
     
     try {
-      WinkClient wc = new WinkClient();
+      SyncClient sc = new SyncClient();
       
       String agg_url = aggInfo.getHostUrl();
       agg_url = agg_url.substring(0, agg_url.length()-1);
@@ -46,27 +49,28 @@ public class TableTaskTest extends TestCase{
       URL url = new URL(agg_url);
       String host = url.getHost();
       
-      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
       
       LoginTask lTask = new LoginTask(aggInfo, false);
-      lTask.blockingExecute();
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      //AggregateInfo aggInfo, String tableId, String dataPath, String operation
       TableTask tTask = new TableTask(aggInfo, testTableId, dataPath, version, operation, false);
-      tTask.blockingExecute();
+      retCode = tTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      String schemaETag = wc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
-      JSONObject tableDefObj = wc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
+      String schemaETag = sc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
+      JSONObject tableDefObj = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
     
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(dataPath, tableDefObj));
     
       // Then delete table definition
-      wc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
+      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
       
-      JSONObject obj = wc.getTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
+      JSONObject obj = sc.getTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
       assertNull(obj);
       
-      wc.close();
+      sc.close();
     } catch (Exception e) {
       System.out.println("TableTaskTest: Exception thrown in createTableTest");
       e.printStackTrace();
@@ -78,9 +82,10 @@ public class TableTaskTest extends TestCase{
     String testTableId = "test2";
     String operation = "delete";
     String dataPath = "testfiles/plot/definition.csv";
+    int retCode;
 
     try {
-      WinkClient wc = new WinkClient();
+      SyncClient sc = new SyncClient();
       
       String agg_url = aggInfo.getHostUrl();
       agg_url = agg_url.substring(0, agg_url.length()-1);
@@ -88,31 +93,31 @@ public class TableTaskTest extends TestCase{
       URL url = new URL(agg_url);
       String host = url.getHost();
       
-      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
 
       LoginTask lTask = new LoginTask(aggInfo, false);
-      lTask.blockingExecute();
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       String schemaETag = null;
-      wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag,
+      sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag,
           dataPath);
-      schemaETag = wc
+      schemaETag = sc
           .getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
 
-      JSONObject tableDefObj = wc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject tableDefObj = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
           testTableId, schemaETag);
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(dataPath, tableDefObj));
 
-      // AggregateInfo aggInfo, String tableId, String dataPath, String
       // operation
       TableTask tTask = new TableTask(aggInfo, testTableId, dataPath, version, operation, false);
+      retCode = tTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      tTask.blockingExecute();
-
-      JSONObject obj = wc.getTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
+      JSONObject obj = sc.getTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
       assertNull(obj);
 
-      wc.close();
+      sc.close();
 
     } catch (Exception e) {
       System.out.println("TableTaskTest: Exception thrown in testDeleteTable_ExpectPass");
@@ -126,9 +131,10 @@ public class TableTaskTest extends TestCase{
     String operation = "clear";
     String defPath = "testfiles/plot/definition.csv";
     String dataPath = "testfiles/plot/plot-add5.csv";
+    int retCode;
     
     try {
-      WinkClient wc = new WinkClient();
+      SyncClient sc = new SyncClient();
       
       String agg_url = aggInfo.getHostUrl();
       agg_url = agg_url.substring(0, agg_url.length()-1);
@@ -136,43 +142,45 @@ public class TableTaskTest extends TestCase{
       URL url = new URL(agg_url);
       String host = url.getHost();
       
-      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
       
       LoginTask lTask = new LoginTask(aggInfo, false);
-      lTask.blockingExecute();
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      //AggregateInfo aggInfo, String tableId, String dataPath, String operation
-      wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, null, defPath);
+      sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, null, defPath);
       
-      String schemaETag = wc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
-      JSONObject tableDefObj = wc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
+      String schemaETag = sc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
+      JSONObject tableDefObj = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
     
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(defPath, tableDefObj));
       
       // Need to add rows
       UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, null, false);
-      updateTask.blockingExecute();
+      retCode = updateTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      JSONObject rowsObj = wc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
-      JSONArray rows = rowsObj.getJSONArray(WinkClient.ROWS_STR_JSON);
+      JSONObject rowsObj = sc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
+      JSONArray rows = rowsObj.getJSONArray(SyncClient.ROWS_STR_JSON);
       
       assertEquals(rows.size(), 5);
       
       TableTask tTask = new TableTask(aggInfo, testTableId, dataPath, version, operation, false);
-      tTask.blockingExecute();
+      retCode = tTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      rowsObj = wc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
-      rows = rowsObj.getJSONArray(WinkClient.ROWS_STR_JSON);
+      rowsObj = sc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
+      rows = rowsObj.getJSONArray(SyncClient.ROWS_STR_JSON);
       
       assertEquals(rows.size(), 0);
       
       // Then delete table definition
-      wc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
+      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
       
-      JSONObject obj = wc.getTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
+      JSONObject obj = sc.getTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
       assertNull(obj);
       
-      wc.close();
+      sc.close();
       
     } catch (Exception e) {
       System.out.println("TableTaskTest: Exception thrown in testClearTable_ExpectPass");
@@ -186,9 +194,10 @@ public class TableTaskTest extends TestCase{
     String operation = "clear";
     String defPath = "testfiles/plot/definition.csv";
     String dataPath = "testfiles/plot/plot-add5.csv";
+    int retCode;
     
     try {
-      WinkClient wc = new WinkClient();
+      SyncClient sc = new SyncClient();
       
       String agg_url = aggInfo.getHostUrl();
       agg_url = agg_url.substring(0, agg_url.length()-1);
@@ -196,43 +205,45 @@ public class TableTaskTest extends TestCase{
       URL url = new URL(agg_url);
       String host = url.getHost();
       
-      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
       
       LoginTask lTask = new LoginTask(aggInfo, false);
-      lTask.blockingExecute();
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      //AggregateInfo aggInfo, String tableId, String dataPath, String operation
-      wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, null, defPath);
+      sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, null, defPath);
       
-      String schemaETag = wc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
-      JSONObject tableDefObj = wc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
+      String schemaETag = sc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
+      JSONObject tableDefObj = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
     
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(defPath, tableDefObj));
       
       // Need to add rows
       UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, null, false);
-      updateTask.blockingExecute();
+      retCode = updateTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      JSONObject rowsObj = wc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
-      JSONArray rows = rowsObj.getJSONArray(WinkClient.ROWS_STR_JSON);
+      JSONObject rowsObj = sc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
+      JSONArray rows = rowsObj.getJSONArray(SyncClient.ROWS_STR_JSON);
       
       assertEquals(rows.size(), 5);
       
       TableTask tTask = new TableTask(aggInfo, testTableId, null, version, operation, false);
-      tTask.blockingExecute();
+      retCode = tTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      rowsObj = wc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
-      rows = rowsObj.getJSONArray(WinkClient.ROWS_STR_JSON);
+      rowsObj = sc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
+      rows = rowsObj.getJSONArray(SyncClient.ROWS_STR_JSON);
       
       assertEquals(rows.size(), 0);
       
       // Then delete table definition
-      wc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
+      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
       
-      JSONObject obj = wc.getTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
+      JSONObject obj = sc.getTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
       assertNull(obj);
       
-      wc.close();
+      sc.close();
       
     } catch (Exception e) {
       System.out.println("TableTaskTest: Exception thrown in testClearTableNoFilePath_ExpectPass");
@@ -246,9 +257,10 @@ public class TableTaskTest extends TestCase{
     String operation = "clear";
     String defPath = "testfiles/cookstoves/data_definition.csv";
     String dataPath = "testfiles/cookstoves/data_small.csv";
+    int retCode;
     
     try {
-      WinkClient wc = new WinkClient();
+      SyncClient sc = new SyncClient();
       
       String agg_url = aggInfo.getHostUrl();
       agg_url = agg_url.substring(0, agg_url.length()-1);
@@ -256,43 +268,45 @@ public class TableTaskTest extends TestCase{
       URL url = new URL(agg_url);
       String host = url.getHost();
       
-      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
       
       LoginTask lTask = new LoginTask(aggInfo, false);
-      lTask.blockingExecute();
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      //AggregateInfo aggInfo, String tableId, String dataPath, String operation
-      wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, null, defPath);
+      sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, null, defPath);
       
-      String schemaETag = wc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
-      JSONObject tableDefObj = wc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
+      String schemaETag = sc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
+      JSONObject tableDefObj = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
     
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(defPath, tableDefObj));
       
       // Need to add rows
       UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, null, false);
-      updateTask.blockingExecute();
+      retCode = updateTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      JSONObject rowsObj = wc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
-      JSONArray rows = rowsObj.getJSONArray(WinkClient.ROWS_STR_JSON);
+      JSONObject rowsObj = sc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
+      JSONArray rows = rowsObj.getJSONArray(SyncClient.ROWS_STR_JSON);
       
       assertEquals(rows.size(), 1000);
       
       TableTask tTask = new TableTask(aggInfo, testTableId, null, version, operation, false);
-      tTask.blockingExecute();
+      retCode = tTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      rowsObj = wc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
-      rows = rowsObj.getJSONArray(WinkClient.ROWS_STR_JSON);
+      rowsObj = sc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
+      rows = rowsObj.getJSONArray(SyncClient.ROWS_STR_JSON);
       
       assertEquals(rows.size(), 0);
       
       // Then delete table definition
-      wc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
+      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
       
-      JSONObject obj = wc.getTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
+      JSONObject obj = sc.getTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
       assertNull(obj);
       
-      wc.close();
+      sc.close();
       
     } catch (Exception e) {
       System.out.println("TableTaskTest: Exception thrown in testClearLargeTableData_ExpectPass");
@@ -305,9 +319,10 @@ public class TableTaskTest extends TestCase{
     String testTableId = "test6";
     String operation = "clear";
     String defPath = "testfiles/cookstoves/data_definition.csv";
+    int retCode;
     
     try {
-      WinkClient wc = new WinkClient();
+      SyncClient sc = new SyncClient();
       
       String agg_url = aggInfo.getHostUrl();
       agg_url = agg_url.substring(0, agg_url.length()-1);
@@ -315,39 +330,40 @@ public class TableTaskTest extends TestCase{
       URL url = new URL(agg_url);
       String host = url.getHost();
       
-      wc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
       
       LoginTask lTask = new LoginTask(aggInfo, false);
-      lTask.blockingExecute();
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      //AggregateInfo aggInfo, String tableId, String dataPath, String operation
-      wc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, null, defPath);
+      sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, null, defPath);
       
-      String schemaETag = wc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
-      JSONObject tableDefObj = wc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
+      String schemaETag = sc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
+      JSONObject tableDefObj = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
     
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(defPath, tableDefObj));
       
-      JSONObject rowsObj = wc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
-      JSONArray rows = rowsObj.getJSONArray(WinkClient.ROWS_STR_JSON);
+      JSONObject rowsObj = sc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
+      JSONArray rows = rowsObj.getJSONArray(SyncClient.ROWS_STR_JSON);
       
       assertEquals(rows.size(), 0);
       
       TableTask tTask = new TableTask(aggInfo, testTableId, null, version, operation, false);
-      tTask.blockingExecute();
+      retCode = tTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      rowsObj = wc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
-      rows = rowsObj.getJSONArray(WinkClient.ROWS_STR_JSON);
+      rowsObj = sc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
+      rows = rowsObj.getJSONArray(SyncClient.ROWS_STR_JSON);
       
       assertEquals(rows.size(), 0);
       
       // Then delete table definition
-      wc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
+      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
       
-      JSONObject obj = wc.getTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
+      JSONObject obj = sc.getTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
       assertNull(obj);
       
-      wc.close();
+      sc.close();
       
     } catch (Exception e) {
       System.out.println("TableTaskTest: Exception thrown in testClearLargeTableData_ExpectPass");

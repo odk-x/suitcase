@@ -1,5 +1,6 @@
 package org.opendatakit.suitcase;
 
+import org.opendatakit.suitcase.net.SuitcaseSwingWorker;
 import org.opendatakit.suitcase.ui.MainPanel;
 import org.opendatakit.suitcase.ui.SuitcaseCLI;
 
@@ -11,8 +12,10 @@ import static org.opendatakit.suitcase.ui.LayoutConsts.WINDOW_WIDTH;
 
 public class Suitcase {
   public static void main(String[] args) {
+    int retCode = SuitcaseSwingWorker.okCode;
     if (args.length > 0) {
-      new SuitcaseCLI(args).startCLI();
+      retCode = new SuitcaseCLI(args).startCLI();
+      System.exit(retCode);
     } else {
       EventQueue.invokeLater(new Runnable() {
         @Override

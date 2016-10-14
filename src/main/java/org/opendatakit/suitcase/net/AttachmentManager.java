@@ -3,7 +3,7 @@ package org.opendatakit.suitcase.net;
 import org.opendatakit.suitcase.model.AggregateInfo;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONObject;
-import org.opendatakit.wink.client.WinkClient;
+import org.opendatakit.sync.client.SyncClient;
 import org.opendatakit.suitcase.utils.FileUtils;
 
 import java.io.IOException;
@@ -45,7 +45,7 @@ public class AttachmentManager {
   public void getListOfRowAttachments(String rowId) {
     if (!this.allAttachments.containsKey(rowId)) {
       try {
-        JSONObject manifest = WinkWrapper.getInstance().getManifestForRow(tableId, rowId);
+        JSONObject manifest = SyncWrapper.getInstance().getManifestForRow(tableId, rowId);
         JSONArray attachments = manifest.getJSONArray("files");
 
         if (attachments.size() > 0) {
@@ -115,12 +115,12 @@ public class AttachmentManager {
     if (this.attachmentManifests.containsKey(rowId)) {
       try {
         if (scanRawJsonOnly) {
-          WinkWrapper.getInstance().getFileForRow(
+          SyncWrapper.getInstance().getFileForRow(
               tableId, rowId, getAttachmentLocalPath(rowId, getScanJsonFilename(rowId)).toString(),
               getScanJsonFilename(rowId)
           );
         } else {
-          WinkWrapper.getInstance().batchGetFilesForRow(
+          SyncWrapper.getInstance().batchGetFilesForRow(
               tableId, rowId, getAttachmentLocalDir(rowId).toString(),
               attachmentManifests.get(rowId)
           );
@@ -172,7 +172,7 @@ public class AttachmentManager {
    * @return
    */
   private Path getAttachmentLocalDir(String rowId) throws IOException {
-    String sanitizedRowId = WinkClient.convertRowIdForInstances(rowId);
+    String sanitizedRowId = SyncClient.convertRowIdForInstances(rowId);
     String insPath = FileUtils.getInstancesPath(aggInfo, tableId, savePath).toString();
 
     if (Files.notExists(Paths.get(insPath, sanitizedRowId))) {
@@ -203,6 +203,6 @@ public class AttachmentManager {
    * @return
    */
   private String getScanJsonFilename(String rowId) {
-    return "raw_" + WinkClient.convertRowIdForInstances(rowId) + ".json";
+    return "raw_" + SyncClient.convertRowIdForInstances(rowId) + ".json";
   }
 }

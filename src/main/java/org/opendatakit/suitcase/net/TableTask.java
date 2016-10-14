@@ -18,7 +18,7 @@ import org.opendatakit.aggregate.odktables.rest.entity.RowResourceList;
 import org.opendatakit.suitcase.model.AggregateInfo;
 import org.opendatakit.suitcase.ui.DialogUtils;
 import org.opendatakit.suitcase.ui.SuitcaseProgressBar;
-import org.opendatakit.wink.client.WinkClient;
+import org.opendatakit.sync.client.SyncClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -30,7 +30,7 @@ public class TableTask extends SuitcaseSwingWorker<Void> {
   public final static String DELETE_OP = "DELETE";
   public final static String CLEAR_OP = "CLEAR";
 
-  WinkWrapper wrapper = WinkWrapper.getInstance();
+  SyncWrapper wrapper = SyncWrapper.getInstance();
   String intermediateTemp = "temp";
   String csvExt = ".csv";
 
@@ -53,14 +53,14 @@ public class TableTask extends SuitcaseSwingWorker<Void> {
   }
 
   @Override
-  protected Void doInBackground() throws Exception {
+  protected Void doInBackground() throws IOException, JSONException, InterruptedException {
     setString(IN_PROGRESS_STRING);
 
-    WinkWrapper winkWrapper = WinkWrapper.getInstance();
+    SyncWrapper syncWrapper = SyncWrapper.getInstance();
 
     // We always want to update the table list as
     // things could have changed
-    winkWrapper.updateTableList();
+    syncWrapper.updateTableList();
 
     String className = this.getClass().getSimpleName();
     if (aggInfo == null) {
@@ -114,8 +114,8 @@ public class TableTask extends SuitcaseSwingWorker<Void> {
           row.setDeleted(true);
           rowList.add(row);
         }
-        cursor = rows.optString(WinkClient.WEB_SAFE_RESUME_CURSOR_JSON);
-      } while (rows.getBoolean(WinkClient.HAS_MORE_RESULTS_JSON));
+        cursor = rows.optString(SyncClient.WEB_SAFE_RESUME_CURSOR_JSON);
+      } while (rows.getBoolean(SyncClient.HAS_MORE_RESULTS_JSON));
       
       if (rowList.size() > 0) {
         wrapper.deleteRowsUsingBulkUpload(tableId, rowList);
@@ -128,7 +128,7 @@ public class TableTask extends SuitcaseSwingWorker<Void> {
     }
 
     Thread.sleep(PUSH_FINISH_WAIT);
-    winkWrapper.updateTableList();
+    syncWrapper.updateTableList();
 
     return null;
 
@@ -144,6 +144,7 @@ public class TableTask extends SuitcaseSwingWorker<Void> {
       e.printStackTrace();
       DialogUtils.showError(GENERIC_ERR, isGUI);
       setString(SuitcaseProgressBar.PB_ERROR);
+      returnCode = SuitcaseSwingWorker.errorCode;
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();
 
@@ -161,6 +162,7 @@ public class TableTask extends SuitcaseSwingWorker<Void> {
       DialogUtils.showError(errMsg, isGUI);
       setString(SuitcaseProgressBar.PB_ERROR);
       cause.printStackTrace();
+      returnCode = SuitcaseSwingWorker.errorCode;
     } finally {
       setIndeterminate(false);
     }

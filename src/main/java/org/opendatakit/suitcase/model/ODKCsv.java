@@ -1,6 +1,8 @@
 package org.opendatakit.suitcase.model;
 
 import org.opendatakit.suitcase.net.AttachmentManager;
+import org.opendatakit.suitcase.net.SyncWrapper;
+import org.opendatakit.sync.data.ColumnDefinition;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
@@ -9,7 +11,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
-import static org.opendatakit.wink.client.WinkClient.*;
+import static org.opendatakit.sync.client.SyncClient.*;
 
 //!!!ATTENTION!!! One per aggInfo
 public class ODKCsv implements Iterable<String[]> {
@@ -188,7 +190,7 @@ public class ODKCsv implements Iterable<String[]> {
    * @return
    */
   public String[] getHeader(CsvConfig config) {
-    if (this.size < 1) {
+    if (this.size < 0) {
       throw new IllegalStateException();
     }
 
@@ -235,15 +237,26 @@ public class ODKCsv implements Iterable<String[]> {
    * @param rows
    * @return True if merge is successful
    * @throws JSONException
+   * @throws IOException 
    */
-  public boolean tryAdd(JSONArray rows) throws JSONException {
+  public boolean tryAdd(JSONArray rows) throws JSONException, IOException {
     if (!isCompatible(rows)) {
       return false;
     }
 
     if (this.size < 1) {
-      //current instance is empty, initialize with rows
-      this.completeDataHeader = extractDataHeader(rows.getJSONObject(0));
+      // current instance is empty
+      if (rows.size() > 0) {
+        // initialize with rows
+        this.completeDataHeader = extractDataHeader(rows.getJSONObject(0));
+
+      } else {
+        // initialize with column definitions from table definition
+        SyncWrapper syncWrapper = SyncWrapper.getInstance();
+        ArrayList<ColumnDefinition> cols = syncWrapper.buildColumnDefinitions(tableId);
+        this.completeDataHeader = extractDataHeaderWithListOfCols(cols);
+      }
+      
       this.completeCSVHeader = buildCSVHeader();
       this.colAction = buildActionMap();
     }
@@ -260,10 +273,11 @@ public class ODKCsv implements Iterable<String[]> {
    * @param rowIndex
    * @param config
    * @return
+   * @throws JSONException 
+   * @throws IOException 
    * @throws Exception
    */
-  public String[] get(int rowIndex, CsvConfig config)
-      throws Exception {
+  public String[] get(int rowIndex, CsvConfig config) throws JSONException, IOException {
     if (rowIndex >= size) {
       throw new NoSuchElementException();
     }
@@ -317,6 +331,36 @@ public class ODKCsv implements Iterable<String[]> {
     }
 
     return columns;
+  }
+  
+  /**
+   * Extract data header from 1 row of JSON
+   *
+   * @param oneRow
+   * @return
+   * @throws JSONException
+   */
+  private String[] extractDataHeaderWithListOfCols(ArrayList<ColumnDefinition> listOfColDefs) throws JSONException {
+    if (listOfColDefs == null || listOfColDefs.size() == 0) {
+      throw new IllegalArgumentException("extractDataHeaderWithListOfCols: columns cannot be null or empty");
+    }
+
+    ArrayList<String> columns = new ArrayList<String>();
+    String[] retCols = null;
+
+    for (int i = 0; i < listOfColDefs.size(); i++) {
+      ColumnDefinition colDef = listOfColDefs.get(i);
+      if (colDef.isUnitOfRetention()) {
+        columns.add(colDef.getElementKey());
+      }
+    }
+
+    if (columns.size() > 0) {
+      retCols = new String[columns.size()];
+      retCols = columns.toArray(retCols);
+    }
+    
+    return retCols;
   }
 
   /**
@@ -404,10 +448,11 @@ public class ODKCsv implements Iterable<String[]> {
    * @param row
    * @param config
    * @return
+   * @throws IOException 
+   * @throws JSONException 
    * @throws Exception
    */
-  private String[] getData(JSONObject row, CsvConfig config)
-      throws Exception {
+  private String[] getData(JSONObject row, CsvConfig config) throws IOException, JSONException {
     String rowId = row.optString(ID_JSON);
 
     ScanJson scanRaw = null;
