@@ -30,6 +30,7 @@ public class SuitcaseCLI {
   private String tableId;
   private String version;
   private String path;
+  private String updateLogPath = null;
   private String tableOp;
   private boolean downloadAttachment;
   private boolean scanFormatting;
@@ -99,7 +100,7 @@ public class SuitcaseCLI {
         DialogUtils.showError(error, false);
         retCode = PARAM_ERROR_CODE;
       } else {
-        retCode = new UpdateTask(aggInfo, path, version, tableId, null, false).blockingExecute();
+        retCode = new UpdateTask(aggInfo, path, version, tableId, updateLogPath , false).blockingExecute();
       }
       break;
       
@@ -174,6 +175,10 @@ public class SuitcaseCLI {
 
     //UI
     opt.addOption("f", "force", false, "do not prompt, overwrite existing files");
+    
+    //Update Log
+    opt.addOption("updateLogPath", true, "Specify a custom path to create update log file. "
+        + "Default directory is ./Update");
 
     return opt;
   }
@@ -264,6 +269,8 @@ public class SuitcaseCLI {
       }
 
       path = line.getOptionValue("path", FileUtils.getDefaultSavePath().toString());
+      
+      updateLogPath = line.getOptionValue("updateLogPath");
 
       version = line.getOptionValue("dataVersion");
 

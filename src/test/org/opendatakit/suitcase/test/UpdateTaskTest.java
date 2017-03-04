@@ -1,6 +1,8 @@
 package org.opendatakit.suitcase.test;
 
+import java.io.File;
 import java.net.URL;
+import java.util.Scanner;
 
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONObject;
@@ -102,6 +104,100 @@ public class UpdateTaskTest extends TestCase{
 
       // Now check that the row was created with the right rowId
       assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
+
+      // Now delete the table
+      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+          tableSchemaETag);
+
+      // Check that table no longer exists
+      JSONObject obj = sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
+
+      sc.close();
+
+    } catch (Exception e) {
+      System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskAdd_ExpectPass");
+      e.printStackTrace();
+      fail();
+    }
+  }
+  
+  public void testUpdateTaskAddCustomLog_ExpectPass() {
+    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
+    String dataPath = absolutePathOfTestFiles + "plot/plot-add.csv";
+    String logDataPath = absolutePathOfTestFiles + "plot/log/customOutcomeFile.txt";
+    String testTableId = "test11";
+    String tableSchemaETag = null;
+    SyncClient sc = null;
+    int retCode;
+
+    try {
+      sc = new SyncClient();
+      
+      String agg_url = aggInfo.getHostUrl();
+      agg_url = agg_url.substring(0, agg_url.length()-1);
+      
+      URL url = new URL(agg_url);
+      String host = url.getHost();
+      
+      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+
+      LoginTask lTask = new LoginTask(aggInfo, false);
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
+
+      JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+          testTableId, null, csvFile);
+      System.out.println("testUpdateTaskAdd: result is " + result);
+
+      if (result.containsKey(SyncClient.TABLE_ID_JSON)) {
+        String tableId = result.getString(SyncClient.TABLE_ID_JSON);
+        assertEquals(tableId, testTableId);
+        tableSchemaETag = result.getString(SyncClient.SCHEMA_ETAG_JSON);
+      }
+
+      // Get the table definition
+      JSONObject tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+          testTableId, tableSchemaETag);
+
+      // Make sure it is the same as the csv definition
+      assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
+
+      UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, logDataPath, false);
+      retCode = updateTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
+
+      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+          tableSchemaETag, null, null, null);
+
+      JSONArray rows = res.getJSONArray("rows");
+
+      assertEquals(rows.size(), 1);
+
+      JSONObject jsonRow = rows.getJSONObject(0);
+
+      // Now check that the row was created with the right rowId
+      assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
+      
+      // Check that the log file was created as expected
+      Scanner scanner = null;
+      File logFile = null;
+      try {
+        logFile = new File(logDataPath);
+        assertTrue(logFile.exists());
+        
+        scanner = new Scanner(logFile);
+        String line = scanner.nextLine();
+      
+        assertTrue(line.toLowerCase().contains("success"));
+      } finally {
+        if (scanner != null) {
+          scanner.close();
+        }
+        if (logFile.exists()) {
+          logFile.delete();
+        }
+      }
 
       // Now delete the table
       sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
