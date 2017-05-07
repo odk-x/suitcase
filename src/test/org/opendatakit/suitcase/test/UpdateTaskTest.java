@@ -628,85 +628,85 @@ public class UpdateTaskTest extends TestCase{
   }
   
   // This test must be run with admin privileges!
-  public void testUpdateTaskAddWithUsers_ExpectPass() {
-    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
-    String dataPath = absolutePathOfTestFiles + "plot/plot-add-user.csv";
-    String userPath = absolutePathOfTestFiles + "permissions/perm-file.csv";
-    String testTableId = "test7";
-    String tableSchemaETag = null;
-    SyncClient sc = null;
-    int retCode;
-
-    try {
-      sc = new SyncClient();
-      
-      String agg_url = aggInfo.getHostUrl();
-      agg_url = agg_url.substring(0, agg_url.length()-1);
-      
-      URL url = new URL(agg_url);
-      String host = url.getHost();
-      
-      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
-
-      LoginTask lTask = new LoginTask(aggInfo, false);
-      retCode = lTask.blockingExecute();
-      assertEquals(retCode, SuitcaseSwingWorker.okCode);
-      
-      // First check if this server allows permissions
-      int rspCode = sc.uploadPermissionCSV(agg_url, appId, userPath);
-      
-      // This server does not use user permissions
-      if (rspCode != 200) {
-        return;
-      }
-
-      JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
-          testTableId, null, csvFile);
-      System.out.println("testUpdateTaskAddWithUsers_ExpectPass: result is " + result);
-
-      if (result.containsKey(SyncClient.TABLE_ID_JSON)) {
-        String tableId = result.getString(SyncClient.TABLE_ID_JSON);
-        assertEquals(tableId, testTableId);
-        tableSchemaETag = result.getString(SyncClient.SCHEMA_ETAG_JSON);
-      }
-
-      // Get the table definition
-      JSONObject tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
-          testTableId, tableSchemaETag);
-
-      // Make sure it is the same as the csv definition
-      assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
-
-      UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, null, false);
-      retCode = updateTask.blockingExecute();
-      assertEquals(retCode, SuitcaseSwingWorker.okCode);
-
-      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
-          tableSchemaETag, null, null, null);
-
-      JSONArray rows = res.getJSONArray("rows");
-
-      assertEquals(rows.size(), 1);
-
-      JSONObject jsonRow = rows.getJSONObject(0);
-
-      // Now check that the row was created with the right rowId
-      assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
-
-      // Now delete the table
-      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
-          tableSchemaETag);
-
-      // Check that table no longer exists
-      JSONObject obj = sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
-      assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
-
-      sc.close();
-
-    } catch (Exception e) {
-      System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskAddWithUsers_ExpectPass");
-      e.printStackTrace();
-      fail();
-    }
-  }
+//  public void testUpdateTaskAddWithUsers_ExpectPass() {
+//    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
+//    String dataPath = absolutePathOfTestFiles + "plot/plot-add-user.csv";
+//    String userPath = absolutePathOfTestFiles + "permissions/perm-file.csv";
+//    String testTableId = "test7";
+//    String tableSchemaETag = null;
+//    SyncClient sc = null;
+//    int retCode;
+//
+//    try {
+//      sc = new SyncClient();
+//      
+//      String agg_url = aggInfo.getHostUrl();
+//      agg_url = agg_url.substring(0, agg_url.length()-1);
+//      
+//      URL url = new URL(agg_url);
+//      String host = url.getHost();
+//      
+//      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+//
+//      LoginTask lTask = new LoginTask(aggInfo, false);
+//      retCode = lTask.blockingExecute();
+//      assertEquals(retCode, SuitcaseSwingWorker.okCode);
+//      
+//      // First check if this server allows permissions
+//      int rspCode = sc.uploadPermissionCSV(agg_url, appId, userPath);
+//      
+//      // This server does not use user permissions
+//      if (rspCode != 200) {
+//        return;
+//      }
+//
+//      JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+//          testTableId, null, csvFile);
+//      System.out.println("testUpdateTaskAddWithUsers_ExpectPass: result is " + result);
+//
+//      if (result.containsKey(SyncClient.TABLE_ID_JSON)) {
+//        String tableId = result.getString(SyncClient.TABLE_ID_JSON);
+//        assertEquals(tableId, testTableId);
+//        tableSchemaETag = result.getString(SyncClient.SCHEMA_ETAG_JSON);
+//      }
+//
+//      // Get the table definition
+//      JSONObject tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+//          testTableId, tableSchemaETag);
+//
+//      // Make sure it is the same as the csv definition
+//      assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
+//
+//      UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, null, false);
+//      retCode = updateTask.blockingExecute();
+//      assertEquals(retCode, SuitcaseSwingWorker.okCode);
+//
+//      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+//          tableSchemaETag, null, null, null);
+//
+//      JSONArray rows = res.getJSONArray("rows");
+//
+//      assertEquals(rows.size(), 1);
+//
+//      JSONObject jsonRow = rows.getJSONObject(0);
+//
+//      // Now check that the row was created with the right rowId
+//      assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
+//
+//      // Now delete the table
+//      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+//          tableSchemaETag);
+//
+//      // Check that table no longer exists
+//      JSONObject obj = sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+//      assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
+//
+//      sc.close();
+//
+//    } catch (Exception e) {
+//      System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskAddWithUsers_ExpectPass");
+//      e.printStackTrace();
+//      fail();
+//    }
+//  }
 }

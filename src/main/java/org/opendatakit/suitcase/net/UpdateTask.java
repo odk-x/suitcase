@@ -114,8 +114,11 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
     String rowSavepointTimestamp = null;
     String rowSavepointCreator = null;
     String rowETag = null;
-    String rowFilterType = null;
-    String rowFilterValue = null;
+    String rowDefaultAccess = null;
+    String rowOwner = null;
+    String rowGroupReadOnly = null;
+    String rowGroupModify = null;
+    String rowGroupPrivileged = null;
 
     firstLine = csvReader.readNext();
     if (firstLine == null) {
@@ -131,10 +134,19 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
     rowSavepointCreator = firstLine[rowSavepointCreatorIdx];
 
     int lastCol = firstLine.length - 1;
-    int rowETagIdx = lastCol - 2, rowFilterTypeIdx = lastCol - 1, rowFilterValueIdx = lastCol;
+    int rowETagIdx = lastCol - 5;
+    int rowDefaultAccessIdx = lastCol - 4;
+    int rowOwnerIdx = lastCol - 3;
+    int rowGroupReadOnlyIdx = lastCol - 2;
+    int rowGroupModifyIdx = lastCol - 1;
+    int rowGroupPrivilegedIdx = lastCol;
+    
     rowETag = firstLine[rowETagIdx];
-    rowFilterType = firstLine[rowFilterTypeIdx];
-    rowFilterValue = firstLine[rowFilterValueIdx];
+    rowDefaultAccess = firstLine[rowDefaultAccessIdx];
+    rowOwner = firstLine[rowOwnerIdx];
+    rowGroupReadOnly = firstLine[rowGroupReadOnlyIdx];
+    rowGroupModify = firstLine[rowGroupModifyIdx];
+    rowGroupPrivileged = firstLine[rowGroupPrivilegedIdx];
 
     if ((!operation.equals(OP_STR)) || (!rowId.equals(SyncClient.ID_ROW_DEF))
         || (!rowFormId.equals(SyncClient.FORM_ID_ROW_DEF))
@@ -148,8 +160,11 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
     }
 
     if ((!rowETag.equals(SyncClient.ROW_ETAG_ROW_DEF))
-        || (!rowFilterType.equals(SyncClient.FILTER_TYPE_ROW_DEF))
-        || (!rowFilterValue.equals(SyncClient.FILTER_VALUE_ROW_DEF))) {
+        || (!rowDefaultAccess.equals(SyncClient.DEFAULT_ACCESS_ROW_DEF))
+        || (!rowOwner.equals(SyncClient.OWNER_ROW_DEF))
+        || (!rowGroupReadOnly.equals(SyncClient.GROUP_READ_ONLY_ROW_DEF))
+        || (!rowGroupModify.equals(SyncClient.GROUP_MODIFY_ROW_DEF))
+        || (!rowGroupPrivileged.equals(SyncClient.GROUP_PRIVILEGED_ROW_DEF))){
       throw new IllegalArgumentException(
           "The number of columns in CSV does not contain the last set of metadata columns");
     }
@@ -184,11 +199,14 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
       rowSavepointTimestamp = lineIn[rowSavepointTimestampIdx];
       rowSavepointCreator = lineIn[rowSavepointCreatorIdx];
       rowETag = lineIn[rowETagIdx];
-      rowFilterType = lineIn[rowFilterTypeIdx];
-      rowFilterValue = lineIn[rowFilterValueIdx];
+      rowDefaultAccess = lineIn[rowDefaultAccessIdx];
+      rowOwner = lineIn[rowOwnerIdx];
+      rowGroupReadOnly = lineIn[rowGroupReadOnlyIdx];
+      rowGroupModify = lineIn[rowGroupModifyIdx];
+      rowGroupPrivileged = lineIn[rowGroupPrivilegedIdx];
 
       ArrayList<DataKeyValue> dkvl = new ArrayList<DataKeyValue>();
-      for (int i = 7; i < lineIn.length - 3; i++) {
+      for (int i = 7; i < lineIn.length - 6; i++) {
         DataKeyValue dkv = new DataKeyValue(firstLine[i], lineIn[i]);
         dkvl.add(dkv);
       }
@@ -202,7 +220,7 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
       case FORCE_UPDATE_OP:
         Row forceUpdatedRow = Row.forUpdate(rowId, rowETag, rowFormId, rowLocale, rowSavepointType,
             rowSavepointTimestamp, rowSavepointCreator,
-            RowFilterScope.asRowFilter(rowFilterType, rowFilterValue), dkvl);
+            RowFilterScope.asRowFilter(rowDefaultAccess, rowOwner, rowGroupReadOnly, rowGroupModify, rowGroupPrivileged), dkvl);
         if (existingRowETag != null) {
           forceUpdatedRow.setRowETag(existingRowETag);
         }
@@ -213,7 +231,7 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
       case UPDATE_OP:
         Row updatedRow = Row.forUpdate(rowId, rowETag, rowFormId, rowLocale, rowSavepointType,
             rowSavepointTimestamp, rowSavepointCreator,
-            RowFilterScope.asRowFilter(rowFilterType, rowFilterValue), dkvl);
+            RowFilterScope.asRowFilter(rowDefaultAccess, rowOwner, rowGroupReadOnly, rowGroupModify, rowGroupPrivileged), dkvl);
         if (existingRowETag != null) {
           updatedRow.setRowETag(existingRowETag);
         }
@@ -224,7 +242,7 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
       case NEW_OP:
         Row insertedRow = Row.forInsert(rowId, rowFormId, rowLocale, rowSavepointType,
             rowSavepointTimestamp, rowSavepointCreator,
-            RowFilterScope.asRowFilter(rowFilterType, rowFilterValue), dkvl);
+            RowFilterScope.asRowFilter(rowDefaultAccess, rowOwner, rowGroupReadOnly, rowGroupModify, rowGroupPrivileged), dkvl);
         if (existingRowETag != null) {
           insertedRow.setRowETag(existingRowETag);
         }
@@ -235,7 +253,7 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
       case DELETE_OP:
         Row deletedRow = Row.forUpdate(rowId, rowETag, rowFormId, rowLocale, rowSavepointType,
             rowSavepointTimestamp, rowSavepointCreator,
-            RowFilterScope.asRowFilter(rowFilterType, rowFilterValue), dkvl);
+            RowFilterScope.asRowFilter(rowDefaultAccess, rowOwner, rowGroupReadOnly, rowGroupModify, rowGroupPrivileged), dkvl);
         if (existingRowETag != null) {
           deletedRow.setRowETag(existingRowETag);
         }
