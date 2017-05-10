@@ -33,11 +33,11 @@ public class DownloadTaskTest extends TestCase{
   
   @Override
   protected void setUp() throws MalformedURLException {
-    serverUrl = "";
+    serverUrl = "http://mezuridcswarm.southcentralus.cloudapp.azure.com:30000";
     appId = "default";
     absolutePathOfTestFiles = "testfiles/";
-    userName = "";
-    password = "";
+    userName = "tester@mezuricloud.com";
+    password = "testingTesting0123";
     version = "2";
     aggInfo = new AggregateInfo(serverUrl, appId, userName, password); 
   }

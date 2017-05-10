@@ -20,7 +20,47 @@ public class SuitcaseCLI {
     DOWNLOAD, UPLOAD, UPDATE, RESET, INFO, TABLE_OP, PERMISSION
   }
 
-  private static final String[] REQUIRED_ARGS = new String[]{"aggregateUrl", "tableId", "appId"};
+  private static final String DOWNLOAD_OP = "download";
+  private static final String UPLOAD_OP = "upload";
+  private static final String RESET_OP = "reset";
+  private static final String UPDATE_OP = "update";
+  private static final String TABLE_OP = "tableOp";
+  private static final String PERMISSION_OP = "permission";
+  
+  private static final String HELP_OPT = "help";
+  private static final String HELP_OPT_SHORT = "h";
+  
+  private static final String VERSION_OPT_SHORT = "v";
+  private static final String VERSION_OPT = "version";
+  
+  private static final String AGGREGATE_URL_OPT = "aggregateUrl";
+  private static final String APP_ID_OPT = "appId";
+  private static final String TABLE_ID_OPT = "tableId";
+  private static final String USERNAME_OPT = "username";
+  private static final String PASSWORD_OPT = "password";
+  
+  private static final String DATA_VERSION_OPT = "dataVersion";
+  
+  private static final String ATTACHMENT_OPT = "attachment";
+  private static final String ATTACHMENT_OPT_SHORT = "a";
+  
+  private static final String SCAN_OPT = "scan";
+  private static final String SCAN_OPT_SHORT = "s";
+  
+  private static final String EXTRA_OPT = "extra";
+  private static final String EXTRA_OPT_SHORT = "e";
+  
+  private static final String PATH_OPT = "path";
+  private static final String UPLOAD_OP_OPT = "uploadOp";
+  private static final String RELATIVE_SERVER_PATH_OPT = "relativeServerPath";
+  
+  private static final String FORCE_OPT = "force";
+  private static final String FORCE_OPT_SHORT = "f";
+
+  private static final String UPDATE_LOG_PATH_OPT = "updateLogPath";
+
+
+  private static final String[] REQUIRED_ARGS = new String[]{"aggregateUrl", "appId"};
 
   private String[] args;
 
@@ -30,8 +70,10 @@ public class SuitcaseCLI {
   private String tableId;
   private String version;
   private String path;
-  private String updateLogPath = null;
+  private String relativeServerPath;
+  private String updateLogPath;
   private String tableOp;
+  private String uploadOp;
   private boolean downloadAttachment;
   private boolean scanFormatting;
   private boolean extraMetadata;
@@ -79,7 +121,7 @@ public class SuitcaseCLI {
         DialogUtils.showError(error, false);
         retCode = PARAM_ERROR_CODE;
       } else {
-        retCode = new UploadTask(aggInfo, path, version, false).blockingExecute();
+        retCode = new UploadTask(aggInfo, path, version, false, uploadOp, relativeServerPath).blockingExecute();
       }
       break;
     case RESET:
@@ -136,48 +178,55 @@ public class SuitcaseCLI {
 
     //operations
     OptionGroup operation = new OptionGroup();
-    operation.addOption(new Option("download", false, "Download csv"));
-    operation.addOption(new Option("upload", false, "Upload csv"));
-    operation.addOption(new Option("reset", false, "Reset server"));
-    operation.addOption(new Option("update", false, "Update tableId using csv specified by path"));
-    operation.addOption(new Option("tableop", true, "Create, delete, or clear tableId using csv specified by path"));
-    operation.addOption(new Option("permission", false, "Upload user permissions using csv specified by path"));
-    operation.addOption(new Option("h", "help", false, "print this message"));
-    operation.addOption(new Option("v", "version", false, "prints version information"));
+    operation.addOption(new Option(DOWNLOAD_OP, false, "Download csv"));
+    operation.addOption(new Option(UPLOAD_OP, false, "Upload one file or all files in directory"));
+    operation.addOption(new Option(RESET_OP, false, "Reset server"));
+    operation.addOption(new Option(UPDATE_OP, false, "Update tableId using csv specified by path"));
+    operation.addOption(new Option(TABLE_OP, true, "Create, delete, or clear tableId using csv specified by path"));
+    operation.addOption(new Option(PERMISSION_OP, false, "Upload user permissions using csv specified by path"));
+    operation.addOption(new Option(HELP_OPT_SHORT, HELP_OPT, false, "print this message"));
+    operation.addOption(new Option(VERSION_OPT_SHORT, VERSION_OPT, false, "prints version information"));
     operation.setRequired(true);
     opt.addOptionGroup(operation);
 
     //aggregate related
-    Option aggUrl = new Option("aggregateUrl", true, "url to Aggregate server");
+    Option aggUrl = new Option(AGGREGATE_URL_OPT, true, "url to Aggregate server");
     opt.addOption(aggUrl);
 
-    Option appId = new Option("appId", true, "app id");
+    Option appId = new Option(APP_ID_OPT, true, "app id");
     opt.addOption(appId);
 
-    Option tableId = new Option("tableId", true, "table id");
+    Option tableId = new Option(TABLE_ID_OPT, true, "table id");
     opt.addOption(tableId);
 
-    opt.addOption("username", true, "username"); // not required
-    opt.addOption("password", true, "password"); // not required
+    opt.addOption(USERNAME_OPT, true, "username"); // not required
+    opt.addOption(PASSWORD_OPT, true, "password"); // not required
 
     // not required for download, check later
-    opt.addOption("dataVersion", true, "version of data, usually 1 or 2");
+    opt.addOption(DATA_VERSION_OPT, true, "version of data, usually 1 or 2");
     
 
     //csv options
-    opt.addOption("a", "attachment", false, "download attachments");
-    opt.addOption("s", "scan", false, "apply Scan formatting");
-    opt.addOption("e", "extra", false, "add extra metadata columns");
+    opt.addOption(ATTACHMENT_OPT_SHORT, ATTACHMENT_OPT, false, "download attachments");
+    opt.addOption(SCAN_OPT_SHORT, SCAN_OPT, false, "apply Scan formatting");
+    opt.addOption(EXTRA_OPT_SHORT, EXTRA_OPT, false, "add extra metadata columns");
 
-    opt.addOption("path", true, "Specify a custom path to output csv or to upload from. "
+    opt.addOption(PATH_OPT, true, "Specify a custom path to output csv or to upload from. "
                               + "Default csv directory is ./Download/ "
                               + "Default upload directory is ./Upload/ ");
+    
+    opt.addOption(UPLOAD_OP_OPT, false, "Specify the uploadop to either FILE or RESET_APP."
+                                   + "This option must be used with upload option."
+                                   + "RESET_APP is the default option and will push all files to server"
+                                   + "FILE is used to push one file to relativeServerPath");
+    
+    opt.addOption(RELATIVE_SERVER_PATH_OPT, true, "Specify the relative server path to push file to");
 
     //UI
-    opt.addOption("f", "force", false, "do not prompt, overwrite existing files");
+    opt.addOption(FORCE_OPT_SHORT, FORCE_OPT, false, "do not prompt, overwrite existing files");
     
     //Update Log
-    opt.addOption("updateLogPath", true, "Specify a custom path to create update log file. "
+    opt.addOption(UPDATE_LOG_PATH_OPT, true, "Specify a custom path to create update log file. "
         + "Default directory is ./Update");
 
     return opt;
@@ -198,34 +247,34 @@ public class SuitcaseCLI {
       CommandLine line = parser.parse(options, args);
 
       //handle -h and --help
-      if (line.hasOption('h')) {
+      if (line.hasOption(HELP_OPT_SHORT)) {
         HelpFormatter hf = new HelpFormatter();
         hf.printHelp("suitcase", options);
         return Operation.INFO;
       }
 
       //handle -v
-      if (line.hasOption('v')) {
+      if (line.hasOption(VERSION_OPT_SHORT)) {
         System.out.println("ODK org.opendatakit.suitcase.Suitcase 2.0");
         return Operation.INFO;
       }
 
-      if (line.hasOption("upload")) {
+      if (line.hasOption(UPLOAD_OP)) {
         operation = Operation.UPLOAD;
-      } else if (line.hasOption("reset")) {
+      } else if (line.hasOption(RESET_OP)) {
         operation = Operation.RESET;
-      } else if (line.hasOption("update")){
+      } else if (line.hasOption(UPDATE_OP)){
         operation = Operation.UPDATE;
-      } else if (line.hasOption("tableop")) {
+      } else if (line.hasOption(TABLE_OP)) {
         operation = Operation.TABLE_OP;
-      } else if (line.hasOption("permission")) {
+      } else if (line.hasOption(PERMISSION_OP)) {
         operation = Operation.PERMISSION;
       }
       else {
         operation = Operation.DOWNLOAD;
       }
 
-      if (operation != Operation.DOWNLOAD && !line.hasOption("dataVersion")) {
+      if (operation != Operation.DOWNLOAD && !line.hasOption(DATA_VERSION_OPT)) {
         throw new ParseException("Data version is required for upload, update, tableop, permission and reset");
       }
 
@@ -236,16 +285,21 @@ public class SuitcaseCLI {
       }
 
       //Aggregate related
-      String username = line.getOptionValue("username", "");
-      String password = line.getOptionValue("password", "");
-      tableOp = line.getOptionValue("tableop", null);
+      String username = line.getOptionValue(USERNAME_OPT, "");
+      String password = line.getOptionValue(PASSWORD_OPT, "");
+      tableOp = line.getOptionValue(TABLE_OP, null);
+      
+      uploadOp = line.getOptionValue(UPLOAD_OP_OPT);
+      
+      relativeServerPath = line.getOptionValue(RELATIVE_SERVER_PATH_OPT);
 
       // validate fields before creating AggregateInfo object
       String error = FieldsValidatorUtils.checkLoginFields(
-          line.getOptionValue("aggregateUrl"), line.getOptionValue("appId"),
+          line.getOptionValue(AGGREGATE_URL_OPT), line.getOptionValue(APP_ID_OPT),
           username, password,
           username.isEmpty() && password.isEmpty()
       );
+      
       if (error != null) {
         DialogUtils.showError(error, false);
         // return early when validation fails
@@ -253,28 +307,28 @@ public class SuitcaseCLI {
       }
 
       aggInfo = new AggregateInfo(
-          line.getOptionValue("aggregateUrl"), line.getOptionValue("appId"),
+          line.getOptionValue(AGGREGATE_URL_OPT), line.getOptionValue(APP_ID_OPT),
           username, password
       );
 
       new LoginTask(aggInfo, false).blockingExecute();
 
-      tableId = line.getOptionValue("tableId");
+      tableId = line.getOptionValue(TABLE_ID_OPT);
 
       if (operation == Operation.DOWNLOAD) {
         //CSV options
-        downloadAttachment = line.hasOption("a");
-        scanFormatting = line.hasOption("s");
-        extraMetadata = line.hasOption("e");
-      }
+        downloadAttachment = line.hasOption(ATTACHMENT_OPT_SHORT);
+        scanFormatting = line.hasOption(SCAN_OPT_SHORT);
+        extraMetadata = line.hasOption(EXTRA_OPT_SHORT);
+      } 
 
-      path = line.getOptionValue("path", FileUtils.getDefaultSavePath().toString());
+      path = line.getOptionValue(PATH_OPT, FileUtils.getDefaultSavePath().toString());
       
-      updateLogPath = line.getOptionValue("updateLogPath");
+      updateLogPath = line.getOptionValue(UPDATE_LOG_PATH_OPT);
 
-      version = line.getOptionValue("dataVersion");
+      version = line.getOptionValue(DATA_VERSION_OPT);
 
-      force = line.hasOption("f");
+      force = line.hasOption(FORCE_OPT_SHORT);
     } catch (ParseException e) {
       e.printStackTrace();
     } catch (MalformedURLException e) {
