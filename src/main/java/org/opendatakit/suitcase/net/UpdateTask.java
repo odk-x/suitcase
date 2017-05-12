@@ -320,11 +320,9 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
               outcome.getLocale(), outcome.getSavepointType(), v_savepoint_timestamp, 
               outcome.getSavepointCreator(), outcome.getRowFilterScope(), outcome.getValues());
           
-          if (outcome.getOutcome() != OutcomeType.IN_CONFLICT) {
+          if (outcome.getOutcome() != OutcomeType.SUCCESS) {
             forceUpdatedRowArrayList2.add(updatedRow);
-          } else if (outcome.getOutcome() != OutcomeType.SUCCESS) {
-            forceUpdatedRowArrayList2.add(updatedRow);
-          }
+          } 
         }
         
         if (forceUpdatedRowArrayList2.size() > 0) {
