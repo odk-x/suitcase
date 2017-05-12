@@ -39,12 +39,12 @@ public class UploadTaskTest extends TestCase{
     //absolutePathOfTestFiles = System.getProperty("test.absolutePathOfTestFiles");
     //batchSize = Integer.valueOf(System.getProperty("test.batchSize"));
     
-    serverUrl = "http://mezuridcswarm.southcentralus.cloudapp.azure.com:30000";
+    serverUrl = "";
     appId = "default";
     absolutePathOfTestFiles = "testfiles/";
     batchSize = 1000;
-    username = "tester@mezuricloud.com";
-    password = "testingTesting0123";
+    username = "";
+    password = "";
     URL url = new URL(serverUrl);
     host = url.getHost();
     version = "2";

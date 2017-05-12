@@ -1,2 +1,2 @@
-mvn install:install-file -Dfile=aggregate-rest-interface-2017-05-07.jar -DgroupId=org.opendatakit -DartifactId=aggregate-rest-interface -Dversion=2017-05-07 -Dpackaging=jar -DupdateReleaseInfo=true
+mvn install:install-file -Dfile=aggregate-rest-interface-2017-05-10.jar -DgroupId=org.opendatakit -DartifactId=aggregate-rest-interface -Dversion=2017-05-10 -Dpackaging=jar -DupdateReleaseInfo=true
 mvn install:install-file -Dfile=sync-client-1.0-SNAPSHOT-jar-with-dependencies.jar -DgroupId=org.opendatakit -DartifactId=sync-client -Dversion=1.0-SNAPSHOT -Dpackaging=jar -DupdateReleaseInfo=true

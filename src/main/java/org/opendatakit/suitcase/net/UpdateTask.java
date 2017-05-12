@@ -161,7 +161,7 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
 
     if ((!rowETag.equals(SyncClient.ROW_ETAG_ROW_DEF))
         || (!rowDefaultAccess.equals(SyncClient.DEFAULT_ACCESS_ROW_DEF))
-        || (!rowOwner.equals(SyncClient.OWNER_ROW_DEF))
+        || (!rowOwner.equals(SyncClient.ROW_OWNER_ROW_DEF))
         || (!rowGroupReadOnly.equals(SyncClient.GROUP_READ_ONLY_ROW_DEF))
         || (!rowGroupModify.equals(SyncClient.GROUP_MODIFY_ROW_DEF))
         || (!rowGroupPrivileged.equals(SyncClient.GROUP_PRIVILEGED_ROW_DEF))){
