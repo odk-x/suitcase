@@ -20,6 +20,7 @@ import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.aggregate.odktables.rest.RFC4180CsvReader;
+import org.opendatakit.aggregate.odktables.rest.TableConstants;
 import org.opendatakit.aggregate.odktables.rest.entity.DataKeyValue;
 import org.opendatakit.aggregate.odktables.rest.entity.Row;
 import org.opendatakit.aggregate.odktables.rest.entity.RowFilterScope;
@@ -314,8 +315,15 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
         ArrayList<Row> forceUpdatedRowArrayList2 = new ArrayList<Row>();
         for (int i = 0; i < outcomeList.size(); i++) {
           RowOutcome outcome = outcomeList.get(i);
-          if (outcome.getOutcome() != OutcomeType.SUCCESS) {
-            forceUpdatedRowArrayList2.add(outcome);
+          String v_savepoint_timestamp = TableConstants.nanoSecondsFromMillis(System.currentTimeMillis());
+          Row updatedRow = Row.forUpdate(outcome.getRowId(), outcome.getRowETag(), outcome.getFormId(), 
+              outcome.getLocale(), outcome.getSavepointType(), v_savepoint_timestamp, 
+              outcome.getSavepointCreator(), outcome.getRowFilterScope(), outcome.getValues());
+          
+          if (outcome.getOutcome() != OutcomeType.IN_CONFLICT) {
+            forceUpdatedRowArrayList2.add(updatedRow);
+          } else if (outcome.getOutcome() != OutcomeType.SUCCESS) {
+            forceUpdatedRowArrayList2.add(updatedRow);
           }
         }
         
