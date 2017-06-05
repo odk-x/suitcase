@@ -91,12 +91,12 @@ public class ODKCsv implements Iterable<String[]> {
     frontList.add("_last_update_user");
     METADATA_POSITION.put(Position.FRONT, frontList);
 
-    endList.add(ROW_ETAG_ROW_DEF);
     endList.add(DEFAULT_ACCESS_ROW_DEF);
-    endList.add(ROW_OWNER_ROW_DEF);
-    endList.add(GROUP_READ_ONLY_ROW_DEF);
     endList.add(GROUP_MODIFY_ROW_DEF);
     endList.add(GROUP_PRIVILEGED_ROW_DEF);
+    endList.add(GROUP_READ_ONLY_ROW_DEF);
+    endList.add(ROW_ETAG_ROW_DEF);
+    endList.add(ROW_OWNER_ROW_DEF);
     
     METADATA_POSITION.put(Position.END, endList);
   }

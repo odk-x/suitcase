@@ -135,12 +135,12 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
     rowSavepointCreator = firstLine[rowSavepointCreatorIdx];
 
     int lastCol = firstLine.length - 1;
-    int rowETagIdx = lastCol - 5;
-    int rowDefaultAccessIdx = lastCol - 4;
-    int rowOwnerIdx = lastCol - 3;
+    int rowDefaultAccessIdx = lastCol - 5;
+    int rowGroupModifyIdx = lastCol - 4;
+    int rowGroupPrivilegedIdx = lastCol - 3;
     int rowGroupReadOnlyIdx = lastCol - 2;
-    int rowGroupModifyIdx = lastCol - 1;
-    int rowGroupPrivilegedIdx = lastCol;
+    int rowETagIdx = lastCol - 1;
+    int rowOwnerIdx = lastCol;
     
     rowETag = firstLine[rowETagIdx];
     rowDefaultAccess = firstLine[rowDefaultAccessIdx];
