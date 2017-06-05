@@ -372,4 +372,109 @@ public class DownloadTaskTest extends TestCase{
       fail();
     }
   }
+  
+  public void testDownloadTaskAddWithNonEmptyTableFromGeneratedCSVAndGroups_ExpectPass() {
+    String csvFile = absolutePathOfTestFiles + "geotagger/definition.csv";
+    String dataPath = absolutePathOfTestFiles + "geotagger/geotagger-groups.csv";
+    String savePath = this.absolutePathOfTestFiles + "downloadedData/geotagger-output4";
+    String testTableId = "test4";
+    String fileName = "link_unformatted.csv";
+    String tableSchemaETag = null;
+    SyncClient sc = null;
+    int retCode;
+
+    try {
+      sc = new SyncClient();
+      
+      String agg_url = aggInfo.getHostUrl();
+      agg_url = agg_url.substring(0, agg_url.length()-1);
+      
+      URL url = new URL(agg_url);
+      String host = url.getHost();
+      
+      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+
+      LoginTask lTask = new LoginTask(aggInfo, false);
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
+
+      JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+          testTableId, null, csvFile);
+      System.out.println("testDownloadTaskAddWithNonEmptyTableFromGeneratedCSVAndGroups_ExpectPass: result is " + result);
+
+      if (result.containsKey(SyncClient.TABLE_ID_JSON)) {
+        String tableId = result.getString(SyncClient.TABLE_ID_JSON);
+        assertEquals(tableId, testTableId);
+        tableSchemaETag = result.getString(SyncClient.SCHEMA_ETAG_JSON);
+      }
+
+      // Get the table definition
+      JSONObject tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+          testTableId, tableSchemaETag);
+
+      // Make sure it is the same as the csv definition
+      assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
+      
+      UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, null, false);
+      retCode = updateTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
+
+      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+          tableSchemaETag, null, null, null);
+
+      JSONArray rows = res.getJSONArray("rows");
+
+      assertEquals(rows.size(), 3);
+
+      assertEquals(TestUtilities.verifyServerRowsMatchCSV(rows, dataPath), true);
+      
+      // Check the entire file path
+      String fullSavePath = savePath + File.separator + appId + File.separator + 
+          testTableId + File.separator + fileName;
+
+      // First delete any existing file
+      File f = new File(fullSavePath);
+      if(f.exists()) {
+        f.delete();
+      }
+      
+      AttachmentManager attMgr = new AttachmentManager(aggInfo, testTableId, savePath);
+      ODKCsv csv = new ODKCsv(attMgr, aggInfo, testTableId);
+      CsvConfig csvConfig = new CsvConfig(false, false,false);
+      
+      DownloadTask dTask = new DownloadTask(aggInfo, csv, csvConfig, savePath, false);
+      retCode = dTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
+      
+      f = new File(savePath);
+      assertTrue(f.exists());
+      
+      File fullFilePath = new File(fullSavePath);
+      assertTrue(fullFilePath.exists());
+      
+      res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+          tableSchemaETag, null, null, null);
+
+      rows = res.getJSONArray("rows");
+
+      assertEquals(rows.size(), 3);
+      
+      assertEquals(TestUtilities.verifyServerRowsMatchCSV(rows, fullSavePath), true);
+      
+      // Now delete the table
+      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+          tableSchemaETag);
+
+      // Check that table no longer exists
+      JSONObject obj = sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
+
+      sc.close();
+
+    } catch (Exception e) {
+      System.out.println("DownloadTaskTest: Exception thrown in testDownloadTaskAddWithNonEmptyTable_ExpectPass");
+      e.printStackTrace();
+      fail();
+    }
+  }
 }

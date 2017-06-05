@@ -114,11 +114,11 @@ public class ODKCsv implements Iterable<String[]> {
     METADATA_JSON_NAME.put(SAVEPOINT_TIMESTAMP_ROW_DEF, SAVEPOINT_TIMESTAMP_JSON);
     METADATA_JSON_NAME.put(SAVEPOINT_CREATOR_ROW_DEF, SAVEPOINT_CREATOR_JSON);
     METADATA_JSON_NAME.put(ROW_ETAG_ROW_DEF, ROW_ETAG_JSON);
-    METADATA_JSON_NAME.put(DEFAULT_ACCESS_ROW_DEF, DEFAULT_ACCESS_JSON);
-    METADATA_JSON_NAME.put(ROW_OWNER_ROW_DEF, ROW_OWNER_JSON);
-    METADATA_JSON_NAME.put(GROUP_READ_ONLY_ROW_DEF, GROUP_READ_ONLY_JSON);
-    METADATA_JSON_NAME.put(GROUP_MODIFY_ROW_DEF, GROUP_MODIFY_JSON);
-    METADATA_JSON_NAME.put(GROUP_PRIVILEGED_ROW_DEF, GROUP_PRIVILEGED_JSON);
+    METADATA_JSON_NAME.put(DEFAULT_ACCESS_ROW_DEF, FILTER_SCOPE_JSON +":"+ DEFAULT_ACCESS_JSON);
+    METADATA_JSON_NAME.put(ROW_OWNER_ROW_DEF, FILTER_SCOPE_JSON +":"+ ROW_OWNER_JSON);
+    METADATA_JSON_NAME.put(GROUP_READ_ONLY_ROW_DEF, FILTER_SCOPE_JSON +":"+ GROUP_READ_ONLY_JSON);
+    METADATA_JSON_NAME.put(GROUP_MODIFY_ROW_DEF, FILTER_SCOPE_JSON +":"+ GROUP_MODIFY_JSON);
+    METADATA_JSON_NAME.put(GROUP_PRIVILEGED_ROW_DEF, FILTER_SCOPE_JSON +":"+ GROUP_PRIVILEGED_JSON);
     METADATA_JSON_NAME.put("_create_user", "createUser");
     METADATA_JSON_NAME.put("_last_update_user", "lastUpdateUser");
   }
@@ -512,7 +512,12 @@ public class ODKCsv implements Iterable<String[]> {
         }
         break;
       case LINK:
-        data[i - offset] = makeLink(value, row, config.isDownloadAttachment());
+        if (config.isScanFormatting()) {
+          data[i - offset] = makeLink(value, row, config.isDownloadAttachment());
+        } else {
+          data[i - offset] = value;
+        }
+        
         break;
       case SCAN_RAW:
         if (config.isScanFormatting()) {
