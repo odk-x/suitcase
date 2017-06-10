@@ -62,10 +62,14 @@ public class UploadTask extends SuitcaseSwingWorker<Void> {
       return null;
     }
 
-    String op = operation.toUpperCase();
-    if (op == null) {
-      op = RESET_APP_OP;
+    String op = RESET_APP_OP;
+    if (operation != null) {
+      op = operation.toUpperCase();
+      if (op == null) {
+        op = RESET_APP_OP;
+      }
     }
+
     
     switch(op) {
     case FILE_OP:
@@ -80,6 +84,7 @@ public class UploadTask extends SuitcaseSwingWorker<Void> {
       break;
    
     default:
+      System.out.println("You have provided an invalid uploadOp to the UploadTask");
       return null;
     }
     
