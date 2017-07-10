@@ -70,6 +70,8 @@ public class ODKCsv implements Iterable<String[]> {
   private enum Position {
     FRONT, END
   }
+  
+  private static final String NULL_STRING_UPPER = "NULL";
 
   //Some metadata fields are placed before row data, some are placed after
   private static final Map<Position, List<String>> METADATA_POSITION;
@@ -89,9 +91,13 @@ public class ODKCsv implements Iterable<String[]> {
     frontList.add("_last_update_user");
     METADATA_POSITION.put(Position.FRONT, frontList);
 
+    endList.add(DEFAULT_ACCESS_ROW_DEF);
+    endList.add(GROUP_MODIFY_ROW_DEF);
+    endList.add(GROUP_PRIVILEGED_ROW_DEF);
+    endList.add(GROUP_READ_ONLY_ROW_DEF);
     endList.add(ROW_ETAG_ROW_DEF);
-    endList.add(FILTER_TYPE_ROW_DEF);
-    endList.add(FILTER_VALUE_ROW_DEF);
+    endList.add(ROW_OWNER_ROW_DEF);
+    
     METADATA_POSITION.put(Position.END, endList);
   }
 
@@ -108,13 +114,15 @@ public class ODKCsv implements Iterable<String[]> {
     METADATA_JSON_NAME.put(SAVEPOINT_TIMESTAMP_ROW_DEF, SAVEPOINT_TIMESTAMP_JSON);
     METADATA_JSON_NAME.put(SAVEPOINT_CREATOR_ROW_DEF, SAVEPOINT_CREATOR_JSON);
     METADATA_JSON_NAME.put(ROW_ETAG_ROW_DEF, ROW_ETAG_JSON);
-    METADATA_JSON_NAME.put(FILTER_TYPE_ROW_DEF, FILTER_SCOPE_JSON + ": type");
-    METADATA_JSON_NAME.put(FILTER_VALUE_ROW_DEF, FILTER_SCOPE_JSON + ": value");
+    METADATA_JSON_NAME.put(DEFAULT_ACCESS_ROW_DEF, FILTER_SCOPE_JSON +":"+ DEFAULT_ACCESS_JSON);
+    METADATA_JSON_NAME.put(ROW_OWNER_ROW_DEF, FILTER_SCOPE_JSON +":"+ ROW_OWNER_JSON);
+    METADATA_JSON_NAME.put(GROUP_READ_ONLY_ROW_DEF, FILTER_SCOPE_JSON +":"+ GROUP_READ_ONLY_JSON);
+    METADATA_JSON_NAME.put(GROUP_MODIFY_ROW_DEF, FILTER_SCOPE_JSON +":"+ GROUP_MODIFY_JSON);
+    METADATA_JSON_NAME.put(GROUP_PRIVILEGED_ROW_DEF, FILTER_SCOPE_JSON +":"+ GROUP_PRIVILEGED_JSON);
     METADATA_JSON_NAME.put("_create_user", "createUser");
     METADATA_JSON_NAME.put("_last_update_user", "lastUpdateUser");
   }
 
-  private static final String NULL = "null";
   private static final String CONTENT_TYPE_ELEMENT_NAME = "contentType";
   private static final String URI_FRAG_ELEMENT_NAME = "uriFragment";
   private static final String SCAN_RAW_PREFIX = "raw_";
@@ -431,15 +439,28 @@ public class ODKCsv implements Iterable<String[]> {
       String jsonName = METADATA_JSON_NAME.get(colName);
 
       if (jsonName.startsWith(FILTER_SCOPE_JSON)) {
-        metadata
-            .add(row.getJSONObject(FILTER_SCOPE_JSON).optString(jsonName.split(":")[1].trim(), NULL));
+        String value = row.getJSONObject(FILTER_SCOPE_JSON).optString(jsonName.split(":")[1].trim());
+        metadata.add(checkForNull(value));
       } else if (config.isExtraMetadata() || (this.colAction.get(colName) != Action.EXTRA)) {
-        metadata.add(row.optString(jsonName, NULL));
+        String value = row.optString(jsonName);
+        metadata.add(checkForNull(value));
       }
       //everything else ignored
     }
 
     return metadata.toArray(new String[] {});
+  }
+  
+  private String checkForNull(String val) {
+    String value = val;
+    if (val != null && val.length() > 0) {
+      String valToUpper = value.toUpperCase();
+      if (valToUpper.equals(NULL_STRING_UPPER)) {
+        value = null;
+      }
+    }
+
+    return value;
   }
 
   /**
@@ -476,7 +497,7 @@ public class ODKCsv implements Iterable<String[]> {
     for (int i = 0; i < this.completeDataHeader.length; i++) {
       String colName = this.completeDataHeader[i];
       Action act = this.colAction.get(colName);
-      String value = columns.getJSONObject(i).optString("value", NULL);
+      String value = checkForNull(columns.getJSONObject(i).optString("value"));
 
       switch (act) {
       case KEEP:
@@ -491,7 +512,12 @@ public class ODKCsv implements Iterable<String[]> {
         }
         break;
       case LINK:
-        data[i - offset] = makeLink(value, row, config.isDownloadAttachment());
+        if (config.isScanFormatting()) {
+          data[i - offset] = makeLink(value, row, config.isDownloadAttachment());
+        } else {
+          data[i - offset] = value;
+        }
+        
         break;
       case SCAN_RAW:
         if (config.isScanFormatting()) {
