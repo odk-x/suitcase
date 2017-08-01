@@ -98,6 +98,11 @@ public class SyncWrapper {
       //ignore
     }
   }
+  
+  public int putFile(String dataPath, String relativePathOnServer, String version) throws IOException {
+    return sc.uploadFile(aggInfo.getServerUrl(), aggInfo.getAppId(), 
+        dataPath, relativePathOnServer, version);
+  }
 
   public int deleteFile(String filename, String version) throws IOException {
     return sc.deleteFile(aggInfo.getServerUrl(), aggInfo.getAppId(), filename, version);

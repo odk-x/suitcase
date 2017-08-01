@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width" />
+        <link href="css/demo-chooser.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="../framework/libs/jquery.1.10.2.js"></script>
+        <script type="text/javascript" src="../framework/tables/js/control.js"></script>
+    </head>
+
+    <body>
+        <table id="content-table">
+          <tr>
+            <td valign="top">
+              <div class="description-text" id="description">Geotagger</div>
+            </td>
+          </tr>
+          <tr>
+            <td valign="bottom">
+              <button class="btn btn-primary btn-block btn-launch" id="launch-button">
+                Launch Demo
+              </button>
+            </td>
+          </tr>
+        </table>
+        <script type="text/javascript">
+			var fileUri = control.getFileAsUrl(
+					'assets/img/spaceNeedle_CCLicense_goCardUSA.jpg');
+		    $('body').css('background-image', 'url(' + fileUri + ')');
+			$('#launch-button').on('click',	function() {
+                    // Note we're relying on geotagger's map list view
+					// to be set, and the map view to be the default view.
+					// These are done in tables/geotagger/properties.csv
+                    control.openTable(
+                        'geotagger',
+                        null,
+                        null);
+            });
+        </script>
+    </body>
+</html>

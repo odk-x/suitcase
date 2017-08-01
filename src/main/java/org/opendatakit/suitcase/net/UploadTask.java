@@ -16,16 +16,25 @@ public class UploadTask extends SuitcaseSwingWorker<Void> {
   private static final int PUSH_FINISH_WAIT = 5000;
 
   private AggregateInfo aggInfo;
+  private String operation;
   private String dataPath;
+  private String relativeServerPath;
   private String version;
   private boolean isGUI;
+  
+  public final static String FILE_OP = "FILE";
+  public final static String RESET_APP_OP = "RESET_APP";
 
-  public UploadTask(AggregateInfo aggInfo, String dataPath, String version, boolean isGUI) {
+  public UploadTask(AggregateInfo aggInfo, String dataPath, String version, boolean isGUI, 
+      String operation, String relativeServerPath) {
+    
     super();
 
     this.aggInfo = aggInfo;
     this.dataPath = dataPath;
     this.version = version;
+    this.operation = operation;
+    this.relativeServerPath = relativeServerPath;
     this.isGUI = isGUI;
   }
 
@@ -35,7 +44,50 @@ public class UploadTask extends SuitcaseSwingWorker<Void> {
     setString(IN_PROGRESS_STRING);
 
     SyncWrapper syncWrapper = SyncWrapper.getInstance();
-    syncWrapper.pushAllData(dataPath, version);
+    syncWrapper.updateTableList();
+    
+    String className = this.getClass().getSimpleName();
+    if (aggInfo == null) {
+      System.out.println("aggInfo must be specified " + className);
+      return null;
+    }
+    
+    if (dataPath == null || dataPath.length() == 0) {
+      System.out.println("dataPath must be specified for " + className);
+      return null;
+    }
+    
+    if (version == null || version.length() == 0) {
+      System.out.println("version must be specified for " + className);
+      return null;
+    }
+
+    String op = RESET_APP_OP;
+    if (operation != null) {
+      op = operation.toUpperCase();
+      if (op == null) {
+        op = RESET_APP_OP;
+      }
+    }
+
+    
+    switch(op) {
+    case FILE_OP:
+      if (relativeServerPath == null || relativeServerPath.length() == 0) {
+        System.out.println("relativeServerPath must be specified for " + FILE_OP + " op in " + className);
+      }
+      syncWrapper.putFile(dataPath, relativeServerPath, version);
+      break;
+      
+    case RESET_APP_OP:
+      syncWrapper.pushAllData(dataPath, version);
+      break;
+   
+    default:
+      System.out.println("You have provided an invalid uploadOp to the UploadTask");
+      return null;
+    }
+    
 
     Thread.sleep(PUSH_FINISH_WAIT);
     syncWrapper.updateTableList();

@@ -109,7 +109,8 @@ public class AttachmentManager {
    */
   public void downloadAttachments(String rowId, boolean scanRawJsonOnly) throws IOException {
     if (!this.allAttachments.containsKey(rowId)) {
-      throw new IllegalStateException("Row manifest has not been downloaded");
+      // TODO: add warning 
+      return;
     }
 
     if (this.attachmentManifests.containsKey(rowId)) {
