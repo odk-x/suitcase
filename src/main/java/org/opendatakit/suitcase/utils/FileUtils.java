@@ -1,6 +1,6 @@
 package org.opendatakit.suitcase.utils;
 
-import org.opendatakit.suitcase.model.AggregateInfo;
+import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.opendatakit.suitcase.model.CsvConfig;
 
 import java.io.IOException;
@@ -28,37 +28,37 @@ public class FileUtils {
   /**
    * Checks whether a table is downloaded
    *
-   * @param aggInfo
+   * @param cloudEndpointInfo
    * @param savePath
    * @return
    */
-  public static boolean isDownloaded(AggregateInfo aggInfo, String tableId, String savePath) {
-    return Files.exists(getBasePath(aggInfo, tableId, savePath));
+  public static boolean isDownloaded(CloudEndpointInfo cloudEndpointInfo, String tableId, String savePath) {
+    return Files.exists(getBasePath(cloudEndpointInfo, tableId, savePath));
   }
 
   /**
    * Checks whether a CSV of a table is downloaded
    *
-   * @param aggInfo
+   * @param cloudEndpointInfo
    * @param savePath
    * @return
    */
-  public static boolean isDownloaded(AggregateInfo aggInfo, String tableId, CsvConfig config,
-      String savePath) {
-    return Files.exists(getCSVPath(aggInfo, tableId, config, savePath));
+  public static boolean isDownloaded(CloudEndpointInfo cloudEndpointInfo, String tableId, CsvConfig config,
+                                     String savePath) {
+    return Files.exists(getCSVPath(cloudEndpointInfo, tableId, config, savePath));
   }
 
   /**
    * Finds the Path to a csv file using server info, table id, csv config and save path
    *
-   * @param aggInfo
+   * @param cloudEndpointInfo
    * @param config
    * @param savePath
    * @return absolute Path
    */
-  public static Path getCSVPath(AggregateInfo aggInfo, String tableId, CsvConfig config,
-      String savePath) {
-    return getBasePath(aggInfo, tableId, savePath).resolve(getCSVName(config));
+  public static Path getCSVPath(CloudEndpointInfo cloudEndpointInfo, String tableId, CsvConfig config,
+                                String savePath) {
+    return getBasePath(cloudEndpointInfo, tableId, savePath).resolve(getCSVName(config));
   }
 
   /**
@@ -99,23 +99,23 @@ public class FileUtils {
 
   /**
    *
-   * @param aggInfo
+   * @param cloudEndpointInfo
    * @param tableId
    * @param savePath
    * @return absolute Path
    */
-  public static Path getBasePath(AggregateInfo aggInfo, String tableId, String savePath) {
-    return Paths.get(savePath, aggInfo.getAppId(), tableId).toAbsolutePath();
+  public static Path getBasePath(CloudEndpointInfo cloudEndpointInfo, String tableId, String savePath) {
+    return Paths.get(savePath, cloudEndpointInfo.getAppId(), tableId).toAbsolutePath();
   }
 
   /**
    *
-   * @param aggInfo
+   * @param cloudEndpointInfo
    * @param savePath
    * @return absolute Path
    */
-  public static Path getInstancesPath(AggregateInfo aggInfo, String tableId, String savePath) {
-    return getBasePath(aggInfo, tableId, savePath).resolve(INSTANCES_PATH);
+  public static Path getInstancesPath(CloudEndpointInfo cloudEndpointInfo, String tableId, String savePath) {
+    return getBasePath(cloudEndpointInfo, tableId, savePath).resolve(INSTANCES_PATH);
   }
 
   public static String getCSVName(CsvConfig config) {
@@ -137,22 +137,22 @@ public class FileUtils {
     return csvNameBuilder.append(CSV_EXTENSION).toString();
   }
 
-  public static void createDirectory(AggregateInfo aggInfo, CsvConfig config, String tableId,
-      String savePath) throws IOException {
+  public static void createDirectory(CloudEndpointInfo cloudEndpointInfo, CsvConfig config, String tableId,
+                                     String savePath) throws IOException {
     if (config.isDownloadAttachment() || config.isScanFormatting()) {
-      FileUtils.createInstancesDirectory(aggInfo, tableId, savePath);
+      FileUtils.createInstancesDirectory(cloudEndpointInfo, tableId, savePath);
     } else {
-      FileUtils.createBaseDirectory(aggInfo, tableId, savePath);
+      FileUtils.createBaseDirectory(cloudEndpointInfo, tableId, savePath);
     }
   }
 
-  public static void deleteCsv(AggregateInfo aggInfo, CsvConfig config, String tableId, String
+  public static void deleteCsv(CloudEndpointInfo cloudEndpointInfo, CsvConfig config, String tableId, String
       savePath) throws IOException {
     if (config.isDownloadAttachment() || config.isScanFormatting()) {
-      deleteDirectory(getInstancesPath(aggInfo, tableId, savePath));
+      deleteDirectory(getInstancesPath(cloudEndpointInfo, tableId, savePath));
     }
 
-    Files.delete(getCSVPath(aggInfo, tableId, config, savePath));
+    Files.delete(getCSVPath(cloudEndpointInfo, tableId, config, savePath));
   }
 
   public static boolean checkUploadDir(String path) {
@@ -180,18 +180,18 @@ public class FileUtils {
     });
   }
 
-  private static void createBaseDirectory(AggregateInfo aggInfo, String tableId, String savePath)
+  private static void createBaseDirectory(CloudEndpointInfo cloudEndpointInfo, String tableId, String savePath)
       throws IOException {
-    Path basePath = getBasePath(aggInfo, tableId, savePath);
+    Path basePath = getBasePath(cloudEndpointInfo, tableId, savePath);
 
     if (Files.notExists(basePath)) {
       Files.createDirectories(basePath);
     }
   }
 
-  private static void createInstancesDirectory(AggregateInfo aggInfo, String tableId, String savePath)
+  private static void createInstancesDirectory(CloudEndpointInfo cloudEndpointInfo, String tableId, String savePath)
       throws IOException {
-    Path insPath = getInstancesPath(aggInfo, tableId, savePath);
+    Path insPath = getInstancesPath(cloudEndpointInfo, tableId, savePath);
 
     if (Files.notExists(insPath)) {
       Files.createDirectories(insPath);

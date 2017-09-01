@@ -1,6 +1,6 @@
 package org.opendatakit.suitcase.ui;
 
-import org.opendatakit.suitcase.model.AggregateInfo;
+import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.opendatakit.suitcase.net.LoginTask;
 import org.opendatakit.suitcase.net.SuitcaseSwingWorker;
 import org.opendatakit.suitcase.net.SyncWrapper;
@@ -30,7 +30,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
     public void actionPerformed(ActionEvent e) {
       sanitizeFields(isAnon);
       String error = FieldsValidatorUtils.checkLoginFields(
-          sAggregateAddressText.getText(), sAppIdText.getText(), sUserNameText.getText(),
+          sCloudEndpointAddressText.getText(), sAppIdText.getText(), sUserNameText.getText(),
           String.valueOf(sPasswordText.getPassword()), isAnon
       );
 
@@ -44,9 +44,9 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
         (isAnon ? anonLoginButton : loginButton).setText(LOGIN_LOADING_LABEL);
 
         try {
-          buildAggregateInfo();
+          buildCloudEndpointInfo();
 
-          LoginTask worker = new LoginTask(aggInfo, true);
+          LoginTask worker = new LoginTask(cloudEndpointInfo, true);
           worker.addPropertyChangeListener(parent.getProgressBar());
           worker.addPropertyChangeListener(LoginPanel.this);
           worker.execute();
@@ -62,8 +62,8 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
   private static final String LOGIN_ANON_LABEL = "Anonymous Login";
   private static final String LOGIN_LOADING_LABEL = "Loading";
 
-  private AggregateInfo aggInfo;
-  private JTextField sAggregateAddressText;
+  private CloudEndpointInfo cloudEndpointInfo;
+  private JTextField sCloudEndpointAddressText;
   private JTextField sAppIdText;
   private JTextField sUserNameText;
   private JPasswordField sPasswordText;
@@ -77,7 +77,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
 
     this.parent = parent;
 
-    this.sAggregateAddressText = new JTextField(1);
+    this.sCloudEndpointAddressText = new JTextField(1);
     this.sAppIdText = new JTextField(1);
     this.sUserNameText = new JTextField(1);
     this.sPasswordText = new JPasswordField(1);
@@ -89,9 +89,9 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
     gbc.gridy = GridBagConstraints.RELATIVE;
 
     JPanel inputPanel = new InputPanel(
-        new String[] {"Aggregate Address", "App ID", "Username", "Password"},
-        new JTextField[] {sAggregateAddressText, sAppIdText, sUserNameText, sPasswordText},
-        new String[] {"https://aggregate-server-url.appspot.com", "default", "", ""}
+        new String[] {"Cloud Endpoint Address", "App ID", "Username", "Password"},
+        new JTextField[] {sCloudEndpointAddressText, sAppIdText, sUserNameText, sPasswordText},
+        new String[] {"https://cloud-endpoint-server-url.appspot.com", "default", "", ""}
     );
     gbc.weighty = 85;
     gbc.insets = new Insets(80, 50, 0, 50);
@@ -104,8 +104,8 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
     this.add(buttonPanel, gbc);
   }
 
-  public AggregateInfo getAggregateInfo() {
-    return this.aggInfo;
+  public CloudEndpointInfo getCloudEndpointInfo() {
+    return this.cloudEndpointInfo;
   }
 
   private void buildLoginButtonArea(JPanel buttonsPanel) {
@@ -121,7 +121,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
   }
 
   private void sanitizeFields(boolean anonymous) {
-    sAggregateAddressText.setText(sAggregateAddressText.getText().trim());
+    sCloudEndpointAddressText.setText(sCloudEndpointAddressText.getText().trim());
     sAppIdText.setText(sAppIdText.getText().trim());
     sUserNameText.setText(sUserNameText.getText().trim());
 
@@ -131,9 +131,9 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
     }
   }
 
-  private void buildAggregateInfo() throws MalformedURLException {
-    this.aggInfo = new AggregateInfo(
-        sAggregateAddressText.getText(), sAppIdText.getText(), sUserNameText.getText(),
+  private void buildCloudEndpointInfo() throws MalformedURLException {
+    this.cloudEndpointInfo = new CloudEndpointInfo(
+        sCloudEndpointAddressText.getText(), sAppIdText.getText(), sUserNameText.getText(),
         String.valueOf(sPasswordText.getPassword())
     );
   }

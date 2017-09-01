@@ -15,7 +15,7 @@ import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.aggregate.odktables.rest.entity.Row;
 import org.opendatakit.aggregate.odktables.rest.entity.RowResource;
 import org.opendatakit.aggregate.odktables.rest.entity.RowResourceList;
-import org.opendatakit.suitcase.model.AggregateInfo;
+import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.opendatakit.suitcase.ui.DialogUtils;
 import org.opendatakit.suitcase.ui.SuitcaseProgressBar;
 import org.opendatakit.sync.client.SyncClient;
@@ -34,17 +34,17 @@ public class TableTask extends SuitcaseSwingWorker<Void> {
   String intermediateTemp = "temp";
   String csvExt = ".csv";
 
-  private AggregateInfo aggInfo = null;
+  private CloudEndpointInfo cloudEndpointInfo = null;
   private String operation = null;
   private String tableId = null;
   private String dataPath = null;
   private String version = null;
   private boolean isGUI;
 
-  public TableTask(AggregateInfo aggInfo, String tableId, String dataPath, String version,
-      String operation, boolean isGUI) {
+  public TableTask(CloudEndpointInfo cloudEndpointInfo, String tableId, String dataPath, String version,
+                   String operation, boolean isGUI) {
     super();
-    this.aggInfo = aggInfo;
+    this.cloudEndpointInfo = cloudEndpointInfo;
     this.tableId = tableId;
     this.dataPath = dataPath;
     this.version = version;
@@ -63,8 +63,8 @@ public class TableTask extends SuitcaseSwingWorker<Void> {
     syncWrapper.updateTableList();
 
     String className = this.getClass().getSimpleName();
-    if (aggInfo == null) {
-      System.out.println("aggInfo must be specified " + className);
+    if (cloudEndpointInfo == null) {
+      System.out.println("cloudEndpointInfo must be specified " + className);
     }
 
     if (tableId == null || tableId.length() == 0) {
