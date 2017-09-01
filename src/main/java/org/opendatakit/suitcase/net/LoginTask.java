@@ -1,6 +1,6 @@
 package org.opendatakit.suitcase.net;
 
-import org.opendatakit.suitcase.model.AggregateInfo;
+import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.apache.wink.json4j.JSONException;
 import org.opendatakit.suitcase.ui.DialogUtils;
 import org.opendatakit.suitcase.ui.SuitcaseProgressBar;
@@ -11,13 +11,13 @@ import java.util.concurrent.ExecutionException;
 import static org.opendatakit.suitcase.ui.MessageString.*;
 
 public class LoginTask extends SuitcaseSwingWorker<Void> {
-  private AggregateInfo aggInfo;
+  private CloudEndpointInfo cloudEndpointInfo;
   private boolean isGUI;
 
-  public LoginTask(AggregateInfo aggInfo, boolean isGUI) {
+  public LoginTask(CloudEndpointInfo cloudEndpointInfo, boolean isGUI) {
     super();
 
-    this.aggInfo = aggInfo;
+    this.cloudEndpointInfo = cloudEndpointInfo;
     this.isGUI = isGUI;
   }
 
@@ -26,7 +26,7 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
     SyncWrapper syncWrapper = SyncWrapper.getInstance();
 
     syncWrapper.reset();
-    syncWrapper.init(aggInfo);
+    syncWrapper.init(cloudEndpointInfo);
 
     return null;
   }
