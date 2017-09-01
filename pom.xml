@@ -16,19 +16,26 @@
         <org.apache.commons.commons-lang3>3.0</org.apache.commons.commons-lang3>
         <maven.jar.plugin.version>2.6</maven.jar.plugin.version>
         <maven.javadoc.plugin.version>2.10.3</maven.javadoc.plugin.version>
-        <maven.compiler.plugin.version>3.5.1</maven.compiler.plugin.version>
-        <maven.assembly.plugin.version>2.6</maven.assembly.plugin.version>
-	    <jacoco.version>0.7.7.201606060606</jacoco.version>
+        <maven.compiler.plugin.version>3.6.0</maven.compiler.plugin.version>
+        <maven.assembly.plugin.version>3.0.0</maven.assembly.plugin.version>
+	      <jacoco.version>0.7.7.201606060606</jacoco.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <org.codehaus.mojo.version>1.5.0</org.codehaus.mojo.version>
+        <jdk.version>1.8</jdk.version>
+        <junit.version>4.12</junit.version>
+
         <mainClass>org.opendatakit.suitcase.Suitcase</mainClass>
+        <sourceDir>src/main/java</sourceDir>
+        <testDir>src/test</testDir>
+        <resourceDir>src/main/resources</resourceDir>
     </properties>
 
     <build>
-        <sourceDirectory>src/main/java</sourceDirectory>
-        <testSourceDirectory>src/test</testSourceDirectory>
+        <sourceDirectory>${sourceDir}</sourceDirectory>
+        <testSourceDirectory>${testDir}</testSourceDirectory>
         <resources>
             <resource>
-                <directory>src/main/resources</directory>
+                <directory>${resourceDir}</directory>
                 <excludes>
                     <exclude>**/*.java</exclude>
                 </excludes>
@@ -37,16 +44,16 @@
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>${maven.compiler.plugin.version}</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>${jdk.version}</source>
+                    <target>${jdk.version}</target>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>1.5.0</version>
+                <version>${org.codehaus.mojo.version}</version>
                 <configuration>
                     <mainClass>${mainClass}</mainClass>
                 </configuration>
@@ -72,7 +79,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.0.0</version>
+                <version>${maven.assembly.plugin.version}</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -126,7 +133,7 @@
         <dependency>
     		<groupId>junit</groupId>
     		<artifactId>junit</artifactId>
-    		<version>4.12</version> <!-- Or whatever JUnit you're using. -->
+        <version>${junit.version}</version> <!-- Or whatever JUnit you're using. -->
 		</dependency>
     </dependencies>
 
