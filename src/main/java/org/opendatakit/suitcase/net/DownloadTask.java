@@ -1,6 +1,6 @@
 package org.opendatakit.suitcase.net;
 
-import org.opendatakit.suitcase.model.AggregateInfo;
+import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.opendatakit.suitcase.model.CsvConfig;
 import org.opendatakit.suitcase.model.ODKCsv;
 import org.apache.wink.json4j.JSONException;
@@ -22,17 +22,17 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
   private static final String RETRIEVING_ROW = "Retrieving rows";
   private static final String PROCESSING_ROW = "Processing and writing data";
 
-  private AggregateInfo aggInfo;
+  private CloudEndpointInfo cloudEndpointInfo;
   private ODKCsv csv;
   private CsvConfig csvConfig;
   private String savePath;
   private boolean isGUI;
 
-  public DownloadTask(AggregateInfo aggInfo, ODKCsv csv, CsvConfig csvConfig, String savePath,
-      boolean isGUI) {
+  public DownloadTask(CloudEndpointInfo cloudEndpointInfo, ODKCsv csv, CsvConfig csvConfig, String savePath,
+                      boolean isGUI) {
     super();
 
-    this.aggInfo = aggInfo;
+    this.cloudEndpointInfo = cloudEndpointInfo;
     this.csv = csv;
     this.csvConfig = csvConfig;
     this.savePath = savePath;
@@ -44,17 +44,17 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
     //assume csv has already been initialized by caller of this worker
 
     // check existing data, skip check for CLI
-    if (FileUtils.isDownloaded(aggInfo, csv.getTableId(), csvConfig, savePath) &&
+    if (FileUtils.isDownloaded(cloudEndpointInfo, csv.getTableId(), csvConfig, savePath) &&
         DialogUtils.promptConfirm(OVERWRITE_CSV, isGUI, !isGUI)) {
-      FileUtils.deleteCsv(aggInfo, csvConfig, csv.getTableId(), savePath);
+      FileUtils.deleteCsv(cloudEndpointInfo, csvConfig, csv.getTableId(), savePath);
     }
 
     // then create directory structure when needed
-    FileUtils.createDirectory(aggInfo, csvConfig, csv.getTableId(), savePath);
+    FileUtils.createDirectory(cloudEndpointInfo, csvConfig, csv.getTableId(), savePath);
 
     SyncWrapper syncWrapper = SyncWrapper.getInstance();
 
-    // retrieve data from Aggregate and store in csv
+    // retrieve data from Cloud Endpoint and store in csv
     if (csv.getSize() == 0) {
       publish(new ProgressBarStatus(0, RETRIEVING_ROW, true));
 
@@ -73,7 +73,7 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
     RFC4180CsvWriter csvWriter = null;
     try {
       csvWriter = new RFC4180CsvWriter(new FileWriter(
-          FileUtils.getCSVPath(aggInfo, csv.getTableId(), csvConfig, savePath).toString()
+          FileUtils.getCSVPath(cloudEndpointInfo, csv.getTableId(), csvConfig, savePath).toString()
       ));
 
       //Write header then rows
