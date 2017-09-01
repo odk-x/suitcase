@@ -14,7 +14,7 @@ import java.util.Date;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.opendatakit.suitcase.model.AggregateInfo;
+import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
@@ -43,18 +43,18 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
   public static final int MAX_BATCH_SIZE = 500;
   public static final String DEFAULT_OUTCOME_FILE_NAME = "outcomeFile.txt";
 
-  private AggregateInfo aggInfo;
+  private CloudEndpointInfo cloudEndpointInfo;
   private String dataPath;
   private String outcomePath;
   private String version;
   private String tableId;
   private boolean isGUI;
 
-  public UpdateTask(AggregateInfo aggInfo, String dataPath, String version, String tableId,
-      String outcomePath, boolean isGUI) {
+  public UpdateTask(CloudEndpointInfo cloudEndpointInfo, String dataPath, String version, String tableId,
+                    String outcomePath, boolean isGUI) {
     super();
 
-    this.aggInfo = aggInfo;
+    this.cloudEndpointInfo = cloudEndpointInfo;
     this.dataPath = dataPath;
     this.version = version;
     this.tableId = tableId;
@@ -271,8 +271,8 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
     // Get the dataETag
     // Finally bulk upload the rows with the different collections
     String schemaETag = null;
-    if (aggInfo.tableIdExists(tableId)) {
-      schemaETag = aggInfo.getSchemaETag(tableId);
+    if (cloudEndpointInfo.tableIdExists(tableId)) {
+      schemaETag = cloudEndpointInfo.getSchemaETag(tableId);
     }
 
     // Used to handle row outcomes

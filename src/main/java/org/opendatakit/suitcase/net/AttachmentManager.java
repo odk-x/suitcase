@@ -1,6 +1,6 @@
 package org.opendatakit.suitcase.net;
 
-import org.opendatakit.suitcase.model.AggregateInfo;
+import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.sync.client.SyncClient;
@@ -21,14 +21,14 @@ import java.util.*;
  * !!!ATTENTION!!! One AttachmentManager per table
  */
 public class AttachmentManager {
-  private AggregateInfo aggInfo;
+  private CloudEndpointInfo cloudEndpointInfo;
   private String tableId;
   private String savePath;
   private Map<String, JSONObject> attachmentManifests;
   private Map<String, Map<String, String>> allAttachments;
   
-  public AttachmentManager(AggregateInfo aggInfo, String tableId, String savePath) {
-    this.aggInfo = aggInfo;
+  public AttachmentManager(CloudEndpointInfo cloudEndpointInfo, String tableId, String savePath) {
+    this.cloudEndpointInfo = cloudEndpointInfo;
     this.tableId = tableId;
     this.savePath = savePath;
 
@@ -67,7 +67,7 @@ public class AttachmentManager {
 
   /**
    * Retrieves URL for attachment.
-   * If a localUrl is requested, url is inferred from filename and aggInfo info
+   * If a localUrl is requested, url is inferred from filename and cloudEndpointInfo info
    * If a row lacks attachment manifest, null is returned.
    * When allAttachment lacks record of requested rowId, IllegalStateException will be thrown.
    * When allAttachment lacks record of requested filename, IllegalArgumentException will be thrown.
@@ -167,14 +167,14 @@ public class AttachmentManager {
   }
 
   /**
-   * Infers local path to attachment directory with rowId and aggInfo info.
+   * Infers local path to attachment directory with rowId and cloudEndpointInfo info.
    *
    * @param rowId
    * @return
    */
   private Path getAttachmentLocalDir(String rowId) throws IOException {
     String sanitizedRowId = SyncClient.convertRowIdForInstances(rowId);
-    String insPath = FileUtils.getInstancesPath(aggInfo, tableId, savePath).toString();
+    String insPath = FileUtils.getInstancesPath(cloudEndpointInfo, tableId, savePath).toString();
 
     if (Files.notExists(Paths.get(insPath, sanitizedRowId))) {
       Files.createDirectories(Paths.get(insPath, sanitizedRowId));
@@ -184,7 +184,7 @@ public class AttachmentManager {
   }
 
   /**
-   * Infers local path to attachment with rowId, filename and aggInfo info.
+   * Infers local path to attachment with rowId, filename and cloudEndpointInfo info.
    *
    * Warning: Doesn't check if filename is valid (THIS IS INTENDED)
    *
