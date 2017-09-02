@@ -6,7 +6,7 @@
 
     <groupId>org.opendatakit</groupId>
     <artifactId>suitcase</artifactId>
-    <version>2.0 rev 212a</version>
+    <version>2.0 rev 212RC2</version>
 
     <properties>
         <org.opendatakit.sync-client.version>[2.0 rev 212, 2.0 rev 213)</org.opendatakit.sync-client.version>
