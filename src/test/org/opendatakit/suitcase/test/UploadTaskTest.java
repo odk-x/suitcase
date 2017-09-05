@@ -12,7 +12,7 @@ import org.opendatakit.suitcase.net.LoginTask;
 import org.opendatakit.suitcase.net.SuitcaseSwingWorker;
 import org.opendatakit.suitcase.net.UpdateTask;
 import org.opendatakit.suitcase.net.UploadTask;
-import org.opendatakit.suitcase.model.CloudEndpointInfo;
+import org.opendatakit.suitcase.model.AggregateInfo;
 
 import junit.framework.TestCase;
 
@@ -26,7 +26,7 @@ public class UploadTaskTest extends TestCase{
   String password;
   int batchSize;
   String version;
-  CloudEndpointInfo cloudEndpointInfo = null;
+  AggregateInfo aggInfo = null;
   
   /*
    * Perform setup for test if necessary
@@ -34,7 +34,7 @@ public class UploadTaskTest extends TestCase{
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    //cloud_endpoint_url = System.getProperty("test.cloudEndpointUrl");
+    //agg_url = System.getProperty("test.aggUrl");
     //appId = System.getProperty("test.appId");
     //absolutePathOfTestFiles = System.getProperty("test.absolutePathOfTestFiles");
     //batchSize = Integer.valueOf(System.getProperty("test.batchSize"));
@@ -48,7 +48,7 @@ public class UploadTaskTest extends TestCase{
     URL url = new URL(serverUrl);
     host = url.getHost();
     version = "2";
-    cloudEndpointInfo = new CloudEndpointInfo(serverUrl, appId, username, password);
+    aggInfo = new AggregateInfo(serverUrl, appId, username, password); 
   }
   
   private boolean checkThatFileExists(JSONObject manifest, String relativeServerPath) {
@@ -81,32 +81,32 @@ public class UploadTaskTest extends TestCase{
     try {
       sc = new SyncClient();
       
-      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
-      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
+      String agg_url = aggInfo.getHostUrl();
+      agg_url = agg_url.substring(0, agg_url.length()-1);
       
-      URL url = new URL(cloud_endpoint_url);
+      URL url = new URL(agg_url);
       String host = url.getHost();
       
-      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
+      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
 
-      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
+      LoginTask lTask = new LoginTask(aggInfo, false);
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       // Push the file up to the server
-      UploadTask uploadTask = new UploadTask(cloudEndpointInfo, dataPathToAppFile, version, false, "FILE", relativeServerPath);
+      UploadTask uploadTask = new UploadTask(aggInfo, dataPathToAppFile, version, false, "FILE", relativeServerPath);
       retCode = uploadTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       // Now check that the file was created
-      JSONObject manifest = sc.getManifestForAppLevelFiles(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), version);
+      JSONObject manifest = sc.getManifestForAppLevelFiles(aggInfo.getServerUrl(), aggInfo.getAppId(), version);
       assertTrue(checkThatFileExists(manifest, relativeServerPath));
       
       // Now delete the file
-      sc.deleteFile(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), relativeServerPath, version);
+      sc.deleteFile(aggInfo.getServerUrl(), aggInfo.getAppId(), relativeServerPath, version);
 
       // Check that file no longer exists
-      manifest = sc.getManifestForAppLevelFiles(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), version);
+      manifest = sc.getManifestForAppLevelFiles(aggInfo.getServerUrl(), aggInfo.getAppId(), version);
       assertFalse(checkThatFileExists(manifest, relativeServerPath));
 
       sc.close();
@@ -128,52 +128,52 @@ public class UploadTaskTest extends TestCase{
     try {
       sc = new SyncClient();
       
-      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
-      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
+      String agg_url = aggInfo.getHostUrl();
+      agg_url = agg_url.substring(0, agg_url.length()-1);
       
-      URL url = new URL(cloud_endpoint_url);
+      URL url = new URL(agg_url);
       String host = url.getHost();
       
-      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
+      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
 
-      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
+      LoginTask lTask = new LoginTask(aggInfo, false);
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       // Push the file up to the server
-      UploadTask uploadTask = new UploadTask(cloudEndpointInfo, dataPathToAppFile, version, false, "RESET_APP", null);
+      UploadTask uploadTask = new UploadTask(aggInfo, dataPathToAppFile, version, false, "RESET_APP", null);
       retCode = uploadTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
       // Now check that the file was created
-      JSONObject manifest = sc.getManifestForAppLevelFiles(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), version);
+      JSONObject manifest = sc.getManifestForAppLevelFiles(aggInfo.getServerUrl(), aggInfo.getAppId(), version);
       
       // Check that the number of app files is correct
       JSONArray files = manifest.getJSONArray("files");
       assertEquals(files.length(), 10);
       
-      JSONObject table = sc.getTable(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), tableId);
+      JSONObject table = sc.getTable(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId);
       assertEquals(tableId, table.getString("tableId"));
       
       // Now delete the app level file
       for (int i = 0; i < files.length(); i++) {
         JSONObject file = files.getJSONObject(i);
         String filePath = file.getString("filename");
-        sc.deleteFile(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), filePath, version);
+        sc.deleteFile(aggInfo.getServerUrl(), aggInfo.getAppId(), filePath, version);
       }
       
       // Check that file no longer exists
-      manifest = sc.getManifestForAppLevelFiles(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), version);
+      manifest = sc.getManifestForAppLevelFiles(aggInfo.getServerUrl(), aggInfo.getAppId(), version);
       assertEquals(files.length(), 10);
       
       // Check the table level manifest
-      JSONObject tableManifest = sc.getManifestForTableId(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), tableId, version);
+      JSONObject tableManifest = sc.getManifestForTableId(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, version);
       JSONArray tableFiles = tableManifest.getJSONArray("files");
       assertEquals(tableFiles.length(), 14);
       
-      sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), tableId, table.getString("schemaETag"));
+      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, table.getString("schemaETag"));
       
-      JSONObject tables = sc.getTable(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), tableId);
+      JSONObject tables = sc.getTable(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId);
       assertNull(tables);
 
       sc.close();

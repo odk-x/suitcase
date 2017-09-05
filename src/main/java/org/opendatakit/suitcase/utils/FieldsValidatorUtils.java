@@ -1,6 +1,6 @@
 package org.opendatakit.suitcase.utils;
 
-import org.opendatakit.suitcase.model.CloudEndpointInfo;
+import org.opendatakit.suitcase.model.AggregateInfo;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -11,19 +11,19 @@ public class FieldsValidatorUtils {
   /**
    * Checks fields used for login
    *
-   * @param cloudEndpointUrl
+   * @param aggUrl
    * @param appId
    * @param username
    * @param password
    * @param isAnonymous
    * @return error message or null if no error found
    */
-  public static String checkLoginFields(String cloudEndpointUrl, String appId, String username, String
+  public static String checkLoginFields(String aggUrl, String appId, String username, String
       password, boolean isAnonymous) {
     StringBuilder errorMsgBuilder = new StringBuilder();
 
-    if (cloudEndpointUrl.isEmpty()) {
-      errorMsgBuilder.append(CLOUD_ENDPOINT_EMPTY).append(NEW_LINE);
+    if (aggUrl.isEmpty()) {
+      errorMsgBuilder.append(AGG_EMPTY).append(NEW_LINE);
     }
 
     if (appId.isEmpty()) {
@@ -44,14 +44,14 @@ public class FieldsValidatorUtils {
     return errorMsgBuilder.length() > 0 ? errorMsgBuilder.toString().trim() : null;
   }
 
-  public static String checkDownloadFields(String tableId, String savePath, CloudEndpointInfo cloudEndpointInfo) {
+  public static String checkDownloadFields(String tableId, String savePath, AggregateInfo aggInfo) {
     StringBuilder errorMsgBuilder = new StringBuilder();
 
     if (tableId.isEmpty()) {
       errorMsgBuilder.append(TABLE_ID_EMPTY).append(NEW_LINE);
     }
 
-    if (!tableId.isEmpty() && !cloudEndpointInfo.tableIdExists(tableId)) {
+    if (!tableId.isEmpty() && !aggInfo.tableIdExists(tableId)) {
       errorMsgBuilder.append(BAD_TABLE_ID).append(NEW_LINE);
     }
 

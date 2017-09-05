@@ -123,15 +123,15 @@ public final class TestUtilities {
     return exists;
   }
   
-  public static int getCSVIndexForCloudEndpointMetadata(String[] headers, String cloudEndpointId) {
+  public static int getCSVIndexForAggMetadata(String[] headers, String aggId) {
     int idx = -1;
     
-    if (cloudEndpointId == null || cloudEndpointId.length() == 0) {
+    if (aggId == null || aggId.length() == 0) {
       return idx;
     }
     
     String csvString = null;
-    switch (cloudEndpointId) {
+    switch (aggId) {
       case SyncClient.ID_JSON:
         csvString = SyncClient.ID_ROW_DEF;
         break;

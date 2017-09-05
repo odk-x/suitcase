@@ -1,6 +1,6 @@
 package org.opendatakit.suitcase.ui;
 
-import org.opendatakit.suitcase.model.CloudEndpointInfo;
+import org.opendatakit.suitcase.model.AggregateInfo;
 import org.opendatakit.suitcase.model.CsvConfig;
 import org.opendatakit.suitcase.model.ODKCsv;
 import org.apache.commons.cli.*;
@@ -33,7 +33,7 @@ public class SuitcaseCLI {
   private static final String VERSION_OPT_SHORT = "v";
   private static final String VERSION_OPT = "version";
   
-  private static final String CLOUD_ENDPOINT_URL_OPT = "cloudEndpointUrl";
+  private static final String AGGREGATE_URL_OPT = "aggregateUrl";
   private static final String APP_ID_OPT = "appId";
   private static final String TABLE_ID_OPT = "tableId";
   private static final String USERNAME_OPT = "username";
@@ -60,12 +60,12 @@ public class SuitcaseCLI {
   private static final String UPDATE_LOG_PATH_OPT = "updateLogPath";
 
 
-  private static final String[] REQUIRED_ARGS = new String[]{"cloudEndpointUrl", "appId"};
+  private static final String[] REQUIRED_ARGS = new String[]{"aggregateUrl", "appId"};
 
   private String[] args;
 
   private Options cliOptions;
-  private CloudEndpointInfo cloudEndpointInfo;
+  private AggregateInfo aggInfo;
 
   private String tableId;
   private String version;
@@ -99,19 +99,19 @@ public class SuitcaseCLI {
 
     switch (operation) {
     case DOWNLOAD:
-      AttachmentManager attMngr = new AttachmentManager(cloudEndpointInfo, tableId, path);
+      AttachmentManager attMngr = new AttachmentManager(aggInfo, tableId, path);
       ODKCsv csv = null;
       try {
-        csv = new ODKCsv(attMngr, cloudEndpointInfo, tableId);
+        csv = new ODKCsv(attMngr, aggInfo, tableId);
       } catch (JSONException e) { /* should never happen */} 
       CsvConfig config = new CsvConfig(downloadAttachment, scanFormatting, extraMetadata);
 
-      error = FieldsValidatorUtils.checkDownloadFields(tableId, path, cloudEndpointInfo);
+      error = FieldsValidatorUtils.checkDownloadFields(tableId, path, aggInfo);
       if (error != null) {
         DialogUtils.showError(error, false);
         retCode = PARAM_ERROR_CODE;
       } else {
-        retCode = new DownloadTask(cloudEndpointInfo, csv, config, path, false).blockingExecute();
+        retCode = new DownloadTask(aggInfo, csv, config, path, false).blockingExecute();
       }
       break;
     case UPLOAD:
@@ -121,7 +121,7 @@ public class SuitcaseCLI {
         DialogUtils.showError(error, false);
         retCode = PARAM_ERROR_CODE;
       } else {
-        retCode = new UploadTask(cloudEndpointInfo, path, version, false, uploadOp, relativeServerPath).blockingExecute();
+        retCode = new UploadTask(aggInfo, path, version, false, uploadOp, relativeServerPath).blockingExecute();
       }
       break;
     case RESET:
@@ -142,7 +142,7 @@ public class SuitcaseCLI {
         DialogUtils.showError(error, false);
         retCode = PARAM_ERROR_CODE;
       } else {
-        retCode = new UpdateTask(cloudEndpointInfo, path, version, tableId, updateLogPath , false).blockingExecute();
+        retCode = new UpdateTask(aggInfo, path, version, tableId, updateLogPath , false).blockingExecute();
       }
       break;
       
@@ -153,7 +153,7 @@ public class SuitcaseCLI {
         DialogUtils.showError(error, false);
         retCode = PARAM_ERROR_CODE;
       } else {
-        retCode = new TableTask(cloudEndpointInfo, tableId, path, version, tableOp, false).blockingExecute();
+        retCode = new TableTask(aggInfo, tableId, path, version, tableOp, false).blockingExecute();
       }
       break;
     
@@ -164,7 +164,7 @@ public class SuitcaseCLI {
         DialogUtils.showError(error, false);
         retCode = PARAM_ERROR_CODE;
       } else {
-        retCode = new PermissionTask(cloudEndpointInfo, path, version, false).blockingExecute();
+        retCode = new PermissionTask(aggInfo, path, version, false).blockingExecute();
       }
       
       break;
@@ -189,9 +189,9 @@ public class SuitcaseCLI {
     operation.setRequired(true);
     opt.addOptionGroup(operation);
 
-    //Cloud Endpoint related
-    Option cloudEndpointUrl = new Option(CLOUD_ENDPOINT_URL_OPT, true, "url to Cloud Endpoint server");
-    opt.addOption(cloudEndpointUrl);
+    //aggregate related
+    Option aggUrl = new Option(AGGREGATE_URL_OPT, true, "url to Aggregate server");
+    opt.addOption(aggUrl);
 
     Option appId = new Option(APP_ID_OPT, true, "app id");
     opt.addOption(appId);
@@ -284,7 +284,7 @@ public class SuitcaseCLI {
         }
       }
 
-      //Cloud Endpoint related
+      //Aggregate related
       String username = line.getOptionValue(USERNAME_OPT, "");
       String password = line.getOptionValue(PASSWORD_OPT, "");
       tableOp = line.getOptionValue(TABLE_OP, null);
@@ -293,9 +293,9 @@ public class SuitcaseCLI {
       
       relativeServerPath = line.getOptionValue(RELATIVE_SERVER_PATH_OPT);
 
-      // validate fields before creating CloudEndpointInfo object
+      // validate fields before creating AggregateInfo object
       String error = FieldsValidatorUtils.checkLoginFields(
-          line.getOptionValue(CLOUD_ENDPOINT_URL_OPT), line.getOptionValue(APP_ID_OPT),
+          line.getOptionValue(AGGREGATE_URL_OPT), line.getOptionValue(APP_ID_OPT),
           username, password,
           username.isEmpty() && password.isEmpty()
       );
@@ -306,12 +306,12 @@ public class SuitcaseCLI {
         return null;
       }
 
-      cloudEndpointInfo = new CloudEndpointInfo(
-          line.getOptionValue(CLOUD_ENDPOINT_URL_OPT), line.getOptionValue(APP_ID_OPT),
+      aggInfo = new AggregateInfo(
+          line.getOptionValue(AGGREGATE_URL_OPT), line.getOptionValue(APP_ID_OPT),
           username, password
       );
 
-      new LoginTask(cloudEndpointInfo, false).blockingExecute();
+      new LoginTask(aggInfo, false).blockingExecute();
 
       tableId = line.getOptionValue(TABLE_ID_OPT);
 

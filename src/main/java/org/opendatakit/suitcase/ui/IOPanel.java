@@ -1,6 +1,6 @@
 package org.opendatakit.suitcase.ui;
 
-import org.opendatakit.suitcase.model.CloudEndpointInfo;
+import org.opendatakit.suitcase.model.AggregateInfo;
 
 import javax.swing.*;
 import java.awt.*;
@@ -29,8 +29,8 @@ public class IOPanel extends JPanel {
     this.add(splitPane, LayoutDefault.getDefaultGbc());
   }
 
-  public CloudEndpointInfo getCloudEndpointInfo() {
-    return parent.getCloudEndpointInfo();
+  public AggregateInfo getAggInfo() {
+    return parent.getAggInfo();
   }
 
   public SuitcaseProgressBar getProgressBar() {

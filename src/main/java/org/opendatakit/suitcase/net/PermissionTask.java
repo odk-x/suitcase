@@ -10,7 +10,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.zip.DataFormatException;
 
 import org.apache.wink.json4j.JSONException;
-import org.opendatakit.suitcase.model.CloudEndpointInfo;
+import org.opendatakit.suitcase.model.AggregateInfo;
 import org.opendatakit.suitcase.ui.DialogUtils;
 import org.opendatakit.suitcase.ui.SuitcaseProgressBar;
 
@@ -27,14 +27,14 @@ public class PermissionTask extends SuitcaseSwingWorker<Void> {
   String intermediateTemp = "temp";
   String csvExt = ".csv";
 
-  private CloudEndpointInfo cloudEndpointInfo = null;
+  private AggregateInfo aggInfo = null;
   private String dataPath = null;
   private String version = null;
   private boolean isGUI;
 
-  public PermissionTask(CloudEndpointInfo cloudEndpointInfo, String dataPath, String version, boolean isGUI) {
+  public PermissionTask(AggregateInfo aggInfo, String dataPath, String version, boolean isGUI) {
     super();
-    this.cloudEndpointInfo = cloudEndpointInfo;
+    this.aggInfo = aggInfo;
     this.dataPath = dataPath;
     this.version = version;
     this.isGUI = isGUI;
@@ -47,8 +47,8 @@ public class PermissionTask extends SuitcaseSwingWorker<Void> {
     SyncWrapper syncWrapper = SyncWrapper.getInstance();
 
     String className = this.getClass().getSimpleName();
-    if (cloudEndpointInfo == null) {
-      System.out.println("cloudEndpointInfo must be specified " + className);
+    if (aggInfo == null) {
+      System.out.println("aggInfo must be specified " + className);
     }
 
     if (dataPath == null || dataPath.length() == 0) {

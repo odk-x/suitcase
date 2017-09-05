@@ -1,6 +1,6 @@
 package org.opendatakit.suitcase.net;
 
-import org.opendatakit.suitcase.model.CloudEndpointInfo;
+import org.opendatakit.suitcase.model.AggregateInfo;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
@@ -29,7 +29,7 @@ public class SyncWrapper {
   private static final int DELETE_TABLE_DEF_WAIT = 1000;
   private static final int PUSH_DONE_WAIT = 5000;
 
-  private CloudEndpointInfo cloudEndpointInfo;
+  private AggregateInfo aggInfo;
   private SyncClient sc;
   private boolean hasInit;
 
@@ -45,20 +45,20 @@ public class SyncWrapper {
     return InstanceHolder.INSTANCE;
   }
 
-  public void init(CloudEndpointInfo cloudEndpointInfo) throws IOException, JSONException {
+  public void init(AggregateInfo aggInfo) throws IOException, JSONException {
     if (!hasInit) {
-      this.cloudEndpointInfo = cloudEndpointInfo;
+      this.aggInfo = aggInfo;
       this.sc = new SyncClient();
       
-      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
-      if (cloud_endpoint_url.endsWith("/")) {
-        cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
+      String agg_url = aggInfo.getHostUrl();
+      if (agg_url.endsWith("/")) {
+        agg_url = agg_url.substring(0, agg_url.length()-1);
       }
       
-      URL url = new URL(cloud_endpoint_url);
+      URL url = new URL(agg_url);
       String host = url.getHost();
 
-      this.sc.init(host, this.cloudEndpointInfo.getUserName(), this.cloudEndpointInfo.getPassword());
+      this.sc.init(host, this.aggInfo.getUserName(), this.aggInfo.getPassword());
       
       updateTableList();
 
@@ -76,21 +76,21 @@ public class SyncWrapper {
 
   public Set<String> updateTableList() throws IOException, JSONException {
     JSONArray tables =
-        sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId()).getJSONArray(TABLES_JSON);
+        sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId()).getJSONArray(TABLES_JSON);
 
     for (int i = 0; i < tables.size(); i++) {
       String tableId = tables.getJSONObject(i).getString(TABLE_ID_JSON);
       String eTag = tables.getJSONObject(i).getString(SCHEMA_ETAG_JSON);
-      cloudEndpointInfo.addTableId(tableId, eTag);
+      aggInfo.addTableId(tableId, eTag);
     }
 
-    return cloudEndpointInfo.getAllTableId();
+    return aggInfo.getAllTableId();
   }
 
   public void pushAllData(String dataPath, String version)
       throws JSONException, IOException, DataFormatException {
-//    System.out.println("pushAllData " + cloudEndpointInfo.getServerUrl() + " " +cloudEndpointInfo.getAppId() + " " + dataPath +" "+version);
-    sc.pushAllDataToUri(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), dataPath, version);
+//    System.out.println("pushAllData " + aggInfo.getServerUrl() + " " +aggInfo.getAppId() + " " + dataPath +" "+version);
+    sc.pushAllDataToUri(aggInfo.getServerUrl(), aggInfo.getAppId(), dataPath, version);
 
     try {
       Thread.sleep(PUSH_DONE_WAIT);
@@ -100,16 +100,16 @@ public class SyncWrapper {
   }
   
   public int putFile(String dataPath, String relativePathOnServer, String version) throws IOException {
-    return sc.uploadFile(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
+    return sc.uploadFile(aggInfo.getServerUrl(), aggInfo.getAppId(), 
         dataPath, relativePathOnServer, version);
   }
 
   public int deleteFile(String filename, String version) throws IOException {
-    return sc.deleteFile(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), filename, version);
+    return sc.deleteFile(aggInfo.getServerUrl(), aggInfo.getAppId(), filename, version);
   }
 
   public JSONObject getManifestForAppLevelFiles(String version) throws IOException, JSONException {
-    return sc.getManifestForAppLevelFiles(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), version);
+    return sc.getManifestForAppLevelFiles(aggInfo.getServerUrl(), aggInfo.getAppId(), version);
   }
   
   public int createTable(String tableId, String csvFilePath) {
@@ -127,7 +127,7 @@ public class SyncWrapper {
     }
 
     try {
-      sc.createTableWithCSV(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), tableId, null, csvFilePath);
+      sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, null, csvFilePath);
     } catch (FileNotFoundException fnfe) {
       fnfe.printStackTrace();
     } catch (DataFormatException dfe) {
@@ -154,11 +154,11 @@ public class SyncWrapper {
     }
 
     try {
-      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
-      if (cloud_endpoint_url.endsWith("/")) {
-        cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length() - 1);
+      String agg_url = aggInfo.getHostUrl();
+      if (agg_url.endsWith("/")) {
+        agg_url = agg_url.substring(0, agg_url.length() - 1);
       }
-      rspCode = sc.uploadPermissionCSV(cloudEndpointInfo.getHostUrl(), cloudEndpointInfo.getAppId(), csvFilePath);
+      rspCode = sc.uploadPermissionCSV(aggInfo.getHostUrl(), aggInfo.getAppId(), csvFilePath);
     } catch (IOException ioe) {
       ioe.printStackTrace();
     } 
@@ -178,13 +178,13 @@ public class SyncWrapper {
       throw new IllegalArgumentException("tableId cannot be null");
     }
     
-    if (!cloudEndpointInfo.tableIdExists(tableId)) {
+    if (!aggInfo.tableIdExists(tableId)) {
       throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
     
-    String schemaETag = cloudEndpointInfo.getSchemaETag(tableId);
+    String schemaETag = aggInfo.getSchemaETag(tableId);
     
-    tableDef = sc.getTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), tableId, schemaETag);
+    tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag);
    
     return tableDef;
   }
@@ -194,16 +194,16 @@ public class SyncWrapper {
       throw new IllegalArgumentException("tableId cannot be null");
     }
     
-    if (schemaETag == null && !cloudEndpointInfo.tableIdExists(tableId)) {
+    if (schemaETag == null && !aggInfo.tableIdExists(tableId)) {
       throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
 
     if (schemaETag == null) {
-      schemaETag = cloudEndpointInfo.getSchemaETag(tableId);
+      schemaETag = aggInfo.getSchemaETag(tableId);
     }
 
     int result =
-        sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), tableId, schemaETag);
+        sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag);
 
     try {
       Thread.sleep(DELETE_TABLE_DEF_WAIT);
@@ -215,53 +215,53 @@ public class SyncWrapper {
 
   public JSONObject getManifestForRow(String tableId, String rowId)
       throws IOException, JSONException {
-    if (!cloudEndpointInfo.tableIdExists(tableId)) {
+    if (!aggInfo.tableIdExists(tableId)) {
       throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
     
     String schemaETag = verifyTableIdAndSchemaETag(tableId);
 
     return sc.getManifestForRow(
-        cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), tableId,
+        aggInfo.getServerUrl(), aggInfo.getAppId(), tableId,
         schemaETag, rowId);
   }
 
   public JSONObject getRows(String tableId, String cursor) throws IOException, JSONException {
-    if (!cloudEndpointInfo.tableIdExists(tableId)) {
+    if (!aggInfo.tableIdExists(tableId)) {
       throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
     
     String schemaETag = verifyTableIdAndSchemaETag(tableId);
 
     return sc.getRows(
-        cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), tableId, schemaETag,
+        aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag,
         cursor, FETCH_LIMIT
     );
   }
 
   public void getFileForRow(String tableId, String rowId, String savePath, String relPathOnServer)
       throws IOException, JSONException {
-    if (!cloudEndpointInfo.tableIdExists(tableId)) {
+    if (!aggInfo.tableIdExists(tableId)) {
       throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
     
     String schemaETag = verifyTableIdAndSchemaETag(tableId);
 
     sc.getFileForRow(
-        cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), tableId, schemaETag,
+        aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag,
         rowId, false, savePath, relPathOnServer);
   }
 
   public void batchGetFilesForRow(String tableId, String rowId, String savePath, JSONObject files)
       throws IOException, JSONException {
-    if (!cloudEndpointInfo.tableIdExists(tableId)) {
+    if (!aggInfo.tableIdExists(tableId)) {
       throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
 
     String schemaETag = verifyTableIdAndSchemaETag(tableId);
     
     sc.batchGetFilesForRow(
-        cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), tableId, schemaETag,
+        aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag,
         rowId, savePath, files, -1);
   }
   
@@ -269,7 +269,7 @@ public class SyncWrapper {
     String dataETag = null;
     
     try{
-      JSONObject res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), tableId, tableSchemaETag, null, null,
+      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, tableSchemaETag, null, null,
           null);
       
       if (res.containsKey(DATA_ETAG_JSON) && !res.isNull(DATA_ETAG_JSON)) {
@@ -297,7 +297,7 @@ public class SyncWrapper {
     
     String dataETag = getDataETag(tableId, schemaETag);
     
-    return sc.alterRowsUsingSingleBatch(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), tableId, schemaETag, dataETag, rowArrayList);
+    return sc.alterRowsUsingSingleBatch(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, schemaETag, dataETag, rowArrayList);
   }
   
   public void deleteRowsUsingBulkUpload(String tableId, ArrayList<Row> rowArrayList) 
@@ -310,7 +310,7 @@ public class SyncWrapper {
     
     String dataETag = getDataETag(tableId, schemaETag);
     
-    sc.deleteRowsUsingBulkUpload(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), tableId,
+    sc.deleteRowsUsingBulkUpload(aggInfo.getServerUrl(), aggInfo.getAppId(), tableId, 
         schemaETag, dataETag, rowArrayList, 0);
     
   }
@@ -322,21 +322,21 @@ public class SyncWrapper {
       throw new IllegalArgumentException("verifyTableIdAndSchemaETag: tableId must not be null");
     }
     
-    if (!cloudEndpointInfo.tableIdExists(tableId)) {
+    if (!aggInfo.tableIdExists(tableId)) {
       // Update the list in case things have changed
       updateTableList();
       
-      if (cloudEndpointInfo.tableIdExists(tableId)) {
+      if (aggInfo.tableIdExists(tableId)) {
         throw new IllegalArgumentException("verifyTableIdAndSchemaETag: tableId does not exist on server");
       }
     }
     
-    schemaETag = cloudEndpointInfo.getSchemaETag(tableId);
+    schemaETag = aggInfo.getSchemaETag(tableId);
     if (schemaETag == null || schemaETag.length() == 0) {
       // Update the list to make sure that we have the most recent
       updateTableList();
       
-      schemaETag = cloudEndpointInfo.getSchemaETag(tableId);
+      schemaETag = aggInfo.getSchemaETag(tableId);
       if (schemaETag == null || schemaETag.length() == 0) {
         throw new IllegalArgumentException("verifyTableIdAndSchemaETag: schemaETag does not exist on server");
       }
@@ -354,11 +354,11 @@ public class SyncWrapper {
       throw new IllegalArgumentException("buildColumnDefinitions: tableId must not be null");
     }
     
-    if (!cloudEndpointInfo.tableIdExists(tableId)) {
+    if (!aggInfo.tableIdExists(tableId)) {
       // Update the list in case things have changed
       updateTableList();
       
-      if (cloudEndpointInfo.tableIdExists(tableId)) {
+      if (aggInfo.tableIdExists(tableId)) {
         throw new IllegalArgumentException("buildColumnDefinitions: tableId does not exist on server");
       }
     }
@@ -368,7 +368,7 @@ public class SyncWrapper {
     ObjectMapper mapper = new ObjectMapper();
     TableDefinitionResource tableDefRes = mapper.readValue(tableDefObj.toString(), TableDefinitionResource.class);
     
-    colDefs = ColumnDefinition.buildColumnDefinitions(cloudEndpointInfo.getAppId(),
+    colDefs = ColumnDefinition.buildColumnDefinitions(aggInfo.getAppId(), 
         tableId, tableDefRes.getColumns());
     
     return colDefs;

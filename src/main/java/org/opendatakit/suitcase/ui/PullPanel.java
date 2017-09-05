@@ -87,7 +87,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         sTableIdText.setText(sTableIdText.getText().trim());
 
         String error = FieldsValidatorUtils.checkDownloadFields(
-            sTableIdText.getText(), savePathChooser.getPath(), parent.getCloudEndpointInfo());
+            sTableIdText.getText(), savePathChooser.getPath(), parent.getAggInfo());
 
         if (error != null) {
           DialogUtils.showError(error, true);
@@ -100,7 +100,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
           CsvConfig config = new CsvConfig(sDownloadAttachment.isSelected(), sApplyScanFmt.isSelected(), sExtraMetadata.isSelected());
 
           if (attachMngr == null) {
-            attachMngr = new AttachmentManager(parent.getCloudEndpointInfo(), sTableIdText.getText(),
+            attachMngr = new AttachmentManager(parent.getAggInfo(), sTableIdText.getText(),
                 savePathChooser.getPath());
           } else {
             attachMngr.setSavePath(savePathChooser.getPath());
@@ -109,11 +109,11 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
           // create a new csv instance when csv == null or when table id changed
           if (csv == null || !csv.getTableId().equals(sTableIdText.getText())) {
             try {
-              csv = new ODKCsv(attachMngr, parent.getCloudEndpointInfo(), sTableIdText.getText());
+              csv = new ODKCsv(attachMngr, parent.getAggInfo(), sTableIdText.getText());
             } catch (JSONException e1) { /*should never happen*/ }
           }
 
-          DownloadTask worker = new DownloadTask(parent.getCloudEndpointInfo(), csv, config, savePathChooser.getPath(), true);
+          DownloadTask worker = new DownloadTask(parent.getAggInfo(), csv, config, savePathChooser.getPath(), true);
           worker.addPropertyChangeListener(parent.getProgressBar());
           worker.addPropertyChangeListener(PullPanel.this);
           worker.execute();

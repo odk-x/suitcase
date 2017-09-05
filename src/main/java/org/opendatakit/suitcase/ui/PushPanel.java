@@ -94,7 +94,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
           sPushButton.setText(PUSHING_LABEL);
           setButtonState(false);
 
-          UploadTask worker = new UploadTask(parent.getCloudEndpointInfo(), dataPathChooser.getPath(),
+          UploadTask worker = new UploadTask(parent.getAggInfo(), dataPathChooser.getPath(),
               sVersionPushText.getText(), true, null, null);
           worker.addPropertyChangeListener(parent.getProgressBar());
           worker.addPropertyChangeListener(PushPanel.this);

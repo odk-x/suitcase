@@ -13,7 +13,7 @@ import java.util.*;
 
 import static org.opendatakit.sync.client.SyncClient.*;
 
-//!!!ATTENTION!!! One per cloudEndpointInfo
+//!!!ATTENTION!!! One per aggInfo
 public class ODKCsv implements Iterable<String[]> {
   public class ODKCSVIterator implements Iterator<String[]> {
     private int cursor;
@@ -130,7 +130,7 @@ public class ODKCsv implements Iterable<String[]> {
   private static final int NUM_FILTERED = 1; //TODO: generalize this?
 
   private AttachmentManager attMngr;
-  private CloudEndpointInfo cloudEndpointInfo;
+  private AggregateInfo aggInfo;
   private String tableId;
 
   private List<JSONArray> jsonRows;
@@ -145,26 +145,26 @@ public class ODKCsv implements Iterable<String[]> {
    *
    * @param rows
    * @param attMngr
-   * @param cloudEndpointInfo
+   * @param aggInfo
    * @throws JSONException
    */
-  public ODKCsv(JSONArray rows, AttachmentManager attMngr, CloudEndpointInfo cloudEndpointInfo, String tableId)
+  public ODKCsv(JSONArray rows, AttachmentManager attMngr, AggregateInfo aggInfo, String tableId)
       throws JSONException {
     if (attMngr == null) {
       throw new IllegalArgumentException("AttachmentManager cannot be null");
     }
-    if (cloudEndpointInfo == null) {
-      throw new IllegalArgumentException("CloudEndpointInfo cannot be null");
+    if (aggInfo == null) {
+      throw new IllegalArgumentException("AggregateInfo cannot be null");
     }
     if (tableId == null || tableId.isEmpty()) {
       throw new IllegalArgumentException("Table Id cannot be null or empty");
     }
-    if (!cloudEndpointInfo.tableIdExists(tableId)) {
+    if (!aggInfo.tableIdExists(tableId)) {
       throw new IllegalArgumentException("tableId: " + tableId + " does not exist");
     }
 
     this.attMngr = attMngr;
-    this.cloudEndpointInfo = cloudEndpointInfo;
+    this.aggInfo = aggInfo;
     this.tableId = tableId;
 
     this.size = 0;
@@ -184,11 +184,11 @@ public class ODKCsv implements Iterable<String[]> {
    * Initialize an empty ODKCsv
    *
    * @param attMngr
-   * @param cloudEndpointInfo
+   * @param aggInfo
    */
-  public ODKCsv(AttachmentManager attMngr, CloudEndpointInfo cloudEndpointInfo, String tableId)
+  public ODKCsv(AttachmentManager attMngr, AggregateInfo aggInfo, String tableId)
       throws JSONException {
-    this(null, attMngr, cloudEndpointInfo, tableId);
+    this(null, attMngr, aggInfo, tableId);
   }
 
   /**
@@ -550,14 +550,14 @@ public class ODKCsv implements Iterable<String[]> {
     if (localLink) {
       URL attachmentUrl = this.attMngr.getAttachmentUrl(row.optString(ID_JSON), fileName, true);
       if (attachmentUrl == null) {
-        return "File is missing on the Cloud Endpoint.";
+        return "File is missing on Aggregate server.";
       }
       attachmentUrlStr = attachmentUrl.toString();
     } else {
       attachmentUrlStr =
-          this.cloudEndpointInfo.getServerUrl() + "/" + "tables" + "/" + this.cloudEndpointInfo.getAppId() + "/" +
+          this.aggInfo.getServerUrl() + "/" + "tables" + "/" + this.aggInfo.getAppId() + "/" +
               this.tableId + "/ref/" +
-              this.cloudEndpointInfo.getSchemaETag(this.tableId) + "/attachments/" +
+              this.aggInfo.getSchemaETag(this.tableId) + "/attachments/" +
               row.optString(ID_JSON) + "/file/" + fileName;
     }
 
