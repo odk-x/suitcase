@@ -1,6 +1,7 @@
 package org.opendatakit.suitcase.ui;
 
 import javax.swing.*;
+import org.opendatakit.suitcase.utils.SuitcaseConst;
 import java.util.Scanner;
 
 public class DialogUtils {
