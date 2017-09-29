@@ -40,7 +40,7 @@ public class UploadTaskTest extends TestCase{
     //batchSize = Integer.valueOf(System.getProperty("test.batchSize"));
     
     serverUrl = "";
-    appId = "default";
+    appId = "";
     absolutePathOfTestFiles = "testfiles/";
     batchSize = 1000;
     username = "";
@@ -109,12 +109,14 @@ public class UploadTaskTest extends TestCase{
       manifest = sc.getManifestForAppLevelFiles(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), version);
       assertFalse(checkThatFileExists(manifest, relativeServerPath));
 
-      sc.close();
-
     } catch (Exception e) {
       System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskAdd_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
   
@@ -176,12 +178,14 @@ public class UploadTaskTest extends TestCase{
       JSONObject tables = sc.getTable(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), tableId);
       assertNull(tables);
 
-      sc.close();
-
     } catch (Exception e) {
       System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskAdd_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
 }

@@ -5,6 +5,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
+import org.opendatakit.aggregate.odktables.rest.entity.PrivilegesInfo;
 import org.opendatakit.aggregate.odktables.rest.entity.Row;
 import org.opendatakit.aggregate.odktables.rest.entity.RowOutcomeList;
 import org.opendatakit.aggregate.odktables.rest.entity.TableDefinitionResource;
@@ -372,6 +373,17 @@ public class SyncWrapper {
         tableId, tableDefRes.getColumns());
     
     return colDefs;
+  }
+  
+  public void setPrivilegesInfo() throws ClientProtocolException, IOException,
+      JSONException {
+
+    PrivilegesInfo privInfo = sc.getPrivilegesInfo(cloudEndpointInfo.getServerUrl(),
+        cloudEndpointInfo.getAppId());
+    
+    if (privInfo != null) {
+      cloudEndpointInfo.setPrivilegedUserName(privInfo.getUser_id());
+    }
   }
   
   @Override
