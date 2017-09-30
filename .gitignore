@@ -6,6 +6,7 @@ target/*
 *.ipr
 *.iws
 .idea/
+.settings/
 out/
 
 # Downloaded Data

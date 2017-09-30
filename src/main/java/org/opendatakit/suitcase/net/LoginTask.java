@@ -27,6 +27,7 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
 
     syncWrapper.reset();
     syncWrapper.init(cloudEndpointInfo);
+    syncWrapper.setPrivilegesInfo();
 
     return null;
   }

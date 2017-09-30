@@ -1,6 +1,18 @@
 package org.opendatakit.suitcase.net;
 
 import static org.opendatakit.suitcase.ui.MessageString.*;
+import static org.opendatakit.sync.client.SyncClient.DEFAULT_ACCESS_ROW_DEF;
+import static org.opendatakit.sync.client.SyncClient.FORM_ID_ROW_DEF;
+import static org.opendatakit.sync.client.SyncClient.GROUP_MODIFY_ROW_DEF;
+import static org.opendatakit.sync.client.SyncClient.GROUP_PRIVILEGED_ROW_DEF;
+import static org.opendatakit.sync.client.SyncClient.GROUP_READ_ONLY_ROW_DEF;
+import static org.opendatakit.sync.client.SyncClient.ID_ROW_DEF;
+import static org.opendatakit.sync.client.SyncClient.LOCALE_ROW_DEF;
+import static org.opendatakit.sync.client.SyncClient.ROW_ETAG_ROW_DEF;
+import static org.opendatakit.sync.client.SyncClient.ROW_OWNER_ROW_DEF;
+import static org.opendatakit.sync.client.SyncClient.SAVEPOINT_CREATOR_ROW_DEF;
+import static org.opendatakit.sync.client.SyncClient.SAVEPOINT_TIMESTAMP_ROW_DEF;
+import static org.opendatakit.sync.client.SyncClient.SAVEPOINT_TYPE_ROW_DEF;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,6 +23,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.zip.DataFormatException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -20,6 +35,7 @@ import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.aggregate.odktables.rest.RFC4180CsvReader;
+import org.opendatakit.aggregate.odktables.rest.SavepointTypeManipulator;
 import org.opendatakit.aggregate.odktables.rest.TableConstants;
 import org.opendatakit.aggregate.odktables.rest.entity.DataKeyValue;
 import org.opendatakit.aggregate.odktables.rest.entity.Row;
@@ -31,6 +47,7 @@ import org.opendatakit.sync.client.SyncClient;
 import org.opendatakit.suitcase.ui.DialogUtils;
 import org.opendatakit.suitcase.ui.SuitcaseProgressBar;
 import org.opendatakit.suitcase.utils.FileUtils;
+import org.opendatakit.suitcase.utils.SuitcaseConst;
 
 public class UpdateTask extends SuitcaseSwingWorker<Void> {
   private static final String IN_PROGRESS_STRING = "Updating...";
@@ -49,6 +66,26 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
   private String version;
   private String tableId;
   private boolean isGUI;
+  
+  private Map<String, Integer> colToIdx = new HashMap<String, Integer>();
+  private static ArrayList<String> metadataColumns = new ArrayList<String>();
+  
+  static {
+    metadataColumns.add(OP_STR);
+    metadataColumns.add(SyncClient.ID_ROW_DEF);
+    metadataColumns.add(SyncClient.FORM_ID_ROW_DEF);
+    metadataColumns.add(SyncClient.LOCALE_ROW_DEF);
+    metadataColumns.add(SyncClient.SAVEPOINT_TYPE_ROW_DEF); 
+    metadataColumns.add(SyncClient.SAVEPOINT_TIMESTAMP_ROW_DEF);
+    metadataColumns.add(SyncClient.SAVEPOINT_CREATOR_ROW_DEF);
+    metadataColumns.add(SyncClient.ROW_ETAG_ROW_DEF);
+    metadataColumns.add(SyncClient.DEFAULT_ACCESS_ROW_DEF);
+    metadataColumns.add(SyncClient.ROW_OWNER_ROW_DEF); 
+    metadataColumns.add(SyncClient.GROUP_READ_ONLY_ROW_DEF);
+    metadataColumns.add(SyncClient.GROUP_MODIFY_ROW_DEF);
+    metadataColumns.add(SyncClient.GROUP_PRIVILEGED_ROW_DEF);
+                                                   
+  }
 
   public UpdateTask(CloudEndpointInfo cloudEndpointInfo, String dataPath, String version, String tableId,
                     String outcomePath, boolean isGUI) {
@@ -66,7 +103,91 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
           + DEFAULT_OUTCOME_FILE_NAME;
     }
   }
+  
+  protected void verifyColumns(String[] headerCols) {
+    for (int i = 0; i < headerCols.length; i++) {
+      String col = headerCols[i];
+          colToIdx.put(col, i);
+    }
+    
+    if (!colToIdx.containsKey(OP_STR)) {
+      throw new IllegalArgumentException(
+          "CSV does not contain metadata column:" + OP_STR);
+    }
+    
+    if (!colToIdx.containsKey(SyncClient.ID_ROW_DEF)) {
+      throw new IllegalArgumentException(
+          "CSV does not contain metadata column:" + SyncClient.ID_ROW_DEF);
+    }
+    
+    if (!colToIdx.containsKey(SyncClient.FORM_ID_ROW_DEF)) {
+      throw new IllegalArgumentException(
+          "CSV does not contain metadata column:" + SyncClient.FORM_ID_ROW_DEF);
+    }
+    
+    if (!colToIdx.containsKey(SyncClient.LOCALE_ROW_DEF)) {
+      throw new IllegalArgumentException(
+          "CSV does not contain metadata column:" + SyncClient.LOCALE_ROW_DEF);   
+    }
+    
+    if (!colToIdx.containsKey(SyncClient.SAVEPOINT_TYPE_ROW_DEF)) {
+      throw new IllegalArgumentException(
+          "CSV does not contain metadata column:" + SyncClient.SAVEPOINT_TYPE_ROW_DEF);   
+    }
+    
+    if (!colToIdx.containsKey(SyncClient.SAVEPOINT_TIMESTAMP_ROW_DEF)) {
+      throw new IllegalArgumentException(
+          "CSV does not contain metadata column:" + SyncClient.SAVEPOINT_TIMESTAMP_ROW_DEF); 
+    }
+    
+    if (!colToIdx.containsKey(SyncClient.SAVEPOINT_CREATOR_ROW_DEF)) {
+      throw new IllegalArgumentException(
+          "CSV does not contain metadata column:" + SyncClient.SAVEPOINT_CREATOR_ROW_DEF); 
+    }
+    
+    if (!colToIdx.containsKey(SyncClient.ROW_ETAG_ROW_DEF)) {
+      throw new IllegalArgumentException(
+          "CSV does not contain metadata column:" + SyncClient.ROW_ETAG_ROW_DEF); 
+    }
+    
+    if (!colToIdx.containsKey(SyncClient.DEFAULT_ACCESS_ROW_DEF)) {
+      throw new IllegalArgumentException(
+          "CSV does not contain metadata column:" + SyncClient.DEFAULT_ACCESS_ROW_DEF); 
+    }
+    
+    if (!colToIdx.containsKey(SyncClient.ROW_OWNER_ROW_DEF)) {
+      throw new IllegalArgumentException(
+          "CSV does not contain metadata column:" + SyncClient.ROW_OWNER_ROW_DEF); 
+    }
+    
+    if (!colToIdx.containsKey(SyncClient.GROUP_READ_ONLY_ROW_DEF)) {
+      throw new IllegalArgumentException(
+          "CSV does not contain metadata column:" + SyncClient.GROUP_READ_ONLY_ROW_DEF); 
+    }
+    
+    if (!colToIdx.containsKey(SyncClient.GROUP_MODIFY_ROW_DEF)) {
+      throw new IllegalArgumentException(
+          "CSV does not contain metadata column:" + SyncClient.GROUP_MODIFY_ROW_DEF); 
+    }
+    
+    if (!colToIdx.containsKey(SyncClient.GROUP_PRIVILEGED_ROW_DEF)) {
+      throw new IllegalArgumentException(
+          "CSV does not contain metadata column:" + SyncClient.GROUP_PRIVILEGED_ROW_DEF); 
+    }
+  }
 
+  protected boolean isDataColumn(String colName) {
+    if (colName == null || colName.length() == 0) {
+      return false;
+    }
+    
+    if (!metadataColumns.contains(colName)) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
   @Override
   protected Void doInBackground() throws IOException, JSONException, InterruptedException {
     setString(IN_PROGRESS_STRING);
@@ -107,7 +228,6 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
     // NOTE: This could change in the future
     String[] firstLine;
     String operation = null;
-    int opIdx = 0, rowIdIdx = 1, rowFormIdIdx = 2, rowLocaleIdx = 3, rowSavepointTypeIdx = 4, rowSavepointTimestampIdx = 5, rowSavepointCreatorIdx = 6;
     String rowId = null;
     String rowFormId = null;
     String rowLocale = null;
@@ -125,6 +245,16 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
     if (firstLine == null) {
       throw new IllegalArgumentException("The number of columns present in the CSV is not correct");
     }
+    
+    verifyColumns(firstLine);
+    
+    int opIdx = colToIdx.get(OP_STR);
+    int rowIdIdx = colToIdx.get(SyncClient.ID_ROW_DEF);
+    int rowFormIdIdx = colToIdx.get(SyncClient.FORM_ID_ROW_DEF);
+    int rowLocaleIdx = colToIdx.get(SyncClient.LOCALE_ROW_DEF);
+    int rowSavepointTypeIdx = colToIdx.get(SyncClient.SAVEPOINT_TYPE_ROW_DEF);
+    int rowSavepointTimestampIdx = colToIdx.get(SyncClient.SAVEPOINT_TIMESTAMP_ROW_DEF);
+    int rowSavepointCreatorIdx = colToIdx.get(SyncClient.SAVEPOINT_CREATOR_ROW_DEF);
 
     operation = firstLine[opIdx];
     rowId = firstLine[rowIdIdx];
@@ -134,13 +264,12 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
     rowSavepointTimestamp = firstLine[rowSavepointTimestampIdx];
     rowSavepointCreator = firstLine[rowSavepointCreatorIdx];
 
-    int lastCol = firstLine.length - 1;
-    int rowDefaultAccessIdx = lastCol - 5;
-    int rowGroupModifyIdx = lastCol - 4;
-    int rowGroupPrivilegedIdx = lastCol - 3;
-    int rowGroupReadOnlyIdx = lastCol - 2;
-    int rowETagIdx = lastCol - 1;
-    int rowOwnerIdx = lastCol;
+    int rowDefaultAccessIdx = colToIdx.get(SyncClient.DEFAULT_ACCESS_ROW_DEF);
+    int rowGroupModifyIdx = colToIdx.get(SyncClient.GROUP_MODIFY_ROW_DEF);
+    int rowGroupPrivilegedIdx = colToIdx.get(SyncClient.GROUP_PRIVILEGED_ROW_DEF);
+    int rowGroupReadOnlyIdx = colToIdx.get(SyncClient.GROUP_READ_ONLY_ROW_DEF);
+    int rowETagIdx = colToIdx.get(SyncClient.ROW_ETAG_ROW_DEF);
+    int rowOwnerIdx = colToIdx.get(SyncClient.ROW_OWNER_ROW_DEF);
     
     rowETag = firstLine[rowETagIdx];
     rowDefaultAccess = firstLine[rowDefaultAccessIdx];
@@ -149,27 +278,6 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
     rowGroupModify = firstLine[rowGroupModifyIdx];
     rowGroupPrivileged = firstLine[rowGroupPrivilegedIdx];
 
-    if ((!operation.equals(OP_STR)) || (!rowId.equals(SyncClient.ID_ROW_DEF))
-        || (!rowFormId.equals(SyncClient.FORM_ID_ROW_DEF))
-        || (!rowLocale.equals(SyncClient.LOCALE_ROW_DEF))
-        || (!rowSavepointType.equals(SyncClient.SAVEPOINT_TYPE_ROW_DEF))
-        || (!rowSavepointTimestamp.equals(SyncClient.SAVEPOINT_TIMESTAMP_ROW_DEF))
-        || (!rowSavepointCreator.equals(SyncClient.SAVEPOINT_CREATOR_ROW_DEF))) {
-
-      throw new IllegalArgumentException(
-          "The number of columns in CSV does not contain the first set of metadata columns");
-    }
-
-    if ((!rowETag.equals(SyncClient.ROW_ETAG_ROW_DEF))
-        || (!rowDefaultAccess.equals(SyncClient.DEFAULT_ACCESS_ROW_DEF))
-        || (!rowOwner.equals(SyncClient.ROW_OWNER_ROW_DEF))
-        || (!rowGroupReadOnly.equals(SyncClient.GROUP_READ_ONLY_ROW_DEF))
-        || (!rowGroupModify.equals(SyncClient.GROUP_MODIFY_ROW_DEF))
-        || (!rowGroupPrivileged.equals(SyncClient.GROUP_PRIVILEGED_ROW_DEF))){
-      throw new IllegalArgumentException(
-          "The number of columns in CSV does not contain the last set of metadata columns");
-    }
-    
     // Get the current rows in the table
     // in order to pull the rowETags
     SortedMap<String, String> rowIdToRowETag = new TreeMap<>();
@@ -207,14 +315,47 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
       rowGroupPrivileged = lineIn[rowGroupPrivilegedIdx];
 
       ArrayList<DataKeyValue> dkvl = new ArrayList<DataKeyValue>();
-      for (int i = 7; i < lineIn.length - 6; i++) {
-        DataKeyValue dkv = new DataKeyValue(firstLine[i], lineIn[i]);
-        dkvl.add(dkv);
+      for (int i = 0; i < lineIn.length; i++) {
+        if (isDataColumn(firstLine[i])) {
+          DataKeyValue dkv = new DataKeyValue(firstLine[i], lineIn[i]);
+          dkvl.add(dkv);
+        } 
       }
 
       String opToCompare = operation.toUpperCase();
 
       String existingRowETag = rowIdToRowETag.get(rowId);
+      
+      // If the operation is an add, update, or force_update,
+      // we need to populate savepoint_creator,
+      // savepoint_timestamp, savepoint_type, and locale if
+      // the value is not supplied
+      if (opToCompare.equals(FORCE_UPDATE_OP) || opToCompare.equals(UPDATE_OP) ||
+          opToCompare.equals(NEW_OP)) {
+        
+        if (rowSavepointCreator == null || rowSavepointCreator.length() == 0) {
+          rowSavepointCreator = SuitcaseConst.ANONYMOUS_USER;
+          String suppliedUserName = cloudEndpointInfo.getUserName();
+          if (suppliedUserName != null && suppliedUserName.length() > 0) {
+            String privilegedUserName = cloudEndpointInfo.getPrivilegedUserName();
+            if (privilegedUserName != null && privilegedUserName.length() > 0) {
+              rowSavepointCreator = cloudEndpointInfo.getPrivilegedUserName();
+            }
+          }
+        } 
+        
+        if (rowSavepointTimestamp == null || rowSavepointTimestamp.length() == 0) {
+          rowSavepointTimestamp =  TableConstants.nanoSecondsFromMillis(System.currentTimeMillis());
+        }
+        
+        if (rowSavepointType == null || rowSavepointType.length() == 0) {
+          rowSavepointType = SavepointTypeManipulator.complete();
+        }
+        
+        if (rowLocale == null || rowLocale.length() == 0) {
+          rowLocale = SuitcaseConst.DEFAULT_LOCALE;
+        }
+      }
 
       switch (opToCompare) {
       // Figure out what rows need to be force updated

@@ -14,6 +14,7 @@ public class CloudEndpointInfo {
   private String userName;
   private String password;
   private SortedMap<String, String> tableIdSchemaETag;
+  private String privilegedUserName;
   
   public CloudEndpointInfo(String serverUrl, String appId, String userName, String password)
       throws MalformedURLException {
@@ -52,6 +53,14 @@ public class CloudEndpointInfo {
   
   public String getUserName() {
     return userName;
+  }
+  
+  public void setPrivilegedUserName(String privUserName) {
+    privilegedUserName = privUserName;
+  }
+  
+  public String getPrivilegedUserName() {
+    return privilegedUserName;
   }
   
   public String getPassword() {
@@ -108,6 +117,7 @@ public class CloudEndpointInfo {
         "serverUrl='" + serverUrl + '\'' +
         ", appId='" + appId + '\'' +
         ", userName='" + userName + '\'' +
+        ", privilegedUserName='" + privilegedUserName + '\'' +
         ", password='" + password + '\'' +
         ", tableIdSchemaETag=" + tableIdSchemaETag +
         '}';

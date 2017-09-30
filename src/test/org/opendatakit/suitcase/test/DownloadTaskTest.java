@@ -34,11 +34,12 @@ public class DownloadTaskTest extends TestCase{
   @Override
   protected void setUp() throws MalformedURLException {
     serverUrl = "";
-    appId = "default";
+    appId = "";
     absolutePathOfTestFiles = "testfiles/";
     userName = "";
     password = "";
     version = "2";
+    
     cloudEndpointInfo = new CloudEndpointInfo(serverUrl, appId, userName, password);
   }
   
@@ -138,6 +139,10 @@ public class DownloadTaskTest extends TestCase{
       System.out.println("DownloadTaskTest: Exception thrown in testDownloadTaskWithEmptyTable_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
   
@@ -248,12 +253,14 @@ public class DownloadTaskTest extends TestCase{
       JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
       assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
 
-      sc.close();
-
     } catch (Exception e) {
       System.out.println("DownloadTaskTest: Exception thrown in testDownloadTaskAddWithNonEmptyTable_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
   
@@ -364,12 +371,14 @@ public class DownloadTaskTest extends TestCase{
       JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
       assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
 
-      sc.close();
-
     } catch (Exception e) {
       System.out.println("DownloadTaskTest: Exception thrown in testDownloadTaskAddWithNonEmptyTable_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
   
@@ -469,12 +478,14 @@ public class DownloadTaskTest extends TestCase{
       JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
       assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
 
-      sc.close();
-
     } catch (Exception e) {
       System.out.println("DownloadTaskTest: Exception thrown in testDownloadTaskAddWithNonEmptyTable_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
 }

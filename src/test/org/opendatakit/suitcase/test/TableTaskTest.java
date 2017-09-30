@@ -26,8 +26,9 @@ public class TableTaskTest extends TestCase{
   
   @Override
   protected void setUp() throws MalformedURLException {
+    
     serverUrl = "";
-    appId = "default";
+    appId = "";
     userName = "";
     password = "";
     version = "2";
@@ -39,9 +40,10 @@ public class TableTaskTest extends TestCase{
     String operation = "create";
     String dataPath = "testfiles/plot/definition.csv";
     int retCode;
+    SyncClient sc = null;
     
     try {
-      SyncClient sc = new SyncClient();
+      sc = new SyncClient();
       
       String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
       cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
@@ -70,11 +72,14 @@ public class TableTaskTest extends TestCase{
       JSONObject obj = sc.getTable(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId);
       assertNull(obj);
       
-      sc.close();
     } catch (Exception e) {
       System.out.println("TableTaskTest: Exception thrown in createTableTest");
       e.printStackTrace();
       fail(); 
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
   
@@ -83,9 +88,10 @@ public class TableTaskTest extends TestCase{
     String operation = "delete";
     String dataPath = "testfiles/plot/definition.csv";
     int retCode;
+    SyncClient sc = null;
 
     try {
-      SyncClient sc = new SyncClient();
+      sc = new SyncClient();
       
       String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
       cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
@@ -123,6 +129,10 @@ public class TableTaskTest extends TestCase{
       System.out.println("TableTaskTest: Exception thrown in testDeleteTable_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
   
@@ -132,9 +142,10 @@ public class TableTaskTest extends TestCase{
     String defPath = "testfiles/plot/definition.csv";
     String dataPath = "testfiles/plot/plot-add5.csv";
     int retCode;
+    SyncClient sc = null;
     
     try {
-      SyncClient sc = new SyncClient();
+      sc = new SyncClient();
       
       String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
       cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
@@ -180,13 +191,15 @@ public class TableTaskTest extends TestCase{
       JSONObject obj = sc.getTable(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId);
       assertNull(obj);
       
-      sc.close();
-      
     } catch (Exception e) {
       System.out.println("TableTaskTest: Exception thrown in testClearTable_ExpectPass");
       e.printStackTrace();
       fail();
-    } 
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
+    }
   }
   
   public void testClearTableNoFilePath_ExpectPass() {
@@ -195,9 +208,10 @@ public class TableTaskTest extends TestCase{
     String defPath = "testfiles/plot/definition.csv";
     String dataPath = "testfiles/plot/plot-add5.csv";
     int retCode;
+    SyncClient sc = null;
     
     try {
-      SyncClient sc = new SyncClient();
+      sc = new SyncClient();
       
       String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
       cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
@@ -243,13 +257,15 @@ public class TableTaskTest extends TestCase{
       JSONObject obj = sc.getTable(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId);
       assertNull(obj);
       
-      sc.close();
-      
     } catch (Exception e) {
       System.out.println("TableTaskTest: Exception thrown in testClearTableNoFilePath_ExpectPass");
       e.printStackTrace();
       fail();
-    } 
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
+    }
   }
   
   public void testClearLargeTableData_ExpectPass() {
@@ -258,9 +274,10 @@ public class TableTaskTest extends TestCase{
     String defPath = "testfiles/cookstoves/data_definition.csv";
     String dataPath = "testfiles/cookstoves/data_small.csv";
     int retCode;
+    SyncClient sc = null;
     
     try {
-      SyncClient sc = new SyncClient();
+      sc = new SyncClient();
       
       String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
       cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
@@ -306,13 +323,15 @@ public class TableTaskTest extends TestCase{
       JSONObject obj = sc.getTable(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId);
       assertNull(obj);
       
-      sc.close();
-      
     } catch (Exception e) {
       System.out.println("TableTaskTest: Exception thrown in testClearLargeTableData_ExpectPass");
       e.printStackTrace();
       fail();
-    } 
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
+    }
   }
   
   public void testClearEmptyTable_ExpectPass() {
@@ -320,9 +339,10 @@ public class TableTaskTest extends TestCase{
     String operation = "clear";
     String defPath = "testfiles/cookstoves/data_definition.csv";
     int retCode;
+    SyncClient sc = null;
     
     try {
-      SyncClient sc = new SyncClient();
+      sc = new SyncClient();
       
       String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
       cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
@@ -363,12 +383,14 @@ public class TableTaskTest extends TestCase{
       JSONObject obj = sc.getTable(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId);
       assertNull(obj);
       
-      sc.close();
-      
     } catch (Exception e) {
       System.out.println("TableTaskTest: Exception thrown in testClearLargeTableData_ExpectPass");
       e.printStackTrace();
       fail();
-    } 
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
+    }
   }
 }
