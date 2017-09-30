@@ -11,7 +11,7 @@ import junit.framework.TestCase;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.aggregate.odktables.rest.RFC4180CsvReader;
-import org.opendatakit.suitcase.model.AggregateInfo;
+import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.opendatakit.suitcase.model.CsvConfig;
 import org.opendatakit.suitcase.model.ODKCsv;
 import org.opendatakit.suitcase.net.AttachmentManager;
@@ -23,7 +23,7 @@ import org.opendatakit.sync.client.SyncClient;
 
 public class DownloadTaskTest extends TestCase{
   
-  AggregateInfo aggInfo = null;
+  CloudEndpointInfo cloudEndpointInfo = null;
   String serverUrl = null;
   String appId = null;
   String absolutePathOfTestFiles = null;
@@ -34,12 +34,13 @@ public class DownloadTaskTest extends TestCase{
   @Override
   protected void setUp() throws MalformedURLException {
     serverUrl = "";
-    appId = "default";
+    appId = "";
     absolutePathOfTestFiles = "testfiles/";
     userName = "";
     password = "";
     version = "2";
-    aggInfo = new AggregateInfo(serverUrl, appId, userName, password); 
+    
+    cloudEndpointInfo = new CloudEndpointInfo(serverUrl, appId, userName, password);
   }
   
   public void testDownloadTaskWithEmptyTable_ExpectPass() {
@@ -54,15 +55,15 @@ public class DownloadTaskTest extends TestCase{
     try {
       sc = new SyncClient();
       
-      String agg_url = aggInfo.getHostUrl();
-      agg_url = agg_url.substring(0, agg_url.length()-1);
+      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
+      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
       
-      URL url = new URL(agg_url);
+      URL url = new URL(cloud_endpoint_url);
       String host = url.getHost();
       
-      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
 
-      JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject result = sc.createTableWithCSV(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, null, csvFile);
       System.out.println("testDownloadTaskWithEmptyTable_ExpectPass: result is " + result);
 
@@ -73,13 +74,13 @@ public class DownloadTaskTest extends TestCase{
       }
 
       // Get the table definition
-      JSONObject tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject tableDef = sc.getTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, tableSchemaETag);
 
       // Make sure it is the same as the csv definition
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
       
-      LoginTask lTask = new LoginTask(aggInfo, false);
+      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
@@ -93,11 +94,11 @@ public class DownloadTaskTest extends TestCase{
         f.delete();
       }
 
-      AttachmentManager attMgr = new AttachmentManager(aggInfo, testTableId, savePath);
-      ODKCsv csv = new ODKCsv(attMgr, aggInfo, testTableId);
+      AttachmentManager attMgr = new AttachmentManager(cloudEndpointInfo, testTableId, savePath);
+      ODKCsv csv = new ODKCsv(attMgr, cloudEndpointInfo, testTableId);
       CsvConfig csvConfig = new CsvConfig(false, false,false);
       
-      DownloadTask dTask = new DownloadTask(aggInfo, csv, csvConfig, savePath, false);
+      DownloadTask dTask = new DownloadTask(cloudEndpointInfo, csv, csvConfig, savePath, false);
       retCode = dTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
@@ -125,11 +126,11 @@ public class DownloadTaskTest extends TestCase{
       assertEquals(rowId, "_id");
       
       // Now delete the table
-      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag);
 
       // Check that table no longer exists
-      JSONObject obj = sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
       assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
 
       sc.close();
@@ -138,6 +139,10 @@ public class DownloadTaskTest extends TestCase{
       System.out.println("DownloadTaskTest: Exception thrown in testDownloadTaskWithEmptyTable_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
   
@@ -154,19 +159,19 @@ public class DownloadTaskTest extends TestCase{
     try {
       sc = new SyncClient();
       
-      String agg_url = aggInfo.getHostUrl();
-      agg_url = agg_url.substring(0, agg_url.length()-1);
+      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
+      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
       
-      URL url = new URL(agg_url);
+      URL url = new URL(cloud_endpoint_url);
       String host = url.getHost();
       
-      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
 
-      LoginTask lTask = new LoginTask(aggInfo, false);
+      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject result = sc.createTableWithCSV(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, null, csvFile);
       System.out.println("testDownloadTaskAddWithNonEmptyTable_ExpectPass: result is " + result);
 
@@ -177,17 +182,17 @@ public class DownloadTaskTest extends TestCase{
       }
 
       // Get the table definition
-      JSONObject tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject tableDef = sc.getTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, tableSchemaETag);
 
       // Make sure it is the same as the csv definition
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
       
-      UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, null, false);
+      UpdateTask updateTask = new UpdateTask(cloudEndpointInfo, dataPath, version, testTableId, null, false);
       retCode = updateTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      JSONObject res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag, null, null, null);
 
       JSONArray rows = res.getJSONArray("rows");
@@ -209,11 +214,11 @@ public class DownloadTaskTest extends TestCase{
         f.delete();
       }
       
-      AttachmentManager attMgr = new AttachmentManager(aggInfo, testTableId, savePath);
-      ODKCsv csv = new ODKCsv(attMgr, aggInfo, testTableId);
+      AttachmentManager attMgr = new AttachmentManager(cloudEndpointInfo, testTableId, savePath);
+      ODKCsv csv = new ODKCsv(attMgr, cloudEndpointInfo, testTableId);
       CsvConfig csvConfig = new CsvConfig(false, false,false);
       
-      DownloadTask dTask = new DownloadTask(aggInfo, csv, csvConfig, savePath, false);
+      DownloadTask dTask = new DownloadTask(cloudEndpointInfo, csv, csvConfig, savePath, false);
       retCode = dTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
@@ -241,19 +246,21 @@ public class DownloadTaskTest extends TestCase{
       assertEquals(rowId, "12");
       
       // Now delete the table
-      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag);
 
       // Check that table no longer exists
-      JSONObject obj = sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
       assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
-
-      sc.close();
 
     } catch (Exception e) {
       System.out.println("DownloadTaskTest: Exception thrown in testDownloadTaskAddWithNonEmptyTable_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
   
@@ -270,19 +277,19 @@ public class DownloadTaskTest extends TestCase{
     try {
       sc = new SyncClient();
       
-      String agg_url = aggInfo.getHostUrl();
-      agg_url = agg_url.substring(0, agg_url.length()-1);
+      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
+      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
       
-      URL url = new URL(agg_url);
+      URL url = new URL(cloud_endpoint_url);
       String host = url.getHost();
       
-      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
 
-      LoginTask lTask = new LoginTask(aggInfo, false);
+      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject result = sc.createTableWithCSV(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, null, csvFile);
       System.out.println("testDownloadTaskAddWithNonEmptyTableFromGeneratedCSV_ExpectPass: result is " + result);
 
@@ -293,17 +300,17 @@ public class DownloadTaskTest extends TestCase{
       }
 
       // Get the table definition
-      JSONObject tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject tableDef = sc.getTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, tableSchemaETag);
 
       // Make sure it is the same as the csv definition
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
       
-      UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, null, false);
+      UpdateTask updateTask = new UpdateTask(cloudEndpointInfo, dataPath, version, testTableId, null, false);
       retCode = updateTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      JSONObject res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag, null, null, null);
 
       JSONArray rows = res.getJSONArray("rows");
@@ -325,11 +332,11 @@ public class DownloadTaskTest extends TestCase{
         f.delete();
       }
       
-      AttachmentManager attMgr = new AttachmentManager(aggInfo, testTableId, savePath);
-      ODKCsv csv = new ODKCsv(attMgr, aggInfo, testTableId);
+      AttachmentManager attMgr = new AttachmentManager(cloudEndpointInfo, testTableId, savePath);
+      ODKCsv csv = new ODKCsv(attMgr, cloudEndpointInfo, testTableId);
       CsvConfig csvConfig = new CsvConfig(false, false,false);
       
-      DownloadTask dTask = new DownloadTask(aggInfo, csv, csvConfig, savePath, false);
+      DownloadTask dTask = new DownloadTask(cloudEndpointInfo, csv, csvConfig, savePath, false);
       retCode = dTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
@@ -357,19 +364,21 @@ public class DownloadTaskTest extends TestCase{
       assertEquals(rowId, "uuid:9551714f-66fa-4f85-ac02-1cbe3a66a61a");
       
       // Now delete the table
-      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag);
 
       // Check that table no longer exists
-      JSONObject obj = sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
       assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
-
-      sc.close();
 
     } catch (Exception e) {
       System.out.println("DownloadTaskTest: Exception thrown in testDownloadTaskAddWithNonEmptyTable_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
   
@@ -386,19 +395,19 @@ public class DownloadTaskTest extends TestCase{
     try {
       sc = new SyncClient();
       
-      String agg_url = aggInfo.getHostUrl();
-      agg_url = agg_url.substring(0, agg_url.length()-1);
+      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
+      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
       
-      URL url = new URL(agg_url);
+      URL url = new URL(cloud_endpoint_url);
       String host = url.getHost();
       
-      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
 
-      LoginTask lTask = new LoginTask(aggInfo, false);
+      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject result = sc.createTableWithCSV(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, null, csvFile);
       System.out.println("testDownloadTaskAddWithNonEmptyTableFromGeneratedCSVAndGroups_ExpectPass: result is " + result);
 
@@ -409,17 +418,17 @@ public class DownloadTaskTest extends TestCase{
       }
 
       // Get the table definition
-      JSONObject tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject tableDef = sc.getTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, tableSchemaETag);
 
       // Make sure it is the same as the csv definition
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
       
-      UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, null, false);
+      UpdateTask updateTask = new UpdateTask(cloudEndpointInfo, dataPath, version, testTableId, null, false);
       retCode = updateTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      JSONObject res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag, null, null, null);
 
       JSONArray rows = res.getJSONArray("rows");
@@ -438,11 +447,11 @@ public class DownloadTaskTest extends TestCase{
         f.delete();
       }
       
-      AttachmentManager attMgr = new AttachmentManager(aggInfo, testTableId, savePath);
-      ODKCsv csv = new ODKCsv(attMgr, aggInfo, testTableId);
+      AttachmentManager attMgr = new AttachmentManager(cloudEndpointInfo, testTableId, savePath);
+      ODKCsv csv = new ODKCsv(attMgr, cloudEndpointInfo, testTableId);
       CsvConfig csvConfig = new CsvConfig(false, false,false);
       
-      DownloadTask dTask = new DownloadTask(aggInfo, csv, csvConfig, savePath, false);
+      DownloadTask dTask = new DownloadTask(cloudEndpointInfo, csv, csvConfig, savePath, false);
       retCode = dTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
@@ -452,7 +461,7 @@ public class DownloadTaskTest extends TestCase{
       File fullFilePath = new File(fullSavePath);
       assertTrue(fullFilePath.exists());
       
-      res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag, null, null, null);
 
       rows = res.getJSONArray("rows");
@@ -462,19 +471,21 @@ public class DownloadTaskTest extends TestCase{
       assertEquals(TestUtilities.verifyServerRowsMatchCSV(rows, fullSavePath), true);
       
       // Now delete the table
-      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag);
 
       // Check that table no longer exists
-      JSONObject obj = sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
       assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
-
-      sc.close();
 
     } catch (Exception e) {
       System.out.println("DownloadTaskTest: Exception thrown in testDownloadTaskAddWithNonEmptyTable_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
 }

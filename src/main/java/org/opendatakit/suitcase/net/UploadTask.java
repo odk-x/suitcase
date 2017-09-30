@@ -1,6 +1,6 @@
 package org.opendatakit.suitcase.net;
 
-import org.opendatakit.suitcase.model.AggregateInfo;
+import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.apache.wink.json4j.JSONException;
 import org.opendatakit.suitcase.ui.DialogUtils;
 import org.opendatakit.suitcase.ui.SuitcaseProgressBar;
@@ -15,7 +15,7 @@ public class UploadTask extends SuitcaseSwingWorker<Void> {
   private static final String IN_PROGRESS_STRING = "Uploading...";
   private static final int PUSH_FINISH_WAIT = 5000;
 
-  private AggregateInfo aggInfo;
+  private CloudEndpointInfo cloudEndpointInfo;
   private String operation;
   private String dataPath;
   private String relativeServerPath;
@@ -25,12 +25,12 @@ public class UploadTask extends SuitcaseSwingWorker<Void> {
   public final static String FILE_OP = "FILE";
   public final static String RESET_APP_OP = "RESET_APP";
 
-  public UploadTask(AggregateInfo aggInfo, String dataPath, String version, boolean isGUI, 
-      String operation, String relativeServerPath) {
+  public UploadTask(CloudEndpointInfo cloudEndpointInfo, String dataPath, String version, boolean isGUI,
+                    String operation, String relativeServerPath) {
     
     super();
 
-    this.aggInfo = aggInfo;
+    this.cloudEndpointInfo = cloudEndpointInfo;
     this.dataPath = dataPath;
     this.version = version;
     this.operation = operation;
@@ -47,8 +47,8 @@ public class UploadTask extends SuitcaseSwingWorker<Void> {
     syncWrapper.updateTableList();
     
     String className = this.getClass().getSimpleName();
-    if (aggInfo == null) {
-      System.out.println("aggInfo must be specified " + className);
+    if (cloudEndpointInfo == null) {
+      System.out.println("cloudEndpointInfo must be specified " + className);
       return null;
     }
     

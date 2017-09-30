@@ -5,12 +5,16 @@ import java.net.URL;
 import java.util.Scanner;
 
 import org.apache.wink.json4j.JSONArray;
+import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
+import org.opendatakit.aggregate.odktables.rest.SavepointTypeManipulator;
+import org.opendatakit.aggregate.odktables.rest.TableConstants;
 import org.opendatakit.sync.client.SyncClient;
 import org.opendatakit.suitcase.net.LoginTask;
 import org.opendatakit.suitcase.net.SuitcaseSwingWorker;
 import org.opendatakit.suitcase.net.UpdateTask;
-import org.opendatakit.suitcase.model.AggregateInfo;
+import org.opendatakit.suitcase.utils.SuitcaseConst;
+import org.opendatakit.suitcase.model.CloudEndpointInfo;
 
 import junit.framework.TestCase;
 
@@ -24,7 +28,7 @@ public class UpdateTaskTest extends TestCase{
   String password;
   int batchSize;
   String version;
-  AggregateInfo aggInfo = null;
+  CloudEndpointInfo cloudEndpointInfo = null;
   
   /*
    * Perform setup for test if necessary
@@ -32,13 +36,13 @@ public class UpdateTaskTest extends TestCase{
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    //agg_url = System.getProperty("test.aggUrl");
+    //cloud_endpoint_url = System.getProperty("test.cloudEndpointUrl");
     //appId = System.getProperty("test.appId");
     //absolutePathOfTestFiles = System.getProperty("test.absolutePathOfTestFiles");
     //batchSize = Integer.valueOf(System.getProperty("test.batchSize"));
     
     serverUrl = "";
-    appId = "default";
+    appId = "";
     absolutePathOfTestFiles = "testfiles/";
     batchSize = 1000;
     username = "";
@@ -46,7 +50,7 @@ public class UpdateTaskTest extends TestCase{
     URL url = new URL(serverUrl);
     host = url.getHost();
     version = "2";
-    aggInfo = new AggregateInfo(serverUrl, appId, username, password); 
+    cloudEndpointInfo = new CloudEndpointInfo(serverUrl, appId, username, password);
   }
   
   public void testUpdateTaskAdd_ExpectPass() {
@@ -60,19 +64,19 @@ public class UpdateTaskTest extends TestCase{
     try {
       sc = new SyncClient();
       
-      String agg_url = aggInfo.getHostUrl();
-      agg_url = agg_url.substring(0, agg_url.length()-1);
+      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
+      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
       
-      URL url = new URL(agg_url);
+      URL url = new URL(cloud_endpoint_url);
       String host = url.getHost();
       
-      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
 
-      LoginTask lTask = new LoginTask(aggInfo, false);
+      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject result = sc.createTableWithCSV(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, null, csvFile);
       System.out.println("testUpdateTaskAdd: result is " + result);
 
@@ -83,17 +87,17 @@ public class UpdateTaskTest extends TestCase{
       }
 
       // Get the table definition
-      JSONObject tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject tableDef = sc.getTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, tableSchemaETag);
 
       // Make sure it is the same as the csv definition
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 
-      UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, null, false);
+      UpdateTask updateTask = new UpdateTask(cloudEndpointInfo, dataPath, version, testTableId, null, false);
       retCode = updateTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      JSONObject res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag, null, null, null);
 
       JSONArray rows = res.getJSONArray("rows");
@@ -106,11 +110,11 @@ public class UpdateTaskTest extends TestCase{
       assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
 
       // Now delete the table
-      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag);
 
       // Check that table no longer exists
-      JSONObject obj = sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
       assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
 
       sc.close();
@@ -119,6 +123,10 @@ public class UpdateTaskTest extends TestCase{
       System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskAdd_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
   
@@ -134,19 +142,19 @@ public class UpdateTaskTest extends TestCase{
     try {
       sc = new SyncClient();
       
-      String agg_url = aggInfo.getHostUrl();
-      agg_url = agg_url.substring(0, agg_url.length()-1);
+      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
+      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
       
-      URL url = new URL(agg_url);
+      URL url = new URL(cloud_endpoint_url);
       String host = url.getHost();
       
-      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
 
-      LoginTask lTask = new LoginTask(aggInfo, false);
+      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject result = sc.createTableWithCSV(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, null, csvFile);
       System.out.println("testUpdateTaskAdd: result is " + result);
 
@@ -157,17 +165,17 @@ public class UpdateTaskTest extends TestCase{
       }
 
       // Get the table definition
-      JSONObject tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject tableDef = sc.getTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, tableSchemaETag);
 
       // Make sure it is the same as the csv definition
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 
-      UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, logDataPath, false);
+      UpdateTask updateTask = new UpdateTask(cloudEndpointInfo, dataPath, version, testTableId, logDataPath, false);
       retCode = updateTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      JSONObject res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag, null, null, null);
 
       JSONArray rows = res.getJSONArray("rows");
@@ -200,11 +208,11 @@ public class UpdateTaskTest extends TestCase{
       }
 
       // Now delete the table
-      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag);
 
       // Check that table no longer exists
-      JSONObject obj = sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
       assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
 
       sc.close();
@@ -213,6 +221,10 @@ public class UpdateTaskTest extends TestCase{
       System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskAdd_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
   
@@ -227,15 +239,15 @@ public class UpdateTaskTest extends TestCase{
 
     try {
       sc = new SyncClient();
-      String agg_url = aggInfo.getHostUrl();
-      agg_url = agg_url.substring(0, agg_url.length()-1);
+      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
+      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
       
-      URL url = new URL(agg_url);
+      URL url = new URL(cloud_endpoint_url);
       String host = url.getHost();
       
-      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
 
-      JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject result = sc.createTableWithCSV(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, null, csvFile);
       System.out.println("testUpdateTaskDelete: result is " + result);
 
@@ -246,21 +258,21 @@ public class UpdateTaskTest extends TestCase{
       }
 
       // Get the table definition
-      JSONObject tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject tableDef = sc.getTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, tableSchemaETag);
 
       // Make sure it is the same as the csv definition
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 
-      LoginTask lTask = new LoginTask(aggInfo, false);
+      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      UpdateTask updateTask = new UpdateTask(aggInfo, dataPathAdd, version, testTableId, null, false);
+      UpdateTask updateTask = new UpdateTask(cloudEndpointInfo, dataPathAdd, version, testTableId, null, false);
       retCode = updateTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null,
+      JSONObject res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, tableSchemaETag, null, null,
           null);
 
       JSONArray rows = res.getJSONArray("rows");
@@ -272,11 +284,11 @@ public class UpdateTaskTest extends TestCase{
       // Now check that the row was created with the right rowId
       assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
 
-      UpdateTask taskDelete = new UpdateTask(aggInfo, dataPathDelete, version, testTableId, null, false);
+      UpdateTask taskDelete = new UpdateTask(cloudEndpointInfo, dataPathDelete, version, testTableId, null, false);
       retCode = taskDelete.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null,
+      res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, tableSchemaETag, null, null,
           null);
 
       rows = res.getJSONArray("rows");
@@ -284,10 +296,10 @@ public class UpdateTaskTest extends TestCase{
       assertEquals(rows.size(), 0);
 
       // Now delete the table
-      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag);
+      sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, tableSchemaETag);
       
       // Check that table no longer exists
-      JSONObject obj = sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
       assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
       
       sc.close();
@@ -296,6 +308,10 @@ public class UpdateTaskTest extends TestCase{
       System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskDelete_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
   
@@ -310,15 +326,15 @@ public class UpdateTaskTest extends TestCase{
 
     try {
       sc = new SyncClient();
-      String agg_url = aggInfo.getHostUrl();
-      agg_url = agg_url.substring(0, agg_url.length()-1);
+      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
+      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
       
-      URL url = new URL(agg_url);
+      URL url = new URL(cloud_endpoint_url);
       String host = url.getHost();
       
-      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
 
-      JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject result = sc.createTableWithCSV(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, null, csvFile);
       System.out.println("testUpdateTaskUpdate: result is " + result);
 
@@ -329,21 +345,21 @@ public class UpdateTaskTest extends TestCase{
       }
 
       // Get the table definition
-      JSONObject tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject tableDef = sc.getTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, tableSchemaETag);
 
       // Make sure it is the same as the csv definition
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 
-      LoginTask lTask = new LoginTask(aggInfo, false);
+      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      UpdateTask updateTask = new UpdateTask(aggInfo, dataPathAdd, version, testTableId, null, false);
+      UpdateTask updateTask = new UpdateTask(cloudEndpointInfo, dataPathAdd, version, testTableId, null, false);
       retCode = updateTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      JSONObject res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag, null, null, null);
 
       JSONArray rows = res.getJSONArray("rows");
@@ -355,11 +371,11 @@ public class UpdateTaskTest extends TestCase{
       // Check that the row was created with the right rowId
       assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
 
-      UpdateTask taskUpdate = new UpdateTask(aggInfo, dataPathUpdate, version, testTableId, null, false);
+      UpdateTask taskUpdate = new UpdateTask(cloudEndpointInfo, dataPathUpdate, version, testTableId, null, false);
       retCode = taskUpdate.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag, null, null, null);
 
       rows = res.getJSONArray("rows");
@@ -374,11 +390,11 @@ public class UpdateTaskTest extends TestCase{
       assertTrue(TestUtilities.checkThatRowHasColumnValue("plot_name", "Clarice", jsonRow));
 
       // Now delete the table
-      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag);
       
       // Check that table no longer exists
-      JSONObject obj = sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
       assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
 
       sc.close();
@@ -387,6 +403,10 @@ public class UpdateTaskTest extends TestCase{
       System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskUpdate_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
   
@@ -401,15 +421,15 @@ public class UpdateTaskTest extends TestCase{
 
     try {
       sc = new SyncClient();
-      String agg_url = aggInfo.getHostUrl();
-      agg_url = agg_url.substring(0, agg_url.length()-1);
+      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
+      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
       
-      URL url = new URL(agg_url);
+      URL url = new URL(cloud_endpoint_url);
       String host = url.getHost();
       
-      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
 
-      JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject result = sc.createTableWithCSV(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, null, csvFile);
       System.out.println("testUpdateTaskForceUpdate: result is " + result);
 
@@ -420,21 +440,21 @@ public class UpdateTaskTest extends TestCase{
       }
 
       // Get the table definition
-      JSONObject tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject tableDef = sc.getTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, tableSchemaETag);
 
       // Make sure it is the same as the csv definition
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 
-      LoginTask lTask = new LoginTask(aggInfo, false);
+      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      UpdateTask task = new UpdateTask(aggInfo, dataPathAdd, version, testTableId, null, false);
+      UpdateTask task = new UpdateTask(cloudEndpointInfo, dataPathAdd, version, testTableId, null, false);
       retCode = task.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null,
+      JSONObject res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, tableSchemaETag, null, null,
           null);
 
       JSONArray rows = res.getJSONArray("rows");
@@ -446,11 +466,11 @@ public class UpdateTaskTest extends TestCase{
       // Check that the row was created with the right rowId
       assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
 
-      UpdateTask taskUpdate = new UpdateTask(aggInfo, dataPathUpdate, version, testTableId, null, false);
+      UpdateTask taskUpdate = new UpdateTask(cloudEndpointInfo, dataPathUpdate, version, testTableId, null, false);
       retCode = taskUpdate.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null, null);
+      res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, tableSchemaETag, null, null, null);
 
       rows = res.getJSONArray("rows");
 
@@ -464,17 +484,21 @@ public class UpdateTaskTest extends TestCase{
       assertTrue(TestUtilities.checkThatRowHasColumnValue("plot_name", "Clarice", jsonRow));
 
       // Now delete the table
-      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag);
 
       // Check that table no longer exists
-      JSONObject obj = sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
       assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
 
     } catch (Exception e) {
       System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskForceUpdate_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
   
@@ -488,15 +512,15 @@ public class UpdateTaskTest extends TestCase{
 
     try {
       sc = new SyncClient();
-      String agg_url = aggInfo.getHostUrl();
-      agg_url = agg_url.substring(0, agg_url.length()-1);
+      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
+      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
       
-      URL url = new URL(agg_url);
+      URL url = new URL(cloud_endpoint_url);
       String host = url.getHost();
       
-      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
 
-      JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject result = sc.createTableWithCSV(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, null, csvFile);
       System.out.println("testUpdateTaskForceUpdate: result is " + result);
 
@@ -507,21 +531,21 @@ public class UpdateTaskTest extends TestCase{
       }
 
       // Get the table definition
-      JSONObject tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject tableDef = sc.getTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, tableSchemaETag);
 
       // Make sure it is the same as the csv definition
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 
-      LoginTask lTask = new LoginTask(aggInfo, false);
+      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      UpdateTask task = new UpdateTask(aggInfo, dataPathUpdate, version, testTableId, null, false);
+      UpdateTask task = new UpdateTask(cloudEndpointInfo, dataPathUpdate, version, testTableId, null, false);
       retCode = task.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null,
+      JSONObject res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, tableSchemaETag, null, null,
           null);
 
       JSONArray rows = res.getJSONArray("rows");
@@ -534,17 +558,21 @@ public class UpdateTaskTest extends TestCase{
       assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
 
       // Now delete the table
-      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag);
 
       // Check that table no longer exists
-      JSONObject obj = sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
       assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
 
     } catch (Exception e) {
       System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskForceUpdate_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
   
@@ -559,15 +587,15 @@ public class UpdateTaskTest extends TestCase{
 
     try {
       sc = new SyncClient();
-      String agg_url = aggInfo.getHostUrl();
-      agg_url = agg_url.substring(0, agg_url.length()-1);
+      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
+      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
       
-      URL url = new URL(agg_url);
+      URL url = new URL(cloud_endpoint_url);
       String host = url.getHost();
       
-      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
 
-      JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject result = sc.createTableWithCSV(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, null, csvFile);
       System.out.println("testUpdateTaskForceUpdate: result is " + result);
 
@@ -578,21 +606,21 @@ public class UpdateTaskTest extends TestCase{
       }
 
       // Get the table definition
-      JSONObject tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject tableDef = sc.getTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, tableSchemaETag);
 
       // Make sure it is the same as the csv definition
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 
-      LoginTask lTask = new LoginTask(aggInfo, false);
+      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      UpdateTask task = new UpdateTask(aggInfo, dataPathUpdate, version, testTableId, null, false);
+      UpdateTask task = new UpdateTask(cloudEndpointInfo, dataPathUpdate, version, testTableId, null, false);
       retCode = task.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null,
+      JSONObject res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, tableSchemaETag, null, null,
           null);
 
       JSONArray rows = res.getJSONArray("rows");
@@ -604,21 +632,21 @@ public class UpdateTaskTest extends TestCase{
       // Check that the row was created with the right rowId
       assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
       
-      UpdateTask taskDelete = new UpdateTask(aggInfo, dataPathDelete, version, testTableId, null, false);
+      UpdateTask taskDelete = new UpdateTask(cloudEndpointInfo, dataPathDelete, version, testTableId, null, false);
       retCode = taskDelete.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null, null);
+      res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, tableSchemaETag, null, null, null);
 
       rows = res.getJSONArray("rows");
 
       assertEquals(rows.size(), 0);
 
-      UpdateTask taskUpdate = new UpdateTask(aggInfo, dataPathUpdate, version, testTableId, null, false);
+      UpdateTask taskUpdate = new UpdateTask(cloudEndpointInfo, dataPathUpdate, version, testTableId, null, false);
       retCode = taskUpdate.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null, null);
+      res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, tableSchemaETag, null, null, null);
 
       rows = res.getJSONArray("rows");
 
@@ -632,17 +660,21 @@ public class UpdateTaskTest extends TestCase{
       assertTrue(TestUtilities.checkThatRowHasColumnValue("plot_name", "Clarice", jsonRow));
 
       // Now delete the table
-      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag);
 
       // Check that table no longer exists
-      JSONObject obj = sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
       assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
 
     } catch (Exception e) {
       System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskForceUpdate_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
   
@@ -651,42 +683,43 @@ public class UpdateTaskTest extends TestCase{
     String defPath = "testfiles/cookstoves/data_definition.csv";
     String dataPath = "testfiles/cookstoves/data_small.csv";
     int retCode;
+    SyncClient sc = null;
     
     try {
-      SyncClient sc = new SyncClient();
-      String agg_url = aggInfo.getHostUrl();
-      agg_url = agg_url.substring(0, agg_url.length()-1);
+      sc = new SyncClient();
+      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
+      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
       
-      URL url = new URL(agg_url);
+      URL url = new URL(cloud_endpoint_url);
       String host = url.getHost();
       
-      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
       
-      LoginTask lTask = new LoginTask(aggInfo, false);
+      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, null, defPath);
+      sc.createTableWithCSV(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, null, defPath);
       
-      String schemaETag = sc.getSchemaETagForTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
-      JSONObject tableDefObj = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
+      String schemaETag = sc.getSchemaETagForTable(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId);
+      JSONObject tableDefObj = sc.getTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, schemaETag);
     
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(defPath, tableDefObj));
       
       // Need to add rows
-      UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, null, false);
+      UpdateTask updateTask = new UpdateTask(cloudEndpointInfo, dataPath, version, testTableId, null, false);
       retCode = updateTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
       
-      JSONObject rowsObj = sc.getRows(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag, null, null);
+      JSONObject rowsObj = sc.getRows(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, schemaETag, null, null);
       JSONArray rows = rowsObj.getJSONArray(SyncClient.ROWS_STR_JSON);
       
       assertEquals(rows.size(), 1000);
       
       // Then delete table definition
-      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, schemaETag);
+      sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, schemaETag);
       
-      JSONObject obj = sc.getTable(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId);
+      JSONObject obj = sc.getTable(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId);
       assertNull(obj);
       
       sc.close();
@@ -695,7 +728,11 @@ public class UpdateTaskTest extends TestCase{
       System.out.println("TableTaskTest: Exception thrown in testUpdateTaskWith1000Rows_ExpectPass");
       e.printStackTrace();
       fail();
-    } 
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
+    }
   }
   
   public void testUpdateTaskAllOperationsInFile_ExpectPass() {
@@ -709,15 +746,15 @@ public class UpdateTaskTest extends TestCase{
 
     try {
       sc = new SyncClient();
-      String agg_url = aggInfo.getHostUrl();
-      agg_url = agg_url.substring(0, agg_url.length()-1);
+      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
+      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
       
-      URL url = new URL(agg_url);
+      URL url = new URL(cloud_endpoint_url);
       String host = url.getHost();
       
-      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
 
-      JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject result = sc.createTableWithCSV(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, null, csvFile);
 
       if (result.containsKey(SyncClient.TABLE_ID_JSON)) {
@@ -727,32 +764,32 @@ public class UpdateTaskTest extends TestCase{
       }
 
       // Get the table definition
-      JSONObject tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+      JSONObject tableDef = sc.getTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
           testTableId, tableSchemaETag);
 
       // Make sure it is the same as the csv definition
       assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 
-      LoginTask lTask = new LoginTask(aggInfo, false);
+      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
       retCode = lTask.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      UpdateTask task = new UpdateTask(aggInfo, dataPathAdd, version, testTableId, null, false);
+      UpdateTask task = new UpdateTask(cloudEndpointInfo, dataPathAdd, version, testTableId, null, false);
       retCode = task.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null,
+      JSONObject res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, tableSchemaETag, null, null,
           null);
 
       JSONArray rows = res.getJSONArray("rows");
 
       assertEquals(rows.size(), 5);
 
-      UpdateTask taskUpdate = new UpdateTask(aggInfo, dataPathUpdate, version, testTableId, null, false);
+      UpdateTask taskUpdate = new UpdateTask(cloudEndpointInfo, dataPathUpdate, version, testTableId, null, false);
       retCode = taskUpdate.blockingExecute();
       assertEquals(retCode, SuitcaseSwingWorker.okCode);
 
-      res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId, tableSchemaETag, null, null, null);
+      res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, tableSchemaETag, null, null, null);
 
       rows = res.getJSONArray("rows");
 
@@ -781,17 +818,248 @@ public class UpdateTaskTest extends TestCase{
       }
 
       // Now delete the table
-      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+      sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
           tableSchemaETag);
 
       // Check that table no longer exists
-      JSONObject obj = sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+      JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
       assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
 
     } catch (Exception e) {
       System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskAllOperationsInFile_ExpectPass");
       e.printStackTrace();
       fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
+    }
+  }
+  
+  public void testUpdateTaskAddUpdateForceUpdateInFile_ExpectPass() {
+    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
+    String dataPathAdd = absolutePathOfTestFiles + "plot/plot-add5.csv";
+    String dataPathUpdate = absolutePathOfTestFiles + "plot/plot-addUpdateForceUpdate.csv";
+    String testTableId = "test6";
+    String tableSchemaETag = null;
+    SyncClient sc = null;
+    int retCode;
+
+    try {
+      sc = new SyncClient();
+      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
+      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
+      
+      URL url = new URL(cloud_endpoint_url);
+      String host = url.getHost();
+      
+      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
+
+      JSONObject result = sc.createTableWithCSV(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
+          testTableId, null, csvFile);
+
+      if (result.containsKey(SyncClient.TABLE_ID_JSON)) {
+        String tableId = result.getString(SyncClient.TABLE_ID_JSON);
+        assertEquals(tableId, testTableId);
+        tableSchemaETag = result.getString(SyncClient.SCHEMA_ETAG_JSON);
+      }
+
+      // Get the table definition
+      JSONObject tableDef = sc.getTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
+          testTableId, tableSchemaETag);
+
+      // Make sure it is the same as the csv definition
+      assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
+
+      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
+
+      UpdateTask task = new UpdateTask(cloudEndpointInfo, dataPathAdd, version, testTableId, null, false);
+      retCode = task.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
+
+      JSONObject res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, tableSchemaETag, null, null,
+          null);
+
+      JSONArray rows = res.getJSONArray("rows");
+
+      assertEquals(rows.size(), 5);
+
+      UpdateTask taskUpdate = new UpdateTask(cloudEndpointInfo, dataPathUpdate, version, testTableId, null, false);
+      retCode = taskUpdate.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
+
+      res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, tableSchemaETag, null, null, null);
+
+      rows = res.getJSONArray("rows");
+
+      assertEquals(rows.size(), 7);
+
+      JSONObject jsonRow = null;
+      for (int i = 0; i < rows.size(); i++) {
+        jsonRow = rows.getJSONObject(i);
+        String rowId = jsonRow.getString(SyncClient.ID_JSON);
+        if (!rowId.equals("1") && !rowId.equals("2") &&
+            !rowId.equals("3") && !rowId.equals("4") &&
+            !rowId.equals("5") && !rowId.equals("7") &&
+            !rowId.equals("8") && !rowId.equals("10")) {
+          System.out
+          .println("UpdateTaskTest: unexpected row id " + rowId + " in testUpdateTaskAllOperationsInFile_ExpectPass");
+          fail();
+        } else {
+          verifyMetadataValues(jsonRow);
+          
+          if (rowId.equals("2")) {
+            assertTrue(TestUtilities.checkThatRowHasColumnValue("plot_name", "Clarice", jsonRow));
+          } else if (rowId.equals("3")) {
+            assertTrue(TestUtilities.checkThatRowHasColumnValue("plot_name", "Clarlars", jsonRow));
+          } else if (rowId.equals("10")) {
+            assertTrue(TestUtilities.checkThatRowHasColumnValue("plot_name", "Lars", jsonRow));
+          } else if (rowId.equals("8")) {
+            assertTrue(TestUtilities.checkThatRowHasColumnValue("plot_name", "Quincy", jsonRow));
+          }
+        }
+      }
+
+      // Now delete the table
+      sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
+          tableSchemaETag);
+
+      // Check that table no longer exists
+      JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
+      assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
+
+    } catch (Exception e) {
+      System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskAllOperationsInFile_ExpectPass");
+      e.printStackTrace();
+      fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
+    }
+  }
+
+  private void verifyMetadataValues(JSONObject jsonRow) throws JSONException {
+    assertEquals(jsonRow.getString(SyncClient.LOCALE_JSON), SuitcaseConst.DEFAULT_LOCALE);
+    assertEquals(jsonRow.getString(SyncClient.SAVEPOINT_TYPE_JSON), SavepointTypeManipulator.complete());
+    
+    String creator = jsonRow.getString(SyncClient.SAVEPOINT_CREATOR_JSON);
+    String expectedCreator = SuitcaseConst.ANONYMOUS_USER;
+    if (creator.startsWith(SuitcaseConst.MAIL_TO_PREFIX)) {
+      expectedCreator = SuitcaseConst.MAIL_TO_PREFIX + username;
+    } else if (creator.startsWith(SuitcaseConst.USERNAME_PREFIX)) {
+      expectedCreator = SuitcaseConst.USERNAME_PREFIX + username;
+    }
+    
+    assertEquals(creator, expectedCreator);
+    
+    assertNotNull(jsonRow.getString(SyncClient.SAVEPOINT_TIMESTAMP_JSON));
+  }
+  
+  public void testUpdateTaskAddUpdateForceUpdateInFileDiffColOrder_ExpectPass() {
+    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
+    String dataPathAdd = absolutePathOfTestFiles + "plot/plot-add5.csv";
+    String dataPathUpdate = absolutePathOfTestFiles + "plot/plot-addUpdateForceUpdate2.csv";
+    String testTableId = "test6";
+    String tableSchemaETag = null;
+    SyncClient sc = null;
+    int retCode;
+
+    try {
+      sc = new SyncClient();
+      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
+      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
+      
+      URL url = new URL(cloud_endpoint_url);
+      String host = url.getHost();
+      
+      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
+
+      JSONObject result = sc.createTableWithCSV(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
+          testTableId, null, csvFile);
+
+      if (result.containsKey(SyncClient.TABLE_ID_JSON)) {
+        String tableId = result.getString(SyncClient.TABLE_ID_JSON);
+        assertEquals(tableId, testTableId);
+        tableSchemaETag = result.getString(SyncClient.SCHEMA_ETAG_JSON);
+      }
+
+      // Get the table definition
+      JSONObject tableDef = sc.getTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
+          testTableId, tableSchemaETag);
+
+      // Make sure it is the same as the csv definition
+      assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
+
+      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
+      retCode = lTask.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
+
+      UpdateTask task = new UpdateTask(cloudEndpointInfo, dataPathAdd, version, testTableId, null, false);
+      retCode = task.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
+
+      JSONObject res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, tableSchemaETag, null, null,
+          null);
+
+      JSONArray rows = res.getJSONArray("rows");
+
+      assertEquals(rows.size(), 5);
+
+      UpdateTask taskUpdate = new UpdateTask(cloudEndpointInfo, dataPathUpdate, version, testTableId, null, false);
+      retCode = taskUpdate.blockingExecute();
+      assertEquals(retCode, SuitcaseSwingWorker.okCode);
+
+      res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId, tableSchemaETag, null, null, null);
+
+      rows = res.getJSONArray("rows");
+
+      assertEquals(rows.size(), 7);
+
+      JSONObject jsonRow = null;
+      for (int i = 0; i < rows.size(); i++) {
+        jsonRow = rows.getJSONObject(i);
+        String rowId = jsonRow.getString(SyncClient.ID_JSON);
+        if (!rowId.equals("1") && !rowId.equals("2") &&
+            !rowId.equals("3") && !rowId.equals("4") &&
+            !rowId.equals("5") && !rowId.equals("7") &&
+            !rowId.equals("8") && !rowId.equals("10")) {
+          System.out
+          .println("UpdateTaskTest: unexpected row id " + rowId + " in testUpdateTaskAllOperationsInFile_ExpectPass");
+          fail();
+        } else { 
+          verifyMetadataValues(jsonRow);
+          
+          if (rowId.equals("2")) {
+            assertTrue(TestUtilities.checkThatRowHasColumnValue("plot_name", "Clarice", jsonRow));
+          } else if (rowId.equals("3")) {
+            assertTrue(TestUtilities.checkThatRowHasColumnValue("plot_name", "Clarlars", jsonRow));
+          } else if (rowId.equals("10")) {
+            assertTrue(TestUtilities.checkThatRowHasColumnValue("plot_name", "Lars", jsonRow));
+          } else if (rowId.equals("8")) {
+            assertTrue(TestUtilities.checkThatRowHasColumnValue("plot_name", "Quincy", jsonRow));
+          }
+        }
+      }
+
+      // Now delete the table
+      sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
+          tableSchemaETag);
+
+      // Check that table no longer exists
+      JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
+      assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
+
+    } catch (Exception e) {
+      System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskAllOperationsInFile_ExpectPass");
+      e.printStackTrace();
+      fail();
+    } finally {
+      if (sc != null) {
+        sc.close();
+      }
     }
   }
   
@@ -808,27 +1076,27 @@ public class UpdateTaskTest extends TestCase{
 //    try {
 //      sc = new SyncClient();
 //      
-//      String agg_url = aggInfo.getHostUrl();
-//      agg_url = agg_url.substring(0, agg_url.length()-1);
+//      String cloud_endpoint_url = cloudEndpointInfo.getHostUrl();
+//      cloud_endpoint_url = cloud_endpoint_url.substring(0, cloud_endpoint_url.length()-1);
 //      
-//      URL url = new URL(agg_url);
+//      URL url = new URL(cloud_endpoint_url);
 //      String host = url.getHost();
 //      
-//      sc.init(host, aggInfo.getUserName(), aggInfo.getPassword());
+//      sc.init(host, cloudEndpointInfo.getUserName(), cloudEndpointInfo.getPassword());
 //
-//      LoginTask lTask = new LoginTask(aggInfo, false);
+//      LoginTask lTask = new LoginTask(cloudEndpointInfo, false);
 //      retCode = lTask.blockingExecute();
 //      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 //      
 //      // First check if this server allows permissions
-//      int rspCode = sc.uploadPermissionCSV(agg_url, appId, userPath);
+//      int rspCode = sc.uploadPermissionCSV(cloud_endpoint_url, appId, userPath);
 //      
 //      // This server does not use user permissions
 //      if (rspCode != 200) {
 //        return;
 //      }
 //
-//      JSONObject result = sc.createTableWithCSV(aggInfo.getServerUrl(), aggInfo.getAppId(),
+//      JSONObject result = sc.createTableWithCSV(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
 //          testTableId, null, csvFile);
 //      System.out.println("testUpdateTaskAddWithUsers_ExpectPass: result is " + result);
 //
@@ -839,17 +1107,17 @@ public class UpdateTaskTest extends TestCase{
 //      }
 //
 //      // Get the table definition
-//      JSONObject tableDef = sc.getTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(),
+//      JSONObject tableDef = sc.getTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(),
 //          testTableId, tableSchemaETag);
 //
 //      // Make sure it is the same as the csv definition
 //      assertTrue(TestUtilities.checkThatTableDefAndCSVDefAreEqual(csvFile, tableDef));
 //
-//      UpdateTask updateTask = new UpdateTask(aggInfo, dataPath, version, testTableId, null, false);
+//      UpdateTask updateTask = new UpdateTask(cloudEndpointInfo, dataPath, version, testTableId, null, false);
 //      retCode = updateTask.blockingExecute();
 //      assertEquals(retCode, SuitcaseSwingWorker.okCode);
 //
-//      JSONObject res = sc.getRowsSince(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+//      JSONObject res = sc.getRowsSince(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
 //          tableSchemaETag, null, null, null);
 //
 //      JSONArray rows = res.getJSONArray("rows");
@@ -862,11 +1130,11 @@ public class UpdateTaskTest extends TestCase{
 //      assertTrue(TestUtilities.checkThatRowHasId("12", jsonRow));
 //
 //      // Now delete the table
-//      sc.deleteTableDefinition(aggInfo.getServerUrl(), aggInfo.getAppId(), testTableId,
+//      sc.deleteTableDefinition(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId(), testTableId,
 //          tableSchemaETag);
 //
 //      // Check that table no longer exists
-//      JSONObject obj = sc.getTables(aggInfo.getServerUrl(), aggInfo.getAppId());
+//      JSONObject obj = sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId());
 //      assertFalse(TestUtilities.checkTableExistOnServer(obj, testTableId, tableSchemaETag));
 //
 //      sc.close();
@@ -875,6 +1143,11 @@ public class UpdateTaskTest extends TestCase{
 //      System.out.println("UpdateTaskTest: Exception thrown in testUpdateTaskAddWithUsers_ExpectPass");
 //      e.printStackTrace();
 //      fail();
+//    } 
+//    finally {
+//      if (sc != null) {
+//        sc.close();
+//      }
 //    }
 //  }
 }

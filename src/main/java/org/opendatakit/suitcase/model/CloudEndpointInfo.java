@@ -4,7 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
-public class AggregateInfo {
+public class CloudEndpointInfo {
   //These domains are only accessible through https
   private static final String[] HTTPS_DOMAIN = new String[] { "appspot.com" };
   private static final String SERVER_URL_POSTFIX = "odktables";
@@ -14,8 +14,9 @@ public class AggregateInfo {
   private String userName;
   private String password;
   private SortedMap<String, String> tableIdSchemaETag;
+  private String privilegedUserName;
   
-  public AggregateInfo(String serverUrl, String appId, String userName, String password)
+  public CloudEndpointInfo(String serverUrl, String appId, String userName, String password)
       throws MalformedURLException {
     if (serverUrl == null || serverUrl.isEmpty())
       throw new IllegalArgumentException("Invalid server URL");
@@ -52,6 +53,14 @@ public class AggregateInfo {
   
   public String getUserName() {
     return userName;
+  }
+  
+  public void setPrivilegedUserName(String privUserName) {
+    privilegedUserName = privUserName;
+  }
+  
+  public String getPrivilegedUserName() {
+    return privilegedUserName;
   }
   
   public String getPassword() {
@@ -104,10 +113,11 @@ public class AggregateInfo {
 
   @Override
   public String toString() {
-    return "AggregateInfo{" +
+    return "CloudEndpointInfo{" +
         "serverUrl='" + serverUrl + '\'' +
         ", appId='" + appId + '\'' +
         ", userName='" + userName + '\'' +
+        ", privilegedUserName='" + privilegedUserName + '\'' +
         ", password='" + password + '\'' +
         ", tableIdSchemaETag=" + tableIdSchemaETag +
         '}';
