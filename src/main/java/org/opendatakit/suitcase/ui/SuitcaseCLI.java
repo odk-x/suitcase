@@ -215,7 +215,7 @@ public class SuitcaseCLI {
                               + "Default csv directory is ./Download/ "
                               + "Default upload directory is ./Upload/ ");
     
-    opt.addOption(UPLOAD_OP_OPT, false, "Specify the uploadop to either FILE or RESET_APP."
+    opt.addOption(UPLOAD_OP_OPT, true, "Specify the uploadop to either FILE or RESET_APP."
                                    + "This option must be used with upload option."
                                    + "RESET_APP is the default option and will push all files to server"
                                    + "FILE is used to push one file to relativeServerPath");
