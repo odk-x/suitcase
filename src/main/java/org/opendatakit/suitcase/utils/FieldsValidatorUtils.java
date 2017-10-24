@@ -78,18 +78,19 @@ public class FieldsValidatorUtils {
         errorMsgBuilder.append(DATA_DIR_NOT_EXIST).append(NEW_LINE);
       } else {
         if (uploadOp != null) {
-    	  String upperUploadOp = uploadOp.toUpperCase();
-    	  if (upperUploadOp.equals(UploadTask.RESET_APP_OP)) {
-          // check directory validity by checking if necessary sub-directories are present
-          if (!FileUtils.checkUploadDir(dataPath)) {
-            errorMsgBuilder.append(DATA_DIR_INVALID).append(NEW_LINE);
+          String upperUploadOp = uploadOp.toUpperCase();
+          if (upperUploadOp.equals(UploadTask.RESET_APP_OP)) {
+            // check directory validity by checking if necessary sub-directories are present
+            if (!FileUtils.checkUploadDir(dataPath)) {
+              errorMsgBuilder.append(DATA_DIR_INVALID).append(NEW_LINE);
+            }
           }
-    	  }
+        }
       }
     }
-
     return errorMsgBuilder.length() > 0 ? errorMsgBuilder.toString().trim() : null;
   }
+
 
   public static String checkResetFields(String version) {
     StringBuilder errorMsgBuilder = new StringBuilder();

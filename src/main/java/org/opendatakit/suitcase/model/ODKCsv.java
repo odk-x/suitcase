@@ -87,8 +87,10 @@ public class ODKCsv implements Iterable<String[]> {
     frontList.add(SAVEPOINT_TYPE_ROW_DEF);
     frontList.add(SAVEPOINT_TIMESTAMP_ROW_DEF);
     frontList.add(SAVEPOINT_CREATOR_ROW_DEF);
-    frontList.add("_create_user");
-    frontList.add("_last_update_user");
+    frontList.add(CREATE_USER_ROW_DEF);
+    frontList.add(LAST_UPDATE_USER_ROW_DEF);
+    frontList.add(DELETED_ROW_DEF);
+    frontList.add(DATA_ETAG_AT_MODIFICATION_ROW_DEF);
     METADATA_POSITION.put(Position.FRONT, frontList);
 
     endList.add(DEFAULT_ACCESS_ROW_DEF);
@@ -119,8 +121,8 @@ public class ODKCsv implements Iterable<String[]> {
     METADATA_JSON_NAME.put(GROUP_READ_ONLY_ROW_DEF, FILTER_SCOPE_JSON +":"+ GROUP_READ_ONLY_JSON);
     METADATA_JSON_NAME.put(GROUP_MODIFY_ROW_DEF, FILTER_SCOPE_JSON +":"+ GROUP_MODIFY_JSON);
     METADATA_JSON_NAME.put(GROUP_PRIVILEGED_ROW_DEF, FILTER_SCOPE_JSON +":"+ GROUP_PRIVILEGED_JSON);
-    METADATA_JSON_NAME.put("_create_user", "createUser");
-    METADATA_JSON_NAME.put("_last_update_user", "lastUpdateUser");
+    METADATA_JSON_NAME.put(CREATE_USER_ROW_DEF, CREATE_USER_JSON);
+    METADATA_JSON_NAME.put(LAST_UPDATE_USER_ROW_DEF, LAST_UPDATE_USER);
   }
 
   private static final String CONTENT_TYPE_ELEMENT_NAME = "contentType";

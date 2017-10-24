@@ -84,7 +84,10 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
     metadataColumns.add(SyncClient.GROUP_READ_ONLY_ROW_DEF);
     metadataColumns.add(SyncClient.GROUP_MODIFY_ROW_DEF);
     metadataColumns.add(SyncClient.GROUP_PRIVILEGED_ROW_DEF);
-                                                   
+    metadataColumns.add(SyncClient.CREATE_USER_ROW_DEF);
+    metadataColumns.add(SyncClient.LAST_UPDATE_USER_ROW_DEF);
+    metadataColumns.add(SyncClient.DELETED_ROW_DEF);
+    metadataColumns.add(SyncClient.DATA_ETAG_AT_MODIFICATION_ROW_DEF);
   }
 
   public UpdateTask(CloudEndpointInfo cloudEndpointInfo, String dataPath, String version, String tableId,
