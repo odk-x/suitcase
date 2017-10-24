@@ -115,7 +115,7 @@ public class SuitcaseCLI {
       }
       break;
     case UPLOAD:
-      error = FieldsValidatorUtils.checkUploadFields(version, path);
+      error = FieldsValidatorUtils.checkUploadFields(version, path, uploadOp);
 
       if (error != null) {
         DialogUtils.showError(error, false);
