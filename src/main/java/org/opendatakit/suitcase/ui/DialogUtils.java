@@ -38,7 +38,19 @@ public class DialogUtils {
               JOptionPane.QUESTION_MESSAGE);
     } else {
       System.out.print(msg + " yes / no ");
-      return new Scanner(System.in).nextLine().toLowerCase().startsWith("y");
+      boolean confirmed = false;
+      
+      Scanner scanner = null;
+      try {
+        scanner = new Scanner(System.in);
+        confirmed = scanner.nextLine().toLowerCase().startsWith("y");
+      } finally {
+        if (scanner != null) {
+          scanner.close();
+        }
+        
+      }
+      return confirmed;
     }
   }
 }

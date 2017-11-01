@@ -1,8 +1,6 @@
 package org.opendatakit.suitcase.test;
 
-import java.io.File;
 import java.net.URL;
-import java.util.Scanner;
 
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
@@ -10,7 +8,6 @@ import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.sync.client.SyncClient;
 import org.opendatakit.suitcase.net.LoginTask;
 import org.opendatakit.suitcase.net.SuitcaseSwingWorker;
-import org.opendatakit.suitcase.net.UpdateTask;
 import org.opendatakit.suitcase.net.UploadTask;
 import org.opendatakit.suitcase.model.CloudEndpointInfo;
 
