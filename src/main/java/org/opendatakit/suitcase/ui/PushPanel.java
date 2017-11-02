@@ -86,7 +86,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
         sVersionPushText.setText(sVersionPushText.getText().trim());
 
         String error = FieldsValidatorUtils.checkUploadFields(sVersionPushText.getText(),
-            dataPathChooser.getPath());
+            dataPathChooser.getPath(), UploadTask.RESET_APP_OP);
 
         if (error != null) {
           DialogUtils.showError(error, true);

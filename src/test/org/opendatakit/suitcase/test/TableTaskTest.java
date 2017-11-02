@@ -11,7 +11,6 @@ import org.opendatakit.suitcase.net.SuitcaseSwingWorker;
 import org.opendatakit.suitcase.net.TableTask;
 import org.opendatakit.suitcase.net.UpdateTask;
 import org.opendatakit.sync.client.SyncClient;
-import org.opendatakit.suitcase.test.TestUtilities;
 
 import junit.framework.TestCase;
 
