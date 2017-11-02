@@ -1,18 +1,6 @@
 package org.opendatakit.suitcase.net;
 
 import static org.opendatakit.suitcase.ui.MessageString.*;
-import static org.opendatakit.sync.client.SyncClient.DEFAULT_ACCESS_ROW_DEF;
-import static org.opendatakit.sync.client.SyncClient.FORM_ID_ROW_DEF;
-import static org.opendatakit.sync.client.SyncClient.GROUP_MODIFY_ROW_DEF;
-import static org.opendatakit.sync.client.SyncClient.GROUP_PRIVILEGED_ROW_DEF;
-import static org.opendatakit.sync.client.SyncClient.GROUP_READ_ONLY_ROW_DEF;
-import static org.opendatakit.sync.client.SyncClient.ID_ROW_DEF;
-import static org.opendatakit.sync.client.SyncClient.LOCALE_ROW_DEF;
-import static org.opendatakit.sync.client.SyncClient.ROW_ETAG_ROW_DEF;
-import static org.opendatakit.sync.client.SyncClient.ROW_OWNER_ROW_DEF;
-import static org.opendatakit.sync.client.SyncClient.SAVEPOINT_CREATOR_ROW_DEF;
-import static org.opendatakit.sync.client.SyncClient.SAVEPOINT_TIMESTAMP_ROW_DEF;
-import static org.opendatakit.sync.client.SyncClient.SAVEPOINT_TYPE_ROW_DEF;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,7 +12,6 @@ import java.util.zip.DataFormatException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -84,7 +71,10 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
     metadataColumns.add(SyncClient.GROUP_READ_ONLY_ROW_DEF);
     metadataColumns.add(SyncClient.GROUP_MODIFY_ROW_DEF);
     metadataColumns.add(SyncClient.GROUP_PRIVILEGED_ROW_DEF);
-                                                   
+    metadataColumns.add(SyncClient.CREATE_USER_ROW_DEF);
+    metadataColumns.add(SyncClient.LAST_UPDATE_USER_ROW_DEF);
+    metadataColumns.add(SyncClient.DELETED_ROW_DEF);
+    metadataColumns.add(SyncClient.DATA_ETAG_AT_MODIFICATION_ROW_DEF);
   }
 
   public UpdateTask(CloudEndpointInfo cloudEndpointInfo, String dataPath, String version, String tableId,
