@@ -1,9 +1,9 @@
 # suitcase
 
-Building instructions (Linux and Mac):
+Building instructions:
 
-1. Install maven onto your system.
-1. Run the shell script *mvn_local_installs* in the dependencies folder. 
-1. From the root directory (with the pom.xml), run: *mvn clean compile assembly:single*
+1. Install Maven and Ant onto your system.
+1. Run `ant` in the dependencies folder. 
+1. From the root directory (with the pom.xml), run: *mvn clean package*
 
 A new folder, target, will be created with the resulting jar file. 
