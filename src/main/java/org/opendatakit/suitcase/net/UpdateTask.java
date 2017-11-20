@@ -233,7 +233,7 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
 
     firstLine = csvReader.readNext();
     if (firstLine == null) {
-      throw new IllegalArgumentException("The number of columns present in the CSV is not correct");
+      throw new IllegalArgumentException("This CSV is empty.");
     }
     
     verifyColumns(firstLine);
