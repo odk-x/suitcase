@@ -147,10 +147,10 @@ public class ODKCsv implements Iterable<String[]> {
   /**
    * Initialize ODKCsv with rows
    *
-   * @param rows
-   * @param attMngr
-   * @param cloudEndpointInfo
-   * @throws JSONException
+   * @param rows rows
+   * @param attMngr an attachment manager
+   * @param cloudEndpointInfo cloud endpoint info
+   * @throws JSONException JSON Processing Error
    */
   public ODKCsv(JSONArray rows, AttachmentManager attMngr, CloudEndpointInfo cloudEndpointInfo, String tableId)
       throws JSONException {
@@ -187,8 +187,9 @@ public class ODKCsv implements Iterable<String[]> {
   /**
    * Initialize an empty ODKCsv
    *
-   * @param attMngr
-   * @param cloudEndpointInfo
+   * @param attMngr an attachment manager
+   * @param cloudEndpointInfo cloud endpoint info
+   * @param tableId table id
    */
   public ODKCsv(AttachmentManager attMngr, CloudEndpointInfo cloudEndpointInfo, String tableId)
       throws JSONException {
@@ -198,8 +199,8 @@ public class ODKCsv implements Iterable<String[]> {
   /**
    * Returns header of csv
    *
-   * @param config
-   * @return
+   * @param config CsvConfig
+   * @return header in String[]
    */
   public String[] getHeader(CsvConfig config) {
     if (this.size < 0) {
@@ -246,10 +247,10 @@ public class ODKCsv implements Iterable<String[]> {
   /**
    * Tries to merge rows into this ODKCsv instance
    *
-   * @param rows
+   * @param rows rows
    * @return True if merge is successful
-   * @throws JSONException
-   * @throws IOException 
+   * @throws JSONException Error reading rows
+   * @throws IOException Error reading rows
    */
   public boolean tryAdd(JSONArray rows) throws JSONException, IOException {
     if (!isCompatible(rows)) {
@@ -282,12 +283,11 @@ public class ODKCsv implements Iterable<String[]> {
   /**
    * Retrieves 1 row, including data and metadata
    *
-   * @param rowIndex
-   * @param config
-   * @return
-   * @throws JSONException 
-   * @throws IOException 
-   * @throws Exception
+   * @param rowIndex index of row to get
+   * @param config CsvConfig
+   * @return the row
+   * @throws JSONException JSON processing error
+   * @throws IOException Other IO error
    */
   public String[] get(int rowIndex, CsvConfig config) throws JSONException, IOException {
     if (rowIndex >= size) {
@@ -323,16 +323,12 @@ public class ODKCsv implements Iterable<String[]> {
     return this.tableId;
   }
 
-//  public void setAttachmentManager(AttachmentManager mngr) {
-//    this.attMngr = mngr;
-//  }
-
   /**
    * Extract data header from 1 row of JSON
    *
-   * @param oneRow
-   * @return
-   * @throws JSONException
+   * @param oneRow extract data header using 1 row
+   * @return data header
+   * @throws JSONException JSON processing error
    */
   private String[] extractDataHeader(JSONObject oneRow) throws JSONException {
     JSONArray orderedColumns = oneRow.getJSONArray(ORDERED_COLUMNS_DEF);
@@ -348,9 +344,9 @@ public class ODKCsv implements Iterable<String[]> {
   /**
    * Extract data header from 1 row of JSON
    *
-   * @param oneRow
-   * @return
-   * @throws JSONException
+   * @param listOfColDefs list of ColumnDefinition
+   * @return data header
+   * @throws JSONException JSON processing error
    */
   private String[] extractDataHeaderWithListOfCols(ArrayList<ColumnDefinition> listOfColDefs) throws JSONException {
     if (listOfColDefs == null || listOfColDefs.size() == 0) {
@@ -475,7 +471,6 @@ public class ODKCsv implements Iterable<String[]> {
    * @return
    * @throws IOException 
    * @throws JSONException 
-   * @throws Exception
    */
   private String[] getData(JSONObject row, CsvConfig config) throws IOException, JSONException {
     String rowId = row.optString(ID_JSON);

@@ -40,7 +40,7 @@ public class AttachmentManager {
    * Retrieves attachment manifest for a row.
    * After processing manifest, info is stored in allAttachments and hasManifestMap.
    *
-   * @param rowId
+   * @param rowId row id
    */
   public void getListOfRowAttachments(String rowId) {
     if (!this.allAttachments.containsKey(rowId)) {
@@ -72,11 +72,11 @@ public class AttachmentManager {
    * When allAttachment lacks record of requested rowId, IllegalStateException will be thrown.
    * When allAttachment lacks record of requested filename, IllegalArgumentException will be thrown.
    *
-   * @param rowId
-   * @param filename
+   * @param rowId row id
+   * @param filename attachment filename
    * @param localUrl  True to return url to local file, aka "file:///" url
-   * @return
-   * @throws IOException
+   * @return url for the attachment
+   * @throws IOException IO error
    */
   public URL getAttachmentUrl(String rowId, String filename, boolean localUrl) throws IOException {
     if (!this.allAttachments.containsKey(rowId)) {
@@ -103,11 +103,10 @@ public class AttachmentManager {
    * Downloads all attachments of a row, or just Scan's raw JSON
    * When allAttachment lacks record of requested rowId, IllegalStateException will be thrown.
    *
-   * @param rowId
+   * @param rowId row id
    * @param scanRawJsonOnly True to download only Scan's raw JSON
-   * @throws IOException
    */
-  public void downloadAttachments(String rowId, boolean scanRawJsonOnly) throws IOException {
+  public void downloadAttachments(String rowId, boolean scanRawJsonOnly) {
     if (!this.allAttachments.containsKey(rowId)) {
       // TODO: add warning 
       return;
@@ -139,9 +138,9 @@ public class AttachmentManager {
    *
    * Warning: This method doesn't check whether JSON had been downloaded.
    *
-   * @param rowId
-   * @return
-   * @throws IOException
+   * @param rowId row id
+   * @return InputStream of raw json for the row
+   * @throws IOException IO error
    */
   public InputStream getScanRawJsonStream(String rowId) throws IOException {
     if (!this.attachmentManifests.containsKey(rowId)) {
@@ -160,7 +159,7 @@ public class AttachmentManager {
   /**
    * Overwrites the original save path
    *
-   * @param path
+   * @param path path
    */
   public void setSavePath(String path) {
     this.savePath = path;
