@@ -16,6 +16,7 @@ public class DialogUtils {
    * Progress bar is set to non-indeterminate and string set to "error."
    *
    * @param errMsg Error message to display
+   * @param isGUI is GUI?
    */
   public static void showError(String errMsg, boolean isGUI) {
     if (isGUI) {
