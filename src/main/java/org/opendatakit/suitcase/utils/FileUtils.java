@@ -29,6 +29,7 @@ public class FileUtils {
    * Checks whether a table is downloaded
    *
    * @param cloudEndpointInfo cloud endpoint info
+   * @param tableId Table id 
    * @param savePath path
    * @return true if downloaded, false otherwise
    */

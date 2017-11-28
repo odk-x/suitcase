@@ -150,6 +150,7 @@ public class ODKCsv implements Iterable<String[]> {
    * @param rows rows
    * @param attMngr an attachment manager
    * @param cloudEndpointInfo cloud endpoint info
+   * @param tableId Table id
    * @throws JSONException JSON Processing Error
    */
   public ODKCsv(JSONArray rows, AttachmentManager attMngr, CloudEndpointInfo cloudEndpointInfo, String tableId)
@@ -190,6 +191,7 @@ public class ODKCsv implements Iterable<String[]> {
    * @param attMngr an attachment manager
    * @param cloudEndpointInfo cloud endpoint info
    * @param tableId table id
+   * @throws JSONException JSON Processing Error
    */
   public ODKCsv(AttachmentManager attMngr, CloudEndpointInfo cloudEndpointInfo, String tableId)
       throws JSONException {
