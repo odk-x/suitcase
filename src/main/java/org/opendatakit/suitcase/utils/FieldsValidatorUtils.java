@@ -12,11 +12,11 @@ public class FieldsValidatorUtils {
   /**
    * Checks fields used for login
    *
-   * @param cloudEndpointUrl
-   * @param appId
-   * @param username
-   * @param password
-   * @param isAnonymous
+   * @param cloudEndpointUrl url
+   * @param appId app id
+   * @param username username
+   * @param password password
+   * @param isAnonymous is anonymous
    * @return error message or null if no error found
    */
   public static String checkLoginFields(String cloudEndpointUrl, String appId, String username,

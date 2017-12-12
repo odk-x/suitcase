@@ -28,9 +28,10 @@ public class FileUtils {
   /**
    * Checks whether a table is downloaded
    *
-   * @param cloudEndpointInfo
-   * @param savePath
-   * @return
+   * @param cloudEndpointInfo cloud endpoint info
+   * @param tableId Table id 
+   * @param savePath path
+   * @return true if downloaded, false otherwise
    */
   public static boolean isDownloaded(CloudEndpointInfo cloudEndpointInfo, String tableId, String savePath) {
     return Files.exists(getBasePath(cloudEndpointInfo, tableId, savePath));
@@ -39,9 +40,11 @@ public class FileUtils {
   /**
    * Checks whether a CSV of a table is downloaded
    *
-   * @param cloudEndpointInfo
-   * @param savePath
-   * @return
+   * @param cloudEndpointInfo cloud endpoint info
+   * @param savePath path
+   * @param tableId table id
+   * @param config csv config
+   * @return true if downloaded, false otherwise
    */
   public static boolean isDownloaded(CloudEndpointInfo cloudEndpointInfo, String tableId, CsvConfig config,
                                      String savePath) {
@@ -51,9 +54,10 @@ public class FileUtils {
   /**
    * Finds the Path to a csv file using server info, table id, csv config and save path
    *
-   * @param cloudEndpointInfo
-   * @param config
-   * @param savePath
+   * @param cloudEndpointInfo cloud endpoint info
+   * @param tableId table id
+   * @param config csv config
+   * @param savePath path
    * @return absolute Path
    */
   public static Path getCSVPath(CloudEndpointInfo cloudEndpointInfo, String tableId, CsvConfig config,
@@ -99,9 +103,9 @@ public class FileUtils {
 
   /**
    *
-   * @param cloudEndpointInfo
-   * @param tableId
-   * @param savePath
+   * @param cloudEndpointInfo cloud endpoint info
+   * @param tableId table id
+   * @param savePath path
    * @return absolute Path
    */
   public static Path getBasePath(CloudEndpointInfo cloudEndpointInfo, String tableId, String savePath) {
@@ -110,8 +114,9 @@ public class FileUtils {
 
   /**
    *
-   * @param cloudEndpointInfo
-   * @param savePath
+   * @param cloudEndpointInfo cloud endpoint info
+   * @param tableId table id
+   * @param savePath path
    * @return absolute Path
    */
   public static Path getInstancesPath(CloudEndpointInfo cloudEndpointInfo, String tableId, String savePath) {

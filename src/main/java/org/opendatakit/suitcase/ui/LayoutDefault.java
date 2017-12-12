@@ -6,7 +6,7 @@ public class LayoutDefault {
   /**
    * Returns a predefined set of GridBagConstraints
    *
-   * @return
+   * @return the default GridBagConstraints
    */
   public static GridBagConstraints getDefaultGbc() {
     GridBagConstraints gbc = new GridBagConstraints();

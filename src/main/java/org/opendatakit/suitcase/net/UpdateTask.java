@@ -233,7 +233,7 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
 
     firstLine = csvReader.readNext();
     if (firstLine == null) {
-      throw new IllegalArgumentException("The number of columns present in the CSV is not correct");
+      throw new IllegalArgumentException("This CSV is empty.");
     }
     
     verifyColumns(firstLine);
@@ -312,9 +312,9 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
         } 
       }
 
-      String opToCompare = operation.toUpperCase();
+      String opToCompare = operation != null ? operation.toUpperCase() : "";
 
-      String existingRowETag = rowIdToRowETag.get(rowId);
+      String existingRowETag = rowId != null ? rowIdToRowETag.get(rowId) : null;
       
       // If the operation is an add, update, or force_update,
       // we need to populate savepoint_creator,
