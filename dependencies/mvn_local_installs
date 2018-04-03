@@ -1,2 +1,2 @@
 mvn install:install-file -Dfile=aggregate-rest-interface-2017-06-22.jar -Djavadoc=aggregate-rest-interface-2017-06-22-javadoc.jar -Dsources=aggregate-rest-interface-2017-06-22-sources.jar -DgroupId=org.opendatakit -DartifactId=aggregate-rest-interface -Dversion=2017-06-22 -Dpackaging=jar -DupdateReleaseInfo=true
-mvn install:install-file -Dfile=sync-client-2.0.3.jar -Djavadoc=sync-client-2.0.3-javadoc.jar -Dsources=sync-client-2.0.3-sources.jar -DpomFile=sync-client-2.0.3.pom -Dpackaging=jar -DupdateReleaseInfo=true
+mvn install:install-file -Dfile=sync-client-2.0.4.jar -Djavadoc=sync-client-2.0.4-javadoc.jar -Dsources=sync-client-2.0.4-sources.jar -DpomFile=sync-client-2.0.4.pom -Dpackaging=jar -DupdateReleaseInfo=true
