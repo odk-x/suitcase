@@ -12,8 +12,10 @@ import org.opendatakit.suitcase.ui.ProgressBarStatus;
 import org.opendatakit.suitcase.ui.SuitcaseProgressBar;
 import org.opendatakit.suitcase.utils.FileUtils;
 
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ExecutionException;
 
 import static org.opendatakit.suitcase.ui.MessageString.*;
@@ -72,8 +74,11 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
     publish(new ProgressBarStatus(0, PROCESSING_ROW, false));
     RFC4180CsvWriter csvWriter = null;
     try {
-      csvWriter = new RFC4180CsvWriter(new FileWriter(
-          FileUtils.getCSVPath(cloudEndpointInfo, csv.getTableId(), csvConfig, savePath).toString()
+      csvWriter = new RFC4180CsvWriter(Files.newBufferedWriter(
+          FileUtils.getCSVPath(cloudEndpointInfo, csv.getTableId(), csvConfig, savePath),
+          StandardCharsets.UTF_8,
+          StandardOpenOption.CREATE,
+          StandardOpenOption.TRUNCATE_EXISTING
       ));
 
       //Write header then rows
