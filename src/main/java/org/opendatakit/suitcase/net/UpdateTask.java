@@ -7,14 +7,9 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.zip.DataFormatException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.apache.http.client.ClientProtocolException;
@@ -335,7 +330,8 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
         } 
         
         if (rowSavepointTimestamp == null || rowSavepointTimestamp.length() == 0) {
-          rowSavepointTimestamp =  TableConstants.nanoSecondsFromMillis(System.currentTimeMillis());
+          rowSavepointTimestamp =
+              TableConstants.nanoSecondsFromMillis(System.currentTimeMillis(), Locale.ROOT);
         }
         
         if (rowSavepointType == null || rowSavepointType.length() == 0) {
@@ -446,7 +442,8 @@ public class UpdateTask extends SuitcaseSwingWorker<Void> {
         ArrayList<Row> forceUpdatedRowArrayList2 = new ArrayList<Row>();
         for (int i = 0; i < outcomeList.size(); i++) {
           RowOutcome outcome = outcomeList.get(i);
-          String v_savepoint_timestamp = TableConstants.nanoSecondsFromMillis(System.currentTimeMillis());
+          String v_savepoint_timestamp =
+              TableConstants.nanoSecondsFromMillis(System.currentTimeMillis(), Locale.ROOT);
           Row updatedRow = Row.forUpdate(outcome.getRowId(), outcome.getRowETag(), outcome.getFormId(), 
               outcome.getLocale(), outcome.getSavepointType(), v_savepoint_timestamp, 
               outcome.getSavepointCreator(), outcome.getRowFilterScope(), outcome.getValues());
