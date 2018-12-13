@@ -1,0 +1,263 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.opendatakit</groupId>
+  <artifactId>sync-client</artifactId>
+  <packaging>jar</packaging>
+  <version>2.1.1</version>
+  <name>ODK Sync REST Client</name>
+  <properties>
+    <org.opendatakit-odk-rest-interface-version>2.1.1</org.opendatakit-odk-rest-interface-version>
+
+    <com.fasterxml.jackson.version>2.8.5</com.fasterxml.jackson.version>
+
+    <org.slf4j.version>1.7.7</org.slf4j.version>
+
+    <org.apache.httpcomponents.version>4.5.2</org.apache.httpcomponents.version>
+    <org.apache.httpcomponents-httpcore-version>4.4.4</org.apache.httpcomponents-httpcore-version>
+    <org.apache.httpcomponents-httpmime-version>4.5.1</org.apache.httpcomponents-httpmime-version>
+
+    <commons-fileupload-version>1.3.1</commons-fileupload-version>
+    <org.apache.commons-lang3.version>3.5</org.apache.commons-lang3.version>
+
+    <org.apache.wink.version>1.4</org.apache.wink.version>
+
+    <maven.jar.plugin.version>3.0.2</maven.jar.plugin.version>
+    <maven.javadoc.plugin.version>2.9.1</maven.javadoc.plugin.version>
+    <maven.source.plugin.version>3.0.1</maven.source.plugin.version>
+    <maven.compiler.plugin.version>3.7.0</maven.compiler.plugin.version>
+    <maven.dependency.plugin.version>3.0.2</maven.dependency.plugin.version>
+    <maven.surefire.report.plugin.version>2.16</maven.surefire.report.plugin.version>
+    <maven.surefire.plugin.version>2.16</maven.surefire.plugin.version>
+
+    <junit.version>4.11</junit.version>
+    <jacoco.version>0.7.7.201606060606</jacoco.version>
+
+    <skipTests>true</skipTests>
+
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencies>
+    <!-- ODK -->
+
+    <dependency>
+      <groupId>org.opendatakit</groupId>
+      <artifactId>odk-rest-interface</artifactId>
+      <version>${org.opendatakit-odk-rest-interface-version}</version>
+    </dependency>
+
+    <!-- Apache HttpComponents -->
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>${org.apache.httpcomponents.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+      <version>${org.apache.httpcomponents-httpcore-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpmime</artifactId>
+      <version>${org.apache.httpcomponents-httpmime-version}</version>
+    </dependency>
+
+    <!-- Apache Wink -->
+
+    <dependency>
+      <groupId>org.apache.wink</groupId>
+      <artifactId>wink-json4j</artifactId>
+      <version>${org.apache.wink.version}</version>
+    </dependency>
+
+    <!-- Apache Commons -->
+
+    <dependency>
+      <groupId>commons-fileupload</groupId>
+      <artifactId>commons-fileupload</artifactId>
+      <version>${commons-fileupload-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>${org.apache.commons-lang3.version}</version>
+    </dependency>
+
+    <!-- Jackson -->
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>${com.fasterxml.jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>${com.fasterxml.jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${com.fasterxml.jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-xml</artifactId>
+      <version>${com.fasterxml.jackson.version}</version>
+    </dependency>
+
+    <!-- Logging -->
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${org.slf4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-jcl</artifactId>
+      <version>${org.slf4j.version}</version>
+    </dependency>
+
+    <!-- Test Dependencies -->
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+    <testSourceDirectory>test</testSourceDirectory>
+
+    <resources>
+      <resource>
+        <directory>src</directory>
+      </resource>
+    </resources>
+
+    <testResources>
+      <testResource>
+        <directory>testfiles</directory>
+      </testResource>
+    </testResources>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven.compiler.plugin.version}</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>${maven.dependency.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>analyze</id>
+            <goals>
+              <goal>analyze-only</goal>
+            </goals>
+            <configuration>
+              <failOnWarning>false</failOnWarning>
+              <outputXML>true</outputXML>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${maven.source.plugin.version}</version>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>${maven.javadoc.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>${maven.source.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Test and Coverage -->
+
+      <plugin>
+        <!-- This configures the running of unit tests. -->
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven.surefire.plugin.version}</version>
+        <inherited>true</inherited>
+        <configuration>
+          <systemPropertyVariables>
+            <project.artifactId>${project.artifactId}</project.artifactId>
+            <test.aggUrl>${aggUrl}</test.aggUrl>
+            <test.appId>${appId}</test.appId>
+            <test.absolutePathOfTestFiles>${absolutePathOfTestFiles}</test.absolutePathOfTestFiles>
+            <test.batchSize>${batchSize}</test.batchSize>
+          </systemPropertyVariables>
+          <skipTests>${skipTests}</skipTests>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-report-plugin</artifactId>
+        <version>${maven.surefire.report.plugin.version}</version>
+        <inherited>true</inherited>
+      </plugin>
+    </plugins>
+  </reporting>
+</project>
