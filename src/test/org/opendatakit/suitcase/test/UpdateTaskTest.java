@@ -23,7 +23,7 @@ public class UpdateTaskTest extends TestCase{
   String appId;
   String absolutePathOfTestFiles;
   String host;
-  String username;
+  String userName;
   String password;
   int batchSize;
   String version;
@@ -35,21 +35,25 @@ public class UpdateTaskTest extends TestCase{
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    //cloud_endpoint_url = System.getProperty("test.cloudEndpointUrl");
-    //appId = System.getProperty("test.appId");
-    //absolutePathOfTestFiles = System.getProperty("test.absolutePathOfTestFiles");
-    //batchSize = Integer.valueOf(System.getProperty("test.batchSize"));
     
-    serverUrl = "";
-    appId = "";
-    absolutePathOfTestFiles = "testfiles/";
-    batchSize = 1000;
-    username = "";
-    password = "";
+    serverUrl = System.getProperty("test.aggUrl");
+    appId = System.getProperty("test.appId");
+    absolutePathOfTestFiles = System.getProperty("test.absolutePathOfTestFiles");
+    batchSize = Integer.valueOf(System.getProperty("test.batchSize"));
+    userName = System.getProperty("test.userName");
+    password = System.getProperty("test.password");
+  
+//    serverUrl = "";
+//    appId = "";
+//    absolutePathOfTestFiles = "testfiles/";
+//    batchSize = 1000;
+//    userName = "";
+//    password = "";
+
     URL url = new URL(serverUrl);
     host = url.getHost();
     version = "2";
-    cloudEndpointInfo = new CloudEndpointInfo(serverUrl, appId, username, password);
+    cloudEndpointInfo = new CloudEndpointInfo(serverUrl, appId, userName, password);
   }
   
   public void testUpdateTaskAdd_ExpectPass() {
@@ -947,9 +951,9 @@ public class UpdateTaskTest extends TestCase{
     String creator = jsonRow.getString(SyncClient.SAVEPOINT_CREATOR_JSON);
     String expectedCreator = SuitcaseConst.ANONYMOUS_USER;
     if (creator.startsWith(SuitcaseConst.MAIL_TO_PREFIX)) {
-      expectedCreator = SuitcaseConst.MAIL_TO_PREFIX + username;
+      expectedCreator = SuitcaseConst.MAIL_TO_PREFIX + userName;
     } else if (creator.startsWith(SuitcaseConst.USERNAME_PREFIX)) {
-      expectedCreator = SuitcaseConst.USERNAME_PREFIX + username;
+      expectedCreator = SuitcaseConst.USERNAME_PREFIX + userName;
     }
     
     assertEquals(creator, expectedCreator);
