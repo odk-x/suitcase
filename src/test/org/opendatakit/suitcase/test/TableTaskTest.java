@@ -30,10 +30,10 @@ public class TableTaskTest extends TestCase{
 //    userName = "";
 //    password = "";
 	  
-	serverUrl = System.getProperty("test.aggUrl");
-	appId = System.getProperty("test.appId");
-	userName = System.getProperty("test.userName");
-	password = System.getProperty("test.password");
+    serverUrl = System.getProperty("test.aggUrl");
+    appId = System.getProperty("test.appId");
+    userName = System.getProperty("test.userName");
+    password = System.getProperty("test.password");
     version = "2";
     cloudEndpointInfo = new CloudEndpointInfo(serverUrl, appId, userName, password);
   }

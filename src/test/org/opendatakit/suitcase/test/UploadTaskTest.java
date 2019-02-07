@@ -35,14 +35,14 @@ public class UploadTaskTest extends TestCase{
     appId = System.getProperty("test.appId");
     absolutePathOfTestFiles = System.getProperty("test.absolutePathOfTestFiles");
     batchSize = Integer.valueOf(System.getProperty("test.batchSize"));
-	userName = System.getProperty("test.userName");
-	password = System.getProperty("test.password");
+    userName = System.getProperty("test.userName");
+    password = System.getProperty("test.password");
     
 //    serverUrl = "";
 //    appId = "";
 //    absolutePathOfTestFiles = "testfiles/";
 //    batchSize = 1000;
-//    username = "";
+//    userName = "";
 //    password = "";
 	
     URL url = new URL(serverUrl);

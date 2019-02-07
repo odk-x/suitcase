@@ -13,4 +13,4 @@ By default, the pom.xml skips the tests.
 The tests can be run by passing the test arguments via the command line.  Replace the values in the example below with the appropriate server url, app id, etc. :
 
 mvn clean package -DskipTests=false -Dtest.aggUrl=http://127.0.0.1 -Dtest.appId=default \
--Dtest.absolutePathOfTestFiles=testfiles/  -Dtest.batchSize=1000 -Dtest.userName=sue -Dtest.password=password
+-Dtest.absolutePathOfTestFiles=testfiles/  -Dtest.batchSize=1000 -Dtest.userName=<user> -Dtest.password=<password>
