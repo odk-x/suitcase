@@ -1,5 +1,6 @@
 package org.opendatakit.suitcase.test;
 
+import java.io.File;
 import java.net.URL;
 
 import org.apache.wink.json4j.JSONArray;
@@ -40,7 +41,7 @@ public class UploadTaskTest extends TestCase{
     
 //    serverUrl = "";
 //    appId = "";
-//    absolutePathOfTestFiles = "testfiles/";
+//    absolutePathOfTestFiles = "testfiles" + File.separator;
 //    batchSize = 1000;
 //    userName = "";
 //    password = "";
@@ -72,7 +73,8 @@ public class UploadTaskTest extends TestCase{
   }
   
   public void testUploadTaskAddOneAppFile_ExpectPass() {
-    String dataPathToAppFile = absolutePathOfTestFiles + "dataToUpload/assets/img/spaceNeedle_CCLicense_goCardUSA.jpg";
+    String dataPathToAppFile = absolutePathOfTestFiles + "dataToUpload" + File.separator + 
+    		"assets" + File.separator + "img" + File.separator + "spaceNeedle_CCLicense_goCardUSA.jpg";
     String relativeServerPath = "assets/img/spaceNeedle_CCLicense_goCardUSA.jpg";
     
     SyncClient sc = null;
