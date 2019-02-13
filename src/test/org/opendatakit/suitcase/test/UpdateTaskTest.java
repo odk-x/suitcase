@@ -45,7 +45,7 @@ public class UpdateTaskTest extends TestCase{
   
 //    serverUrl = "";
 //    appId = "";
-//    absolutePathOfTestFiles = "testfiles/";
+//    absolutePathOfTestFiles = "testfiles" + File.separator;
 //    batchSize = 1000;
 //    userName = "";
 //    password = "";
@@ -57,8 +57,8 @@ public class UpdateTaskTest extends TestCase{
   }
   
   public void testUpdateTaskAdd_ExpectPass() {
-    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
-    String dataPath = absolutePathOfTestFiles + "plot/plot-add.csv";
+    String csvFile = absolutePathOfTestFiles + "plot" + File.separator + "definition.csv";
+    String dataPath = absolutePathOfTestFiles + "plot" + File.separator + "plot-add.csv";
     String testTableId = "test1";
     String tableSchemaETag = null;
     SyncClient sc = null;
@@ -134,9 +134,9 @@ public class UpdateTaskTest extends TestCase{
   }
   
   public void testUpdateTaskAddCustomLog_ExpectPass() {
-    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
-    String dataPath = absolutePathOfTestFiles + "plot/plot-add.csv";
-    String logDataPath = absolutePathOfTestFiles + "plot/log/customOutcomeFile.txt";
+    String csvFile = absolutePathOfTestFiles + "plot" + File.separator + "definition.csv";
+    String dataPath = absolutePathOfTestFiles + "plot" + File.separator + "plot-add.csv";
+    String logDataPath = absolutePathOfTestFiles + "plot" + File.separator + "log" + File.separator + "customOutcomeFile.txt";
     String testTableId = "test11";
     String tableSchemaETag = null;
     SyncClient sc = null;
@@ -232,9 +232,9 @@ public class UpdateTaskTest extends TestCase{
   }
   
   public void testUpdateTaskDelete_ExpectPass() {
-    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
-    String dataPathAdd = absolutePathOfTestFiles + "plot/plot-add.csv";
-    String dataPathDelete = absolutePathOfTestFiles + "plot/plot-delete.csv";
+    String csvFile = absolutePathOfTestFiles + "plot" + File.separator + "definition.csv";
+    String dataPathAdd = absolutePathOfTestFiles + "plot" + File.separator + "plot-add.csv";
+    String dataPathDelete = absolutePathOfTestFiles + "plot" + File.separator + "plot-delete.csv";
     String testTableId = "test2";
     String tableSchemaETag = null;
     SyncClient sc = null;
@@ -319,9 +319,9 @@ public class UpdateTaskTest extends TestCase{
   }
   
   public void testUpdateTaskUpdate_ExpectPass() {
-    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
-    String dataPathAdd = absolutePathOfTestFiles + "plot/plot-add.csv";
-    String dataPathUpdate = absolutePathOfTestFiles + "plot/plot-update.csv";
+    String csvFile = absolutePathOfTestFiles + "plot" + File.separator + "definition.csv";
+    String dataPathAdd = absolutePathOfTestFiles + "plot" + File.separator + "plot-add.csv";
+    String dataPathUpdate = absolutePathOfTestFiles + "plot" + File.separator + "plot-update.csv";
     String testTableId = "test3";
     String tableSchemaETag = null;
     SyncClient sc = null;
@@ -414,9 +414,9 @@ public class UpdateTaskTest extends TestCase{
   }
   
   public void testUpdateTaskForceUpdate_ExpectPass() {
-    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
-    String dataPathAdd = absolutePathOfTestFiles + "plot/plot-add.csv";
-    String dataPathUpdate = absolutePathOfTestFiles + "plot/plot-forceUpdate.csv";
+    String csvFile = absolutePathOfTestFiles + "plot" + File.separator + "definition.csv";
+    String dataPathAdd = absolutePathOfTestFiles + "plot" + File.separator + "plot-add.csv";
+    String dataPathUpdate = absolutePathOfTestFiles + "plot" + File.separator + "plot-forceUpdate.csv";
     String testTableId = "test4";
     String tableSchemaETag = null;
     SyncClient sc = null;
@@ -506,8 +506,8 @@ public class UpdateTaskTest extends TestCase{
   }
   
   public void testUpdateTaskForceUpdateToAddRow_ExpectPass() {
-    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
-    String dataPathUpdate = absolutePathOfTestFiles + "plot/plot-forceUpdate.csv";
+    String csvFile = absolutePathOfTestFiles + "plot" + File.separator + "definition.csv";
+    String dataPathUpdate = absolutePathOfTestFiles + "plot" + File.separator + "plot-forceUpdate.csv";
     String testTableId = "test4";
     String tableSchemaETag = null;
     SyncClient sc = null;
@@ -580,9 +580,9 @@ public class UpdateTaskTest extends TestCase{
   }
   
   public void testUpdateTaskForceUpdateDeleteAndRecreateIt_ExpectPass() {
-    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
-    String dataPathUpdate = absolutePathOfTestFiles + "plot/plot-forceUpdate.csv";
-    String dataPathDelete = absolutePathOfTestFiles + "plot/plot-forceUpdateDelete.csv";
+    String csvFile = absolutePathOfTestFiles + "plot" + File.separator + "definition.csv";
+    String dataPathUpdate = absolutePathOfTestFiles + "plot" + File.separator + "plot-forceUpdate.csv";
+    String dataPathDelete = absolutePathOfTestFiles + "plot" + File.separator + "plot-forceUpdateDelete.csv";
     String testTableId = "test4";
     String tableSchemaETag = null;
     SyncClient sc = null;
@@ -683,8 +683,8 @@ public class UpdateTaskTest extends TestCase{
   
   public void testUpdateTaskWith1000Rows_ExpectPass() {
     String testTableId = "test5";
-    String defPath = "testfiles/cookstoves/data_definition.csv";
-    String dataPath = "testfiles/cookstoves/data_small.csv";
+    String defPath =absolutePathOfTestFiles + "cookstoves" + File.separator + "data_definition.csv";
+    String dataPath = absolutePathOfTestFiles + "cookstoves" + File.separator + "data_small.csv";
     int retCode;
     SyncClient sc = null;
     
@@ -739,9 +739,9 @@ public class UpdateTaskTest extends TestCase{
   }
   
   public void testUpdateTaskAllOperationsInFile_ExpectPass() {
-    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
-    String dataPathAdd = absolutePathOfTestFiles + "plot/plot-add5.csv";
-    String dataPathUpdate = absolutePathOfTestFiles + "plot/plot-allops.csv";
+    String csvFile = absolutePathOfTestFiles + "plot" + File.separator + "definition.csv";
+    String dataPathAdd = absolutePathOfTestFiles + "plot" + File.separator + "plot-add5.csv";
+    String dataPathUpdate = absolutePathOfTestFiles + "plot" + File.separator + "plot-allops.csv";
     String testTableId = "test6";
     String tableSchemaETag = null;
     SyncClient sc = null;
@@ -840,9 +840,9 @@ public class UpdateTaskTest extends TestCase{
   }
   
   public void testUpdateTaskAddUpdateForceUpdateInFile_ExpectPass() {
-    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
-    String dataPathAdd = absolutePathOfTestFiles + "plot/plot-add5.csv";
-    String dataPathUpdate = absolutePathOfTestFiles + "plot/plot-addUpdateForceUpdate.csv";
+    String csvFile = absolutePathOfTestFiles + "plot" + File.separator + "definition.csv";
+    String dataPathAdd = absolutePathOfTestFiles + "plot" + File.separator + "plot-add5.csv";
+    String dataPathUpdate = absolutePathOfTestFiles + "plot" + File.separator + "plot-addUpdateForceUpdate.csv";
     String testTableId = "test6";
     String tableSchemaETag = null;
     SyncClient sc = null;
@@ -962,9 +962,9 @@ public class UpdateTaskTest extends TestCase{
   }
   
   public void testUpdateTaskAddUpdateForceUpdateInFileDiffColOrder_ExpectPass() {
-    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
-    String dataPathAdd = absolutePathOfTestFiles + "plot/plot-add5.csv";
-    String dataPathUpdate = absolutePathOfTestFiles + "plot/plot-addUpdateForceUpdate2.csv";
+    String csvFile = absolutePathOfTestFiles + "plot" + File.separator + "definition.csv";
+    String dataPathAdd = absolutePathOfTestFiles + "plot" + File.separator + "plot-add5.csv";
+    String dataPathUpdate = absolutePathOfTestFiles + "plot" + File.separator + "plot-addUpdateForceUpdate2.csv";
     String testTableId = "test6";
     String tableSchemaETag = null;
     SyncClient sc = null;
@@ -1068,9 +1068,9 @@ public class UpdateTaskTest extends TestCase{
   
   // This test must be run with admin privileges!
 //  public void testUpdateTaskAddWithUsers_ExpectPass() {
-//    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
-//    String dataPath = absolutePathOfTestFiles + "plot/plot-add-user.csv";
-//    String userPath = absolutePathOfTestFiles + "permissions/perm-file.csv";
+//    String csvFile = absolutePathOfTestFiles + "plot" + File.separator + "definition.csv";
+//    String dataPath = absolutePathOfTestFiles + "plot" + File.separator + "plot-add-user.csv";
+//    String userPath = absolutePathOfTestFiles + "permissions" + File.separator + "perm-file.csv";
 //    String testTableId = "test7";
 //    String tableSchemaETag = null;
 //    SyncClient sc = null;
