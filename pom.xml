@@ -6,11 +6,11 @@
 
     <groupId>org.opendatakit</groupId>
     <artifactId>suitcase</artifactId>
-    <version>2.1.1</version>
+    <version>2.1.2</version>
 
     <properties>
-        <org.opendatakit.sync-client.version>2.1.1</org.opendatakit.sync-client.version>
-        <org.opendatakit.odk.rest.interface>2.1.1</org.opendatakit.odk.rest.interface>
+        <org.opendatakit.sync-client.version>2.1.2</org.opendatakit.sync-client.version>
+        <org.opendatakit.odk.rest.interface>2.1.2</org.opendatakit.odk.rest.interface>
 
         <org.apache.wink.version>1.4</org.apache.wink.version>
         <org.apache.commons.cli.version>1.4</org.apache.commons.cli.version>
