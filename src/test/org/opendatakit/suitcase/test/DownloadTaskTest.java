@@ -33,19 +33,25 @@ public class DownloadTaskTest extends TestCase{
   
   @Override
   protected void setUp() throws MalformedURLException {
-    serverUrl = "";
-    appId = "";
-    absolutePathOfTestFiles = "testfiles/";
-    userName = "";
-    password = "";
+//    serverUrl = "";
+//    appId = "";
+//    absolutePathOfTestFiles = "testfiles" + File.separator;
+//    userName = "";
+//    password = "";
+    
+    serverUrl = System.getProperty("test.aggUrl");
+    appId = System.getProperty("test.appId");
+    absolutePathOfTestFiles = System.getProperty("test.absolutePathOfTestFiles");
+    userName = System.getProperty("test.userName");
+    password = System.getProperty("test.password");
     version = "2";
     
     cloudEndpointInfo = new CloudEndpointInfo(serverUrl, appId, userName, password);
   }
   
   public void testDownloadTaskWithEmptyTable_ExpectPass() {
-    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
-    String savePath = this.absolutePathOfTestFiles + "downloadedData/plot-output1";
+    String csvFile = absolutePathOfTestFiles + "plot" + File.separator + "definition.csv";
+    String savePath = absolutePathOfTestFiles + "downloadedData" + File.separator + "plot-output1";
     String testTableId = "test1";
     String fileName = "link_unformatted.csv";
     String tableSchemaETag = null;
@@ -147,9 +153,9 @@ public class DownloadTaskTest extends TestCase{
   }
   
   public void testDownloadTaskAddWithNonEmptyTable_ExpectPass() {
-    String csvFile = absolutePathOfTestFiles + "plot/definition.csv";
-    String dataPath = absolutePathOfTestFiles + "plot/plot-add.csv";
-    String savePath = this.absolutePathOfTestFiles + "downloadedData/plot-output2";
+    String csvFile = absolutePathOfTestFiles + "plot" + File.separator + "definition.csv";
+    String dataPath = absolutePathOfTestFiles + "plot" + File.separator + "plot-add.csv";
+    String savePath = absolutePathOfTestFiles + "downloadedData" + File.separator + "plot-output2";
     String testTableId = "test2";
     String fileName = "link_unformatted.csv";
     String tableSchemaETag = null;
@@ -265,9 +271,9 @@ public class DownloadTaskTest extends TestCase{
   }
   
   public void testDownloadTaskAddWithNonEmptyTableFromGeneratedCSV_ExpectPass() {
-    String csvFile = absolutePathOfTestFiles + "geotagger/definition.csv";
-    String dataPath = absolutePathOfTestFiles + "geotagger/geotagger-add.csv";
-    String savePath = this.absolutePathOfTestFiles + "downloadedData/geotagger-output3";
+    String csvFile = absolutePathOfTestFiles + "geotagger" + File.separator + "definition.csv";
+    String dataPath = absolutePathOfTestFiles + "geotagger" + File.separator + "geotagger-add.csv";
+    String savePath = absolutePathOfTestFiles + "downloadedData" + File.separator + "geotagger-output3";
     String testTableId = "test3";
     String fileName = "link_unformatted.csv";
     String tableSchemaETag = null;
@@ -383,9 +389,9 @@ public class DownloadTaskTest extends TestCase{
   }
   
   public void testDownloadTaskAddWithNonEmptyTableFromGeneratedCSVAndGroups_ExpectPass() {
-    String csvFile = absolutePathOfTestFiles + "geotagger/definition.csv";
-    String dataPath = absolutePathOfTestFiles + "geotagger/geotagger-groups.csv";
-    String savePath = this.absolutePathOfTestFiles + "downloadedData/geotagger-output4";
+    String csvFile = absolutePathOfTestFiles + "geotagger" + File.separator + "definition.csv";
+    String dataPath = absolutePathOfTestFiles + "geotagger" + File.separator + "geotagger-groups.csv";
+    String savePath = absolutePathOfTestFiles + "downloadedData" + File.separator +" geotagger-output4";
     String testTableId = "test4";
     String fileName = "link_unformatted.csv";
     String tableSchemaETag = null;

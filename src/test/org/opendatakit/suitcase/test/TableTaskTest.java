@@ -1,5 +1,6 @@
 package org.opendatakit.suitcase.test;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -19,17 +20,24 @@ public class TableTaskTest extends TestCase{
   CloudEndpointInfo cloudEndpointInfo = null;
   String serverUrl = null;
   String appId = null;
+  String absolutePathOfTestFiles = null;
   String userName = null;
   String password = null;
   String version = null;
   
   @Override
   protected void setUp() throws MalformedURLException {
-    
-    serverUrl = "";
-    appId = "";
-    userName = "";
-    password = "";
+//    serverUrl = "";
+//    appId = "";
+//    absolutePathOfTestFiles = "testfiles" + File.separator;
+//    userName = "";
+//    password = "";
+	  
+    serverUrl = System.getProperty("test.aggUrl");
+    appId = System.getProperty("test.appId");
+    absolutePathOfTestFiles = System.getProperty("test.absolutePathOfTestFiles");
+    userName = System.getProperty("test.userName");
+    password = System.getProperty("test.password");
     version = "2";
     cloudEndpointInfo = new CloudEndpointInfo(serverUrl, appId, userName, password);
   }
@@ -37,7 +45,7 @@ public class TableTaskTest extends TestCase{
   public void testCreateTable_ExpectPass() {
     String testTableId = "test1";
     String operation = "create";
-    String dataPath = "testfiles/plot/definition.csv";
+    String dataPath = absolutePathOfTestFiles + "plot" + File.separator + "definition.csv";
     int retCode;
     SyncClient sc = null;
     
@@ -85,7 +93,7 @@ public class TableTaskTest extends TestCase{
   public void testDeleteTable_ExpectPass() {
     String testTableId = "test2";
     String operation = "delete";
-    String dataPath = "testfiles/plot/definition.csv";
+    String dataPath = absolutePathOfTestFiles + "plot" + File.separator + "definition.csv";
     int retCode;
     SyncClient sc = null;
 
@@ -138,8 +146,8 @@ public class TableTaskTest extends TestCase{
   public void testClearTable_ExpectPass() {
     String testTableId = "test3";
     String operation = "clear";
-    String defPath = "testfiles/plot/definition.csv";
-    String dataPath = "testfiles/plot/plot-add5.csv";
+    String defPath = absolutePathOfTestFiles + "plot" + File.separator + "definition.csv";
+    String dataPath = absolutePathOfTestFiles + "plot" + File.separator + "plot-add5.csv";
     int retCode;
     SyncClient sc = null;
     
@@ -204,8 +212,8 @@ public class TableTaskTest extends TestCase{
   public void testClearTableNoFilePath_ExpectPass() {
     String testTableId = "test4";
     String operation = "clear";
-    String defPath = "testfiles/plot/definition.csv";
-    String dataPath = "testfiles/plot/plot-add5.csv";
+    String defPath = absolutePathOfTestFiles + "plot" + File.separator + "definition.csv";
+    String dataPath = absolutePathOfTestFiles + "plot" + File.separator + "plot-add5.csv";
     int retCode;
     SyncClient sc = null;
     
@@ -270,8 +278,8 @@ public class TableTaskTest extends TestCase{
   public void testClearLargeTableData_ExpectPass() {
     String testTableId = "test5";
     String operation = "clear";
-    String defPath = "testfiles/cookstoves/data_definition.csv";
-    String dataPath = "testfiles/cookstoves/data_small.csv";
+    String defPath = absolutePathOfTestFiles + "cookstoves" + File.separator + "data_definition.csv";
+    String dataPath = absolutePathOfTestFiles + "cookstoves" + File.separator + "data_small.csv";
     int retCode;
     SyncClient sc = null;
     
@@ -336,7 +344,7 @@ public class TableTaskTest extends TestCase{
   public void testClearEmptyTable_ExpectPass() {
     String testTableId = "test6";
     String operation = "clear";
-    String defPath = "testfiles/cookstoves/data_definition.csv";
+    String defPath = absolutePathOfTestFiles + "cookstoves" + File.separator + "data_definition.csv";
     int retCode;
     SyncClient sc = null;
     

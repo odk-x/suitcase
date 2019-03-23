@@ -1,2 +1,2 @@
-mvn install:install-file -Dfile=odk-rest-interface-2.1.1.jar -Djavadoc=odk-rest-interface-2.1.1-javadoc.jar -Dsources=odk-rest-interface-2.1.1-sources.jar -DgroupId=org.opendatakit -DartifactId=odk-rest-interface -Dversion=2.1.1 -Dpackaging=jar -DupdateReleaseInfo=true
-mvn install:install-file -Dfile=sync-client-2.1.1.jar -Djavadoc=sync-client-2.1.1-javadoc.jar -Dsources=sync-client-2.1.1-sources.jar -DpomFile=sync-client-2.1.1.pom -Dpackaging=jar -DupdateReleaseInfo=true
+mvn install:install-file -Dfile=odk-rest-interface-2.1.2.jar -Djavadoc=odk-rest-interface-2.1.2-javadoc.jar -Dsources=odk-rest-interface-2.1.2-sources.jar -DgroupId=org.opendatakit -DartifactId=odk-rest-interface -Dversion=2.1.2 -Dpackaging=jar -DupdateReleaseInfo=true
+mvn install:install-file -Dfile=sync-client-2.1.2.jar -Djavadoc=sync-client-2.1.2-javadoc.jar -Dsources=sync-client-2.1.2-sources.jar -DpomFile=sync-client-2.1.2.pom -Dpackaging=jar -DupdateReleaseInfo=true
