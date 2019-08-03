@@ -14,19 +14,20 @@
 
         <org.apache.wink.version>1.4</org.apache.wink.version>
         <org.apache.commons.cli.version>1.4</org.apache.commons.cli.version>
-        <org.apache.httpcomponents.version>4.5.7</org.apache.httpcomponents.version>
+        <org.apache.httpcomponents.version>4.5.9</org.apache.httpcomponents.version>
 
-        <maven.jar.plugin.version>3.1.1</maven.jar.plugin.version>
-        <maven.javadoc.plugin.version>3.0.1</maven.javadoc.plugin.version>
+        <maven.jar.plugin.version>3.1.2</maven.jar.plugin.version>
+        <maven.javadoc.plugin.version>3.1.0</maven.javadoc.plugin.version>
         <maven.source.plugin.version>3.0.1</maven.source.plugin.version>
-        <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
+        <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <maven.assembly.plugin.version>3.1.1</maven.assembly.plugin.version>
         <org.codehaus.mojo.version>1.6.0</org.codehaus.mojo.version>
 
-        <jacoco.version>0.8.3</jacoco.version>
+        <jacoco.version>0.8.4</jacoco.version>
         <junit.version>4.12</junit.version>
 
-        <com.fasterxml.jackson.version>2.9.8</com.fasterxml.jackson.version>
+        <com.fasterxml.jackson.version>2.9.9</com.fasterxml.jackson.version>
+        <com.fasterxml.jackson.databind.version>2.9.9.2</com.fasterxml.jackson.databind.version>
 
         <mainClass>org.opendatakit.suitcase.Suitcase</mainClass>
         <sourceDir>src/main/java</sourceDir>
@@ -196,7 +197,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>${com.fasterxml.jackson.version}</version>
+            <version>${com.fasterxml.jackson.databind.version}</version>
         </dependency>
 
         <!-- Test Dependencies -->
