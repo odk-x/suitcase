@@ -26,8 +26,8 @@
         <jacoco.version>0.8.4</jacoco.version>
         <junit.version>4.12</junit.version>
 
-        <com.fasterxml.jackson.version>2.9.9</com.fasterxml.jackson.version>
-        <com.fasterxml.jackson.databind.version>2.9.9.2</com.fasterxml.jackson.databind.version>
+        <com.fasterxml.jackson.version>2.10.0</com.fasterxml.jackson.version>
+        <com.fasterxml.jackson.databind.version>2.10.0</com.fasterxml.jackson.databind.version>
 
         <mainClass>org.opendatakit.suitcase.Suitcase</mainClass>
         <sourceDir>src/main/java</sourceDir>
