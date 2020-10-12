@@ -24,7 +24,7 @@
         <org.codehaus.mojo.version>1.6.0</org.codehaus.mojo.version>
 
         <jacoco.version>0.8.4</jacoco.version>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13.1</junit.version>
 
         <com.fasterxml.jackson.version>2.10.0</com.fasterxml.jackson.version>
         <com.fasterxml.jackson.databind.version>2.10.0</com.fasterxml.jackson.databind.version>
