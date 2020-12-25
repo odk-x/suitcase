@@ -6,15 +6,15 @@
 
     <groupId>org.opendatakit</groupId>
     <artifactId>suitcase</artifactId>
-    <version>2.1.6</version>
+    <version>2.1.7</version>
 
     <properties>
-        <org.opendatakit.sync-client.version>2.1.6</org.opendatakit.sync-client.version>
-        <org.opendatakit.odk.rest.interface>2.1.6</org.opendatakit.odk.rest.interface>
+        <org.opendatakit.sync-client.version>2.1.7</org.opendatakit.sync-client.version>
+        <org.opendatakit.odk.rest.interface>2.1.7</org.opendatakit.odk.rest.interface>
 
         <org.apache.wink.version>1.4</org.apache.wink.version>
         <org.apache.commons.cli.version>1.4</org.apache.commons.cli.version>
-        <org.apache.httpcomponents.version>4.5.9</org.apache.httpcomponents.version>
+        <org.apache.httpcomponents.version>4.5.13</org.apache.httpcomponents.version>
 
         <maven.jar.plugin.version>3.1.2</maven.jar.plugin.version>
         <maven.javadoc.plugin.version>3.1.0</maven.javadoc.plugin.version>
@@ -24,10 +24,10 @@
         <org.codehaus.mojo.version>1.6.0</org.codehaus.mojo.version>
 
         <jacoco.version>0.8.4</jacoco.version>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13.1</junit.version>
 
-        <com.fasterxml.jackson.version>2.10.0</com.fasterxml.jackson.version>
-        <com.fasterxml.jackson.databind.version>2.10.0</com.fasterxml.jackson.databind.version>
+        <com.fasterxml.jackson.version>2.11.1</com.fasterxml.jackson.version>
+        <com.fasterxml.jackson.databind.version>2.11.1</com.fasterxml.jackson.databind.version>
 
         <mainClass>org.opendatakit.suitcase.Suitcase</mainClass>
         <sourceDir>src/main/java</sourceDir>
