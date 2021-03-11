@@ -114,13 +114,16 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
         if (error != null) {
           DialogUtils.showError(error, true);
         } else {
-          sResetButton.setText(RESETTING_LABEL);
-          setButtonState(false);
-
-          ResetTask worker = new ResetTask(sVersionPushText.getText(), true);
-          worker.addPropertyChangeListener(parent.getProgressBar());
-          worker.addPropertyChangeListener(PushPanel.this);
-          worker.execute();
+        	if(DialogUtils.promptConfirm("Are you sure you want to RESET? "
+        				+ "This will delete ALL your data on the server?", true, false)) {
+	          sResetButton.setText(RESETTING_LABEL);
+	          setButtonState(false);
+	
+	          ResetTask worker = new ResetTask(sVersionPushText.getText(), true);
+	          worker.addPropertyChangeListener(parent.getProgressBar());
+	          worker.addPropertyChangeListener(PushPanel.this);
+	          worker.execute();
+        	}
         }
       }
     });
