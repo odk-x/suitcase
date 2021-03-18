@@ -60,6 +60,7 @@ public class SuitcaseCLI {
   private static final String UPDATE_LOG_PATH_OPT = "updateLogPath";
 
 
+
   private static final String[] REQUIRED_ARGS = new String[]{"cloudEndpointUrl", "appId"};
 
   private String[] args;
@@ -78,6 +79,7 @@ public class SuitcaseCLI {
   private boolean scanFormatting;
   private boolean extraMetadata;
   private boolean force;
+  private String default_data_version = "2";
 
   public SuitcaseCLI(String[] args) {
     this.args = args;
@@ -274,10 +276,6 @@ public class SuitcaseCLI {
         operation = Operation.DOWNLOAD;
       }
 
-      if (operation != Operation.DOWNLOAD && !line.hasOption(DATA_VERSION_OPT)) {
-        throw new ParseException("Data version is required for upload, update, tableop, permission and reset");
-      }
-
       for (String arg : REQUIRED_ARGS) {
         if (!line.hasOption(arg)) {
           throw new ParseException(arg + "is required");
@@ -326,8 +324,12 @@ public class SuitcaseCLI {
       
       updateLogPath = line.getOptionValue(UPDATE_LOG_PATH_OPT);
 
-      version = line.getOptionValue(DATA_VERSION_OPT);
-
+      if (!line.hasOption(DATA_VERSION_OPT)) {
+        version=default_data_version;
+      }
+      else {
+        version = line.getOptionValue(DATA_VERSION_OPT);
+      }
       force = line.hasOption(FORCE_OPT_SHORT);
     } catch (ParseException e) {
       e.printStackTrace();
