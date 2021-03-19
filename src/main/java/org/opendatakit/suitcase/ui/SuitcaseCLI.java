@@ -14,7 +14,7 @@ import java.net.MalformedURLException;
 import static org.opendatakit.suitcase.ui.MessageString.*;
 
 public class SuitcaseCLI {
-  
+
   public static final int PARAM_ERROR_CODE = 1;
   private enum Operation {
     DOWNLOAD, UPLOAD, UPDATE, RESET, INFO, TABLE_OP, PERMISSION
@@ -26,38 +26,39 @@ public class SuitcaseCLI {
   private static final String UPDATE_OP = "update";
   private static final String TABLE_OP = "tableOp";
   private static final String PERMISSION_OP = "permission";
-  
+
   private static final String HELP_OPT = "help";
   private static final String HELP_OPT_SHORT = "h";
-  
+
   private static final String VERSION_OPT_SHORT = "v";
   private static final String VERSION_OPT = "version";
-  
+
   private static final String CLOUD_ENDPOINT_URL_OPT = "cloudEndpointUrl";
   private static final String APP_ID_OPT = "appId";
   private static final String TABLE_ID_OPT = "tableId";
   private static final String USERNAME_OPT = "username";
   private static final String PASSWORD_OPT = "password";
-  
+
   private static final String DATA_VERSION_OPT = "dataVersion";
-  
+
   private static final String ATTACHMENT_OPT = "attachment";
   private static final String ATTACHMENT_OPT_SHORT = "a";
-  
+
   private static final String SCAN_OPT = "scan";
   private static final String SCAN_OPT_SHORT = "s";
-  
+
   private static final String EXTRA_OPT = "extra";
   private static final String EXTRA_OPT_SHORT = "e";
-  
+
   private static final String PATH_OPT = "path";
   private static final String UPLOAD_OP_OPT = "uploadOp";
   private static final String RELATIVE_SERVER_PATH_OPT = "relativeServerPath";
-  
+
   private static final String FORCE_OPT = "force";
   private static final String FORCE_OPT_SHORT = "f";
 
   private static final String UPDATE_LOG_PATH_OPT = "updateLogPath";
+  private static final String default_data_version = "2";
 
 
 
@@ -79,7 +80,7 @@ public class SuitcaseCLI {
   private boolean scanFormatting;
   private boolean extraMetadata;
   private boolean force;
-  private String default_data_version = "2";
+  
 
   public SuitcaseCLI(String[] args) {
     this.args = args;
@@ -105,7 +106,7 @@ public class SuitcaseCLI {
       ODKCsv csv = null;
       try {
         csv = new ODKCsv(attMngr, cloudEndpointInfo, tableId);
-      } catch (JSONException e) { /* should never happen */} 
+      } catch (JSONException e) { /* should never happen */}
       CsvConfig config = new CsvConfig(downloadAttachment, scanFormatting, extraMetadata);
 
       error = FieldsValidatorUtils.checkDownloadFields(tableId, path, cloudEndpointInfo);
@@ -147,7 +148,7 @@ public class SuitcaseCLI {
         retCode = new UpdateTask(cloudEndpointInfo, path, version, tableId, updateLogPath , false).blockingExecute();
       }
       break;
-      
+
     case TABLE_OP:
       error = FieldsValidatorUtils.checkTableOpFields(tableId, path, version, tableOp);
 
@@ -158,7 +159,7 @@ public class SuitcaseCLI {
         retCode = new TableTask(cloudEndpointInfo, tableId, path, version, tableOp, false).blockingExecute();
       }
       break;
-    
+
     case PERMISSION:
       error = FieldsValidatorUtils.checkPermissionFields(version, path);
 
@@ -168,10 +169,10 @@ public class SuitcaseCLI {
       } else {
         retCode = new PermissionTask(cloudEndpointInfo, path, version, false).blockingExecute();
       }
-      
+
       break;
     }
-    
+
     return retCode;
   }
 
@@ -206,7 +207,7 @@ public class SuitcaseCLI {
 
     // not required for download, check later
     opt.addOption(DATA_VERSION_OPT, true, "version of data, usually 1 or 2");
-    
+
 
     //csv options
     opt.addOption(ATTACHMENT_OPT_SHORT, ATTACHMENT_OPT, false, "download attachments");
@@ -216,17 +217,17 @@ public class SuitcaseCLI {
     opt.addOption(PATH_OPT, true, "Specify a custom path to output csv or to upload from. "
                               + "Default csv directory is ./Download/ "
                               + "Default upload directory is ./Upload/ ");
-    
+
     opt.addOption(UPLOAD_OP_OPT, true, "Specify the uploadop to either FILE or RESET_APP."
                                    + "This option must be used with upload option."
                                    + "RESET_APP is the default option and will push all files to server"
                                    + "FILE is used to push one file to relativeServerPath");
-    
+
     opt.addOption(RELATIVE_SERVER_PATH_OPT, true, "Specify the relative server path to push file to");
 
     //UI
     opt.addOption(FORCE_OPT_SHORT, FORCE_OPT, false, "do not prompt, overwrite existing files");
-    
+
     //Update Log
     opt.addOption(UPDATE_LOG_PATH_OPT, true, "Specify a custom path to create update log file. "
         + "Default directory is ./Update");
@@ -286,9 +287,9 @@ public class SuitcaseCLI {
       String username = line.getOptionValue(USERNAME_OPT, "");
       String password = line.getOptionValue(PASSWORD_OPT, "");
       tableOp = line.getOptionValue(TABLE_OP, null);
-      
+
       uploadOp = line.getOptionValue(UPLOAD_OP_OPT);
-      
+
       relativeServerPath = line.getOptionValue(RELATIVE_SERVER_PATH_OPT);
 
       // validate fields before creating CloudEndpointInfo object
@@ -297,7 +298,7 @@ public class SuitcaseCLI {
           username, password,
           username.isEmpty() && password.isEmpty()
       );
-      
+
       if (error != null) {
         DialogUtils.showError(error, false);
         // return early when validation fails
@@ -318,18 +319,14 @@ public class SuitcaseCLI {
         downloadAttachment = line.hasOption(ATTACHMENT_OPT_SHORT);
         scanFormatting = line.hasOption(SCAN_OPT_SHORT);
         extraMetadata = line.hasOption(EXTRA_OPT_SHORT);
-      } 
+      }
 
       path = line.getOptionValue(PATH_OPT, FileUtils.getDefaultSavePath().toString());
-      
+
       updateLogPath = line.getOptionValue(UPDATE_LOG_PATH_OPT);
 
-      if (!line.hasOption(DATA_VERSION_OPT)) {
-        version=default_data_version;
-      }
-      else {
-        version = line.getOptionValue(DATA_VERSION_OPT);
-      }
+      version = line.getOptionValue(DATA_VERSION_OPT,default_data_version);
+
       force = line.hasOption(FORCE_OPT_SHORT);
     } catch (ParseException e) {
       e.printStackTrace();
