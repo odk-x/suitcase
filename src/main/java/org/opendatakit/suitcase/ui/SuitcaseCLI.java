@@ -58,7 +58,7 @@ public class SuitcaseCLI {
   private static final String FORCE_OPT_SHORT = "f";
 
   private static final String UPDATE_LOG_PATH_OPT = "updateLogPath";
-  private static final String default_data_version = "2";
+  private static final String DEFAULT_DATA_VERSION = "2";
 
 
 
@@ -325,7 +325,7 @@ public class SuitcaseCLI {
 
       updateLogPath = line.getOptionValue(UPDATE_LOG_PATH_OPT);
 
-      version = line.getOptionValue(DATA_VERSION_OPT,default_data_version);
+      version = line.getOptionValue(DATA_VERSION_OPT,DEFAULT_DATA_VERSION);
 
       force = line.hasOption(FORCE_OPT_SHORT);
     } catch (ParseException e) {
