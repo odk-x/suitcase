@@ -76,6 +76,8 @@ public class SyncWrapper {
   }
 
   public Set<String> updateTableList() throws IOException, JSONException {
+  	cloudEndpointInfo.resetTableIdSchemaETag();
+  	
     JSONArray tables =
         sc.getTables(cloudEndpointInfo.getServerUrl(), cloudEndpointInfo.getAppId()).getJSONArray(TABLES_JSON);
 
