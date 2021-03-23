@@ -47,7 +47,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     this.sPullButton = new JButton();
     this.sTableIdText = new JTextField(1);
     this.savePathChooser = new PathChooserPanel(
-        SAVE_PATH_LABEL, FileUtils.getDefaultSavePath().toString()
+            SAVE_PATH_LABEL, FileUtils.getDefaultSavePath().toString()
     );
 
     GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
@@ -55,16 +55,16 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     gbc.gridy = GridBagConstraints.RELATIVE;
 
     JPanel pullInputPanel = new InputPanel(
-        new String[] {"Table ID"},
-        new JTextField[] {sTableIdText},
-        new String[] {"table_id"}
+            new String[] {"Table ID"},
+            new JTextField[] {sTableIdText},
+            new String[] {"table_id"}
     );
     gbc.weighty = 2;
     this.add(pullInputPanel, gbc);
 
     JPanel pullPrefPanel = new CheckboxPanel(
-        new String[] {"Download attachments?", "Apply Scan formatting?", "Extra metadata columns?"},
-        new JCheckBox[] {sDownloadAttachment, sApplyScanFmt, sExtraMetadata}, 3, 1
+            new String[] {"Download attachments?", "Apply Scan formatting?", "Extra metadata columns?"},
+            new JCheckBox[] {sDownloadAttachment, sApplyScanFmt, sExtraMetadata}, 3, 1
     );
     gbc.weighty = 5;
     this.add(pullPrefPanel, gbc);
@@ -87,13 +87,13 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         sTableIdText.setText(sTableIdText.getText().trim());
 
         String error = FieldsValidatorUtils.checkDownloadFields(
-            sTableIdText.getText(), savePathChooser.getPath(), parent.getCloudEndpointInfo());
+                sTableIdText.getText(), savePathChooser.getPath(), parent.getCloudEndpointInfo());
 
         if (error != null) {
           DialogUtils.showError(error, true);
         } else {
           // disable download button
-          sPullButton.setEnabled(false);
+          parent.setButtonState(false);
 
           sPullButton.setText(DOWNLOADING_LABEL);
 
@@ -101,7 +101,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
 
           if (attachMngr == null) {
             attachMngr = new AttachmentManager(parent.getCloudEndpointInfo(), sTableIdText.getText(),
-                savePathChooser.getPath());
+                    savePathChooser.getPath());
           } else {
             attachMngr.setSavePath(savePathChooser.getPath());
           }
@@ -124,12 +124,17 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     pullButtonPanel.add(sPullButton);
   }
 
+  public void setsPullButtonState(boolean state)
+  {
+    sPullButton.setEnabled(state);
+  }
+
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
     if (evt.getNewValue() != null && evt.getPropertyName().equals(SuitcaseSwingWorker.DONE_PROPERTY)) {
       // re-enable download button and restore its label
       sPullButton.setText(DOWNLOAD_LABEL);
-      sPullButton.setEnabled(true);
+      parent.setButtonState(true);
     }
   }
 }

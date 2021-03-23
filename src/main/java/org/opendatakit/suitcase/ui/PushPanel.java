@@ -36,7 +36,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
     this.sPushButton = new JButton();
     this.sResetButton = new JButton();
     this.dataPathChooser = new PathChooserPanel(
-        DATA_PATH_LABEL, FileUtils.getDefaultUploadPath().toString()
+            DATA_PATH_LABEL, FileUtils.getDefaultUploadPath().toString()
     );
 
     GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
@@ -44,9 +44,9 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
     gbc.gridy = GridBagConstraints.RELATIVE;
 
     JPanel pushInputPanel = new InputPanel(
-        new String[] {"Version"},
-        new JTextField[] {sVersionPushText},
-        new String[] {"2"}
+            new String[] {"Version"},
+            new JTextField[] {sVersionPushText},
+            new String[] {"2"}
     );
     gbc.weighty = 2;
     this.add(pushInputPanel, gbc);
@@ -57,9 +57,9 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
     JCheckBox placeholderCheckbox2 = new JCheckBox();
     placeholderCheckbox2.setVisible(false);
     JPanel pushPrefPanel = new CheckboxPanel(
-        new String[] {"Option Placeholder", "Option Placeholder 2"},
-        new JCheckBox[] {placeholderCheckbox, placeholderCheckbox2},
-        2, 1
+            new String[] {"Option Placeholder", "Option Placeholder 2"},
+            new JCheckBox[] {placeholderCheckbox, placeholderCheckbox2},
+            2, 1
     );
     gbc.weighty = 5;
     this.add(pushPrefPanel, gbc);
@@ -86,16 +86,16 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
         sVersionPushText.setText(sVersionPushText.getText().trim());
 
         String error = FieldsValidatorUtils.checkUploadFields(sVersionPushText.getText(),
-            dataPathChooser.getPath(), UploadTask.RESET_APP_OP);
+                dataPathChooser.getPath(), UploadTask.RESET_APP_OP);
 
         if (error != null) {
           DialogUtils.showError(error, true);
         } else {
           sPushButton.setText(PUSHING_LABEL);
-          setButtonState(false);
+          parent.setButtonState(false);
 
           UploadTask worker = new UploadTask(parent.getCloudEndpointInfo(), dataPathChooser.getPath(),
-              sVersionPushText.getText(), true, null, null);
+                  sVersionPushText.getText(), true, null, null);
           worker.addPropertyChangeListener(parent.getProgressBar());
           worker.addPropertyChangeListener(PushPanel.this);
           worker.execute();
@@ -114,13 +114,16 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
         if (error != null) {
           DialogUtils.showError(error, true);
         } else {
-          sResetButton.setText(RESETTING_LABEL);
-          setButtonState(false);
+          if(DialogUtils.promptConfirm("Are you sure you want to RESET? "
+                  + "This will delete ALL your data on the server?", true, false)) {
+            sResetButton.setText(RESETTING_LABEL);
+            parent.setButtonState(false);
 
-          ResetTask worker = new ResetTask(sVersionPushText.getText(), true);
-          worker.addPropertyChangeListener(parent.getProgressBar());
-          worker.addPropertyChangeListener(PushPanel.this);
-          worker.execute();
+            ResetTask worker = new ResetTask(sVersionPushText.getText(), true);
+            worker.addPropertyChangeListener(parent.getProgressBar());
+            worker.addPropertyChangeListener(PushPanel.this);
+            worker.execute();
+          }
         }
       }
     });
@@ -129,7 +132,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
     pushButtonPanel.add(sPushButton, gbc);
   }
 
-  private void setButtonState(boolean state) {
+  public void setButtonState(boolean state) {
     sPushButton.setEnabled(state);
     sResetButton.setEnabled(state);
   }
@@ -137,7 +140,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
     if (evt.getNewValue() != null && evt.getPropertyName().equals(SuitcaseSwingWorker.DONE_PROPERTY)) {
-      setButtonState(true);
+      parent.setButtonState(true);
       sPushButton.setText(PUSH_LABEL);
       sResetButton.setText(RESET_LABEL);
     }
