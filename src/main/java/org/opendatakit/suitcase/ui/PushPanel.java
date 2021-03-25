@@ -114,6 +114,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
         if (error != null) {
           DialogUtils.showError(error, true);
         } else {
+
           if(DialogUtils.promptConfirm("Are you sure you want to RESET? "
                   + "This will delete ALL your data on the server?", true, false)) {
             sResetButton.setText(RESETTING_LABEL);
@@ -124,6 +125,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
             worker.addPropertyChangeListener(PushPanel.this);
             worker.execute();
           }
+
         }
       }
     });
