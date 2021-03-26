@@ -92,7 +92,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
           DialogUtils.showError(error, true);
         } else {
           sPushButton.setText(PUSHING_LABEL);
-          parent.setButtonState(false);
+          parent.setButtonState(false,false,false);
 
           UploadTask worker = new UploadTask(parent.getCloudEndpointInfo(), dataPathChooser.getPath(),
                   sVersionPushText.getText(), true, null, null);
@@ -117,7 +117,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
           if(DialogUtils.promptConfirm("Are you sure you want to RESET? "
                   + "This will delete ALL your data on the server?", true, false)) {
             sResetButton.setText(RESETTING_LABEL);
-            parent.setButtonState(false);
+            parent.setButtonState(false,false , false);
 
             ResetTask worker = new ResetTask(sVersionPushText.getText(), true);
             worker.addPropertyChangeListener(parent.getProgressBar());
@@ -132,15 +132,15 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
     pushButtonPanel.add(sPushButton, gbc);
   }
 
-  public void setButtonState(boolean state) {
-    sPushButton.setEnabled(state);
-    sResetButton.setEnabled(state);
+  public void setButtonsState(boolean pushButtonState , boolean resetButtonState) {
+    sPushButton.setEnabled(pushButtonState);
+    sResetButton.setEnabled(resetButtonState);
   }
 
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
     if (evt.getNewValue() != null && evt.getPropertyName().equals(SuitcaseSwingWorker.DONE_PROPERTY)) {
-      parent.setButtonState(true);
+      parent.setButtonState(true,true,true);
       sPushButton.setText(PUSH_LABEL);
       sResetButton.setText(RESET_LABEL);
     }
