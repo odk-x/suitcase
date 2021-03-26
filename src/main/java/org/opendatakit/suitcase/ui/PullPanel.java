@@ -93,7 +93,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
           DialogUtils.showError(error, true);
         } else {
           // disable download button
-          parent.setButtonState(false,false,false);
+          parent.setButtonsState(false,false,false);
 
           sPullButton.setText(DOWNLOADING_LABEL);
 
@@ -134,7 +134,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     if (evt.getNewValue() != null && evt.getPropertyName().equals(SuitcaseSwingWorker.DONE_PROPERTY)) {
       // re-enable download button and restore its label
       sPullButton.setText(DOWNLOAD_LABEL);
-      parent.setButtonState(true,true,true);
+      parent.setButtonsState(true,true,true);
     }
   }
 }

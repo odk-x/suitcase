@@ -33,7 +33,7 @@ public class IOPanel extends JPanel {
     this.add(splitPane, LayoutDefault.getDefaultGbc());
   }
 
-  public void setButtonState(boolean pushButtonState,boolean pullButtonState,boolean resetButtonState)
+  public void setButtonsState(boolean pushButtonState,boolean pullButtonState,boolean resetButtonState)
   {
     pushPanel.setButtonsState(pushButtonState,resetButtonState);
     pullPanel.setsPullButtonState(pullButtonState);
