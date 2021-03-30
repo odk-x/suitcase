@@ -1,6 +1,10 @@
-# suitcase
+# ODK-X Suitcase
 
-Building instructions:
+This project is __*actively maintained*__
+
+The developer [wiki](https://github.com/odk-x/tool-suite-X/wiki) (including release notes) and [issues tracker](https://github.com/odk-x/tool-suite-X/issues) are located under the [**ODK-X Tool Suite**](https://github.com/odk-x) project.
+
+## Setting up Your Environment
 
 1. Install Maven and Ant onto your system.
 1. Run `ant` in the dependencies folder. 
