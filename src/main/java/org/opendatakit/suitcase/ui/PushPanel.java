@@ -3,6 +3,7 @@ package org.opendatakit.suitcase.ui;
 import org.opendatakit.suitcase.net.ResetTask;
 import org.opendatakit.suitcase.net.SuitcaseSwingWorker;
 import org.opendatakit.suitcase.net.UploadTask;
+import org.opendatakit.suitcase.utils.ButtonState;
 import org.opendatakit.suitcase.utils.FieldsValidatorUtils;
 import org.opendatakit.suitcase.utils.FileUtils;
 
@@ -92,7 +93,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
           DialogUtils.showError(error, true);
         } else {
           sPushButton.setText(PUSHING_LABEL);
-          parent.setButtonsState(false,false,false);
+          parent.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED);
 
           UploadTask worker = new UploadTask(parent.getCloudEndpointInfo(), dataPathChooser.getPath(),
                   sVersionPushText.getText(), true, null, null);
@@ -118,7 +119,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
           if(DialogUtils.promptConfirm("Are you sure you want to RESET? "
                   + "This will delete ALL your data on the server?", true, false)) {
             sResetButton.setText(RESETTING_LABEL);
-            parent.setButtonsState(false,false , false);
+            parent.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED , ButtonState.DISABLED);
 
             ResetTask worker = new ResetTask(sVersionPushText.getText(), true);
             worker.addPropertyChangeListener(parent.getProgressBar());
@@ -134,15 +135,27 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
     pushButtonPanel.add(sPushButton, gbc);
   }
 
-  public void setButtonsState(boolean pushButtonState , boolean resetButtonState) {
-    sPushButton.setEnabled(pushButtonState);
-    sResetButton.setEnabled(resetButtonState);
+  public void setButtonsState(ButtonState pushButtonState , ButtonState resetButtonState) {
+    if(pushButtonState== ButtonState.ENABLED) {
+      sPushButton.setEnabled(true);
+    }
+    else if(pushButtonState== ButtonState.DISABLED)
+    {
+      sPushButton.setEnabled(false);
+    }
+    if(resetButtonState== ButtonState.ENABLED) {
+      sResetButton.setEnabled(true);
+    }
+    else if(resetButtonState== ButtonState.DISABLED)
+    {
+      sResetButton.setEnabled(false);
+    }
   }
 
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
     if (evt.getNewValue() != null && evt.getPropertyName().equals(SuitcaseSwingWorker.DONE_PROPERTY)) {
-      parent.setButtonsState(true,true,true);
+      parent.setButtonsState(ButtonState.ENABLED, ButtonState.ENABLED, ButtonState.ENABLED);
       sPushButton.setText(PUSH_LABEL);
       sResetButton.setText(RESET_LABEL);
     }

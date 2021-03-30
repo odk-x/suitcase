@@ -1,6 +1,7 @@
 package org.opendatakit.suitcase.ui;
 
 import org.opendatakit.suitcase.model.CloudEndpointInfo;
+import org.opendatakit.suitcase.utils.ButtonState;
 
 import javax.swing.*;
 import java.awt.*;
@@ -33,7 +34,7 @@ public class IOPanel extends JPanel {
     this.add(splitPane, LayoutDefault.getDefaultGbc());
   }
 
-  public void setButtonsState(boolean pushButtonState,boolean pullButtonState,boolean resetButtonState)
+  public void setButtonsState(ButtonState pushButtonState, ButtonState pullButtonState, ButtonState resetButtonState)
   {
     pushPanel.setButtonsState(pushButtonState,resetButtonState);
     pullPanel.setsPullButtonState(pullButtonState);
