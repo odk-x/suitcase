@@ -126,11 +126,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     }
 
     public void setsPullButtonState(ButtonState pullButtonState) {
-        if (pullButtonState == ButtonState.ENABLED) {
-            sPullButton.setEnabled(true);
-        } else if (pullButtonState == ButtonState.DISABLED) {
-            sPullButton.setEnabled(false);
-        }
+        sPullButton.setEnabled(pullButtonState.getButtonStateBooleanValue());
     }
 
     @Override

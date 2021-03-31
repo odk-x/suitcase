@@ -136,20 +136,8 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
   }
 
   public void setButtonsState(ButtonState pushButtonState , ButtonState resetButtonState) {
-    if(pushButtonState== ButtonState.ENABLED) {
-      sPushButton.setEnabled(true);
-    }
-    else if(pushButtonState== ButtonState.DISABLED)
-    {
-      sPushButton.setEnabled(false);
-    }
-    if(resetButtonState== ButtonState.ENABLED) {
-      sResetButton.setEnabled(true);
-    }
-    else if(resetButtonState== ButtonState.DISABLED)
-    {
-      sResetButton.setEnabled(false);
-    }
+  sPushButton.setEnabled(pushButtonState.getButtonStateBooleanValue());
+  sResetButton.setEnabled(resetButtonState.getButtonStateBooleanValue());
   }
 
   @Override
