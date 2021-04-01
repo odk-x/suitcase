@@ -1,6 +1,7 @@
 package org.opendatakit.suitcase.ui;
 
 import org.opendatakit.suitcase.model.CloudEndpointInfo;
+import org.opendatakit.suitcase.utils.ButtonState;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,6 +11,8 @@ public class IOPanel extends JPanel {
   public static final String PUSH_TAB_LABEL = "Upload";
 
   private MainPanel parent;
+  private PullPanel pullPanel;
+  private PushPanel pushPanel;
 
   public IOPanel(MainPanel parent) {
     super(new GridBagLayout());
@@ -17,16 +20,24 @@ public class IOPanel extends JPanel {
     this.parent = parent;
 
     JTabbedPane tabs = new JTabbedPane();
-    tabs.addTab(PULL_TAB_LABEL, new PullPanel(this));
-    tabs.addTab(PUSH_TAB_LABEL, new PushPanel(this));
+    pullPanel = new PullPanel(this);
+    pushPanel = new PushPanel(this);
+    tabs.addTab(PULL_TAB_LABEL, pullPanel);
+    tabs.addTab(PUSH_TAB_LABEL, pushPanel);
 
     JSplitPane splitPane =
-        new JSplitPane(JSplitPane.VERTICAL_SPLIT, tabs, parent.getProgressBar());
+            new JSplitPane(JSplitPane.VERTICAL_SPLIT, tabs, parent.getProgressBar());
     splitPane.setResizeWeight(0.8);
     splitPane.setDividerSize(0);
     splitPane.setEnabled(false);
 
     this.add(splitPane, LayoutDefault.getDefaultGbc());
+  }
+
+  public void setButtonsState(ButtonState pushButtonState, ButtonState pullButtonState, ButtonState resetButtonState)
+  {
+    pushPanel.setButtonsState(pushButtonState,resetButtonState);
+    pullPanel.setsPullButtonState(pullButtonState);
   }
 
   public CloudEndpointInfo getCloudEndpointInfo() {
