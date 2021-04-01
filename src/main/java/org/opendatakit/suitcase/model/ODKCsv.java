@@ -2,6 +2,7 @@ package org.opendatakit.suitcase.model;
 
 import org.opendatakit.suitcase.net.AttachmentManager;
 import org.opendatakit.suitcase.net.SyncWrapper;
+import org.opendatakit.suitcase.ui.DialogUtils;
 import org.opendatakit.sync.data.ColumnDefinition;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
@@ -482,8 +483,16 @@ public class ODKCsv implements Iterable<String[]> {
       this.attMngr.getListOfRowAttachments(rowId);
 
       if (config.isScanFormatting()) {
-        this.attMngr.downloadAttachments(rowId, true);
-        scanRaw = new ScanJson(this.attMngr.getScanRawJsonStream(rowId));
+          try {
+              this.attMngr.downloadAttachments(rowId, true);
+              scanRaw = new ScanJson(this.attMngr.getScanRawJsonStream(rowId));
+          }
+          catch (JSONException e)
+          {
+              e.printStackTrace();
+              DialogUtils.showError("Scan formatting is not possible for the selected table",true);
+              config.setScanFormatting(false);
+          }
       }
     }
 
