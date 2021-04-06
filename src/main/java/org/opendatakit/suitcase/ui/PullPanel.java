@@ -21,6 +21,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     private static final String DOWNLOAD_LABEL = "Download";
     private static final String DOWNLOADING_LABEL = "Downloading";
     private static final String SAVE_PATH_LABEL = "Save to";
+    private static final String FILE_CHOOSER_LABEL = "Save";
 
     // ui components
     private JCheckBox sDownloadAttachment;
@@ -48,7 +49,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         this.sPullButton = new JButton();
         this.sTableIdText = new JTextField(1);
         this.savePathChooser = new PathChooserPanel(
-                SAVE_PATH_LABEL, FileUtils.getDefaultSavePath().toString()
+                SAVE_PATH_LABEL,FILE_CHOOSER_LABEL ,FileUtils.getDefaultSavePath().toString()
         );
 
         GridBagConstraints gbc = LayoutDefault.getDefaultGbc();

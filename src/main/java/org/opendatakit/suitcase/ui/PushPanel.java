@@ -20,6 +20,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
   private static final String RESET_LABEL = "Reset";
   private static final String RESETTING_LABEL = "Resetting";
   private static final String DATA_PATH_LABEL = "Upload";
+  private static final String FILE_CHOOSER_LABEL = "Select";
 
   private JTextField sVersionPushText;
   private JButton sPushButton;
@@ -37,7 +38,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
     this.sPushButton = new JButton();
     this.sResetButton = new JButton();
     this.dataPathChooser = new PathChooserPanel(
-            DATA_PATH_LABEL, FileUtils.getDefaultUploadPath().toString()
+            DATA_PATH_LABEL, FILE_CHOOSER_LABEL ,FileUtils.getDefaultUploadPath().toString()
     );
 
     GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
