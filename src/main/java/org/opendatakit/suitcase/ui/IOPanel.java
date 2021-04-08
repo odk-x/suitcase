@@ -34,10 +34,10 @@ public class IOPanel extends JPanel {
     this.add(splitPane, LayoutDefault.getDefaultGbc());
   }
 
-  public void setButtonsState(ButtonState pushButtonState, ButtonState pullButtonState, ButtonState resetButtonState)
+  public void setButtonsState(ButtonState pushButtonState, ButtonState pullButtonState, ButtonState resetButtonState, ButtonState refreshButtonState)
   {
     pushPanel.setButtonsState(pushButtonState,resetButtonState);
-    pullPanel.setsPullButtonState(pullButtonState);
+    pullPanel.setButtonsState(pullButtonState,refreshButtonState);
   }
 
   public CloudEndpointInfo getCloudEndpointInfo() {
