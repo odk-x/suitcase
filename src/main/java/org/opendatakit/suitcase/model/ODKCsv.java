@@ -2,7 +2,6 @@ package org.opendatakit.suitcase.model;
 
 import org.opendatakit.suitcase.net.AttachmentManager;
 import org.opendatakit.suitcase.net.SyncWrapper;
-import org.opendatakit.suitcase.ui.DialogUtils;
 import org.opendatakit.sync.data.ColumnDefinition;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
@@ -30,7 +29,12 @@ public class ODKCsv implements Iterable<String[]> {
 
     @Override
     public String[] next() {
-      return next(new CsvConfig());
+      try {
+        return next(new CsvConfig());
+      } catch (ScanJsonException | IOException | JSONException e) {
+        e.printStackTrace();
+        return null;
+      }
     }
 
     @Override
@@ -38,18 +42,14 @@ public class ODKCsv implements Iterable<String[]> {
       throw new UnsupportedOperationException();
     }
 
-    public String[] next(CsvConfig config) {
+    public String[] next(CsvConfig config) throws ScanJsonException, IOException, JSONException {
       if (!hasNext()) {
         throw new NoSuchElementException();
       }
 
       String[] nextLine = null;
 
-      try {
-        nextLine = get(cursor++, config);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
+      nextLine = get(cursor++, config);
 
       return nextLine;
     }
@@ -292,7 +292,7 @@ public class ODKCsv implements Iterable<String[]> {
    * @throws JSONException JSON processing error
    * @throws IOException Other IO error
    */
-  public String[] get(int rowIndex, CsvConfig config) throws JSONException, IOException {
+  public String[] get(int rowIndex, CsvConfig config) throws JSONException, IOException, ScanJsonException {
     if (rowIndex >= size) {
       throw new NoSuchElementException();
     }
@@ -475,7 +475,7 @@ public class ODKCsv implements Iterable<String[]> {
    * @throws IOException 
    * @throws JSONException 
    */
-  private String[] getData(JSONObject row, CsvConfig config) throws IOException, JSONException {
+  private String[] getData(JSONObject row, CsvConfig config) throws IOException, JSONException, ScanJsonException {
     String rowId = row.optString(ID_JSON);
 
     ScanJson scanRaw = null;
@@ -489,9 +489,7 @@ public class ODKCsv implements Iterable<String[]> {
           }
           catch (JSONException e)
           {
-              e.printStackTrace();
-              DialogUtils.showError("Scan formatting is not possible for the selected table",true);
-              config.setScanFormatting(false);
+             throw new ScanJsonException(e.getMessage(),e.getCause());
           }
       }
     }
