@@ -2,9 +2,7 @@ package org.opendatakit.suitcase.ui;
 
 import org.opendatakit.suitcase.model.CsvConfig;
 import org.opendatakit.suitcase.model.ODKCsv;
-import org.opendatakit.suitcase.net.AttachmentManager;
-import org.opendatakit.suitcase.net.DownloadTask;
-import org.opendatakit.suitcase.net.SuitcaseSwingWorker;
+import org.opendatakit.suitcase.net.*;
 import org.apache.wink.json4j.JSONException;
 import org.opendatakit.suitcase.utils.ButtonState;
 import org.opendatakit.suitcase.utils.FieldsValidatorUtils;
@@ -19,6 +17,7 @@ import java.beans.PropertyChangeListener;
 
 public class PullPanel extends JPanel implements PropertyChangeListener {
     private static final String DOWNLOAD_LABEL = "Download";
+    private static final String REFRESH_LABEL = "Refresh tables list";
     private static final String DOWNLOADING_LABEL = "Downloading";
     private static final String SAVE_PATH_LABEL = "Save to";
     private static final String FILE_CHOOSER_LABEL = "Save";
@@ -28,6 +27,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     private JCheckBox sApplyScanFmt;
     private JCheckBox sExtraMetadata;
     private JButton sPullButton;
+    private JButton sRefreshButton;
     private JTextField sTableIdText;
     private PathChooserPanel savePathChooser;
 
@@ -47,6 +47,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         this.sApplyScanFmt = new JCheckBox();
         this.sExtraMetadata = new JCheckBox();
         this.sPullButton = new JButton();
+        this.sRefreshButton = new JButton();
         this.sTableIdText = new JTextField(1);
         this.savePathChooser = new PathChooserPanel(
                 SAVE_PATH_LABEL,FILE_CHOOSER_LABEL ,FileUtils.getDefaultSavePath().toString()
@@ -83,6 +84,17 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
 
     private void buildPullButtonArea(JPanel pullButtonPanel) {
         sPullButton.setText(DOWNLOAD_LABEL);
+        sRefreshButton.setText(REFRESH_LABEL);
+        sRefreshButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                parent.setButtonsState(ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED);
+                RefreshTask worker = new RefreshTask();
+                worker.addPropertyChangeListener(parent.getProgressBar());
+                worker.addPropertyChangeListener(PullPanel.this);
+                worker.execute();
+            }
+        });
         sPullButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -95,7 +107,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
                     DialogUtils.showError(error, true);
                 } else {
                     // disable download button
-                    parent.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED);
+                    parent.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED,ButtonState.DISABLED);
 
                     sPullButton.setText(DOWNLOADING_LABEL);
 
@@ -122,12 +134,13 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
                 }
             }
         });
-
+        pullButtonPanel.add(sRefreshButton);
         pullButtonPanel.add(sPullButton);
     }
 
-    public void setsPullButtonState(ButtonState pullButtonState) {
+    public void setButtonsState(ButtonState pullButtonState,ButtonState refreshButtonState) {
         sPullButton.setEnabled(pullButtonState.getButtonStateBooleanValue());
+        sRefreshButton.setEnabled(refreshButtonState.getButtonStateBooleanValue());
     }
 
     @Override
@@ -135,7 +148,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         if (evt.getNewValue() != null && evt.getPropertyName().equals(SuitcaseSwingWorker.DONE_PROPERTY)) {
             // re-enable download button and restore its label
             sPullButton.setText(DOWNLOAD_LABEL);
-            parent.setButtonsState(ButtonState.ENABLED, ButtonState.ENABLED, ButtonState.ENABLED);
+            parent.setButtonsState(ButtonState.ENABLED, ButtonState.ENABLED, ButtonState.ENABLED,ButtonState.ENABLED);
         }
     }
 }
