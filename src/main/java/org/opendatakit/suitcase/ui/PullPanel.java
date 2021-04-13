@@ -17,7 +17,7 @@ import java.beans.PropertyChangeListener;
 
 public class PullPanel extends JPanel implements PropertyChangeListener {
     private static final String DOWNLOAD_LABEL = "Download";
-    private static final String REFRESH_LABEL = "Refresh tables list";
+    private static final String REFRESH_LABEL = "Refresh Tables List Metadata";
     private static final String DOWNLOADING_LABEL = "Downloading";
     private static final String SAVE_PATH_LABEL = "Save to";
     private static final String FILE_CHOOSER_LABEL = "Save";
