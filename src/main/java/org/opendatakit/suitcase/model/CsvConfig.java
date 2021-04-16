@@ -27,10 +27,6 @@ public class CsvConfig {
     return extraMetadata;
   }
 
-  public void setScanFormatting(boolean scanFormatting) {
-    this.scanFormatting = scanFormatting;
-  }
-
   @Override
   public String toString() {
     return "CsvConfig{" +
