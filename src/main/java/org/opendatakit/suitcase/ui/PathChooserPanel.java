@@ -12,10 +12,11 @@ public class PathChooserPanel extends JPanel{
   private static final int BUTTON_WEIGHT = 5;
 
   private JLabel label;
+  private String fileChooserLabel;
   private JTextField pathText;
   private JButton browseBtn;
 
-  public PathChooserPanel(String label, final String defaultPath) {
+  public PathChooserPanel(String label, String fileChooserLabel,final String defaultPath) {
     super(new GridBagLayout());
 
     GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
@@ -23,6 +24,7 @@ public class PathChooserPanel extends JPanel{
     gbc.gridy = 0;
 
     this.label = new JLabel(label);
+    this.fileChooserLabel = fileChooserLabel;
     this.label.setHorizontalAlignment(JLabel.CENTER);
     gbc.weightx = LABEL_WEIGHT;
     add(this.label, gbc);
@@ -43,7 +45,7 @@ public class PathChooserPanel extends JPanel{
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         chooser.setCurrentDirectory(new File(defaultPath));
 
-        int result = chooser.showSaveDialog(null);
+        int result = chooser.showDialog(null,fileChooserLabel);
         if (result == JFileChooser.APPROVE_OPTION) {
           pathText.setText(chooser.getSelectedFile().toString());
         }
