@@ -45,10 +45,12 @@ public class PathChooserPanel extends JPanel{
 
         int result = chooser.showSaveDialog(null);
         if (result == JFileChooser.APPROVE_OPTION) {
-        	File file = chooser.getSelectedFile();
-          if(isDirectoryEmpty(file)) {
-               DialogUtils.showError(MessageString.DIRECTORY_EMPTY, true);
-            }
+        	if(LayoutConsts.EMPTY_DIR == true) {
+        		File file = chooser.getSelectedFile();
+        		if(isDirectoryEmpty(file)) {
+        			DialogUtils.showError(MessageString.DIRECTORY_EMPTY, true);
+        		}
+        	}
           else
           pathText.setText(chooser.getSelectedFile().toString());
         }
