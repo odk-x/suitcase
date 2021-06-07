@@ -83,6 +83,9 @@ public class CloudEndpointInfo {
     return tableIdSchemaETag.containsKey(tableId);
   }
 
+  public void resetTableIdSchemaETag() {
+  	tableIdSchemaETag.clear();
+  }
   /**
    * Attempts to fix some problems with serverUrl
    *
