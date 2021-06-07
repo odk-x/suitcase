@@ -1,9 +1,11 @@
 package org.opendatakit.suitcase.ui;
 
+import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.opendatakit.suitcase.model.CsvConfig;
 import org.opendatakit.suitcase.model.ODKCsv;
 import org.opendatakit.suitcase.net.*;
 import org.apache.wink.json4j.JSONException;
+import org.opendatakit.suitcase.utils.ButtonAction;
 import org.opendatakit.suitcase.utils.ButtonState;
 import org.opendatakit.suitcase.utils.FieldsValidatorUtils;
 import org.opendatakit.suitcase.utils.FileUtils;
@@ -14,6 +16,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 
 public class PullPanel extends JPanel implements PropertyChangeListener {
     private static final String DOWNLOAD_LABEL = "Download";
@@ -30,11 +33,14 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     private JButton sRefreshButton;
     private JTextField sTableIdText;
     private PathChooserPanel savePathChooser;
+    private JComboBox<String> sTableIdDropdown;
 
     // other instance vars
     private IOPanel parent;
+    private DefaultComboBoxModel<String> comboBoxModel;
     private AttachmentManager attachMngr;
     private ODKCsv csv;
+    private ArrayList<String> selectedTableIds;
 
     public PullPanel(IOPanel parent) {
         super(new GridBagLayout());
@@ -42,13 +48,14 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         this.parent = parent;
         this.attachMngr = null;
         this.csv = null;
-
+        this.selectedTableIds = new ArrayList<String>();
         this.sDownloadAttachment = new JCheckBox();
         this.sApplyScanFmt = new JCheckBox();
         this.sExtraMetadata = new JCheckBox();
         this.sPullButton = new JButton();
         this.sRefreshButton = new JButton();
         this.sTableIdText = new JTextField(1);
+        this.sTableIdDropdown = new JComboBox<>();
         this.savePathChooser = new PathChooserPanel(
                 SAVE_PATH_LABEL,FILE_CHOOSER_LABEL ,FileUtils.getDefaultSavePath().toString()
         );
@@ -57,17 +64,29 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         gbc.gridx = 0;
         gbc.gridy = GridBagConstraints.RELATIVE;
 
-        JPanel pullInputPanel = new InputPanel(
-                new String[]{"Table ID"},
-                new JTextField[]{sTableIdText},
-                new String[]{"table_id"}
+        comboBoxModel = new DefaultComboBoxModel<String>(getAllTableIds(parent.getCloudEndpointInfo()));
+        sTableIdDropdown.setModel(comboBoxModel);
+        JPanel pullDropdown = new DropdownPanel(
+                "Select Table ID",
+                sTableIdDropdown,
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        String action = ((JButton) e.getSource()).getActionCommand();
+                        if (ButtonAction.ADD.getStringValueOfAction().equals(action)) {
+                            selectedTableIds.add( (String)comboBoxModel.getSelectedItem() );
+                            comboBoxModel.removeElement(comboBoxModel.getSelectedItem());
+                        }
+                    }
+                }
+
         );
         gbc.weighty = 2;
-        this.add(pullInputPanel, gbc);
+        this.add(pullDropdown, gbc);
 
         JPanel pullPrefPanel = new CheckboxPanel(
                 new String[]{"Download attachments?", "Apply Scan formatting?", "Extra metadata columns?"},
-                new JCheckBox[]{sDownloadAttachment, sApplyScanFmt, sExtraMetadata}, 3, 1
+                new JCheckBox[]{sDownloadAttachment, sApplyScanFmt, sExtraMetadata}, 1, 3
         );
         gbc.weighty = 5;
         this.add(pullPrefPanel, gbc);
@@ -143,12 +162,27 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         sRefreshButton.setEnabled(refreshButtonState.getButtonStateBooleanValue());
     }
 
+    private String[] getAllTableIds(CloudEndpointInfo cloudEndpointInfo) {
+        String[] tableIds;
+        if (cloudEndpointInfo != null) {
+            tableIds = cloudEndpointInfo.getAllTableId().toArray(new String[0]);
+        } else {
+            tableIds = new String[]{};
+        }
+        return tableIds;
+    }
+
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getNewValue() != null && evt.getPropertyName().equals(SuitcaseSwingWorker.DONE_PROPERTY)) {
             // re-enable download button and restore its label
             sPullButton.setText(DOWNLOAD_LABEL);
             parent.setButtonsState(ButtonState.ENABLED, ButtonState.ENABLED, ButtonState.ENABLED,ButtonState.ENABLED);
+            comboBoxModel.removeAllElements();
+            final String[] allTableIds = getAllTableIds(parent.getCloudEndpointInfo());
+            for (String s : allTableIds) {
+                comboBoxModel.addElement(s);
+            }
         }
     }
 }

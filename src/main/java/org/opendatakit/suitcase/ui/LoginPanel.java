@@ -49,6 +49,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
           LoginTask worker = new LoginTask(cloudEndpointInfo, true);
           worker.addPropertyChangeListener(parent.getProgressBar());
           worker.addPropertyChangeListener(LoginPanel.this);
+          worker.addPropertyChangeListener(parent.getIoPanel().getPullPanel());
           worker.execute();
         } catch (MalformedURLException e1) {
           DialogUtils.showError(MessageString.BAD_URL, true);
