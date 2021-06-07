@@ -6,12 +6,15 @@ import org.opendatakit.suitcase.net.SuitcaseSwingWorker;
 import org.opendatakit.suitcase.net.SyncWrapper;
 import org.opendatakit.suitcase.utils.FieldsValidatorUtils;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 
 public class LoginPanel extends JPanel implements PropertyChangeListener {
@@ -89,19 +92,16 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
     gbc.gridx = 0;
     gbc.gridy = GridBagConstraints.RELATIVE;
 
-    JPanel inputPanel = new InputPanel(
-        new String[] {"Cloud Endpoint Address", "App ID", "Username", "Password"},
-        new JTextField[] {sCloudEndpointAddressText, sAppIdText, sUserNameText, sPasswordText},
-        new String[] {"https://cloud-endpoint-server-url.appspot.com", "default", "", ""}
-    );
+    JPanel logoAndInputPanel = new JPanel(new GridBagLayout());
+    buildInputPanel(logoAndInputPanel);
     gbc.weighty = 85;
-    gbc.insets = new Insets(80, 50, 0, 50);
-    this.add(inputPanel, gbc);
+    gbc.insets = new Insets(80, 40, 0, 40);
+    this.add(logoAndInputPanel, gbc);
 
     JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 20, 0));
     buildLoginButtonArea(buttonPanel);
     gbc.weighty = 15;
-    gbc.insets = new Insets(20, LayoutConsts.WINDOW_WIDTH / 4, 80, LayoutConsts.WINDOW_WIDTH / 4);
+    gbc.insets = new Insets(20, LayoutConsts.WINDOW_WIDTH / 2, 80, 40);
     this.add(buttonPanel, gbc);
   }
 
@@ -120,6 +120,31 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
     buttonsPanel.add(sLoginButton);
     buttonsPanel.add(sAnonLoginButton);
   }
+
+    private void buildInputPanel(JPanel logoAndInputPanel) {
+
+        GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
+        gbc.gridy = 0;
+        gbc.gridx = GridBagConstraints.RELATIVE;
+        gbc.weightx = 25;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        JPanel inputPanel = new InputPanel(
+                new String[] {"Cloud Endpoint Address", "App ID", "Username", "Password"},
+                new JTextField[] {sCloudEndpointAddressText, sAppIdText, sUserNameText, sPasswordText},
+                new String[] {"https://cloud-endpoint-server-url.appspot.com", "default", "", ""}
+        );
+        InputStream resourceAsStream = this.getClass().getResourceAsStream("logo.png");
+        try {
+            Image image = ImageIO.read(resourceAsStream);
+            ImageIcon imageIcon = new ImageIcon(image,"ODK-X Logo");
+            JLabel iconLabel = new JLabel(imageIcon);
+            logoAndInputPanel.add(iconLabel,gbc);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        gbc.weightx=75;
+        logoAndInputPanel.add(inputPanel,gbc);
+    }
 
   private void sanitizeFields(boolean anonymous) {
     sCloudEndpointAddressText.setText(sCloudEndpointAddressText.getText().trim());
