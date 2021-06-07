@@ -20,7 +20,7 @@ public class Suitcase {
       EventQueue.invokeLater(new Runnable() {
         @Override
         public void run() {
-          JFrame frame = new JFrame("org.opendatakit.suitcase.Suitcase");
+          JFrame frame = new JFrame("Suitcase");
           frame.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
           frame.setLocationRelativeTo(null);
           frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
