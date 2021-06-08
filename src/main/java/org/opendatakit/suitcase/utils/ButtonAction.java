@@ -1,8 +1,8 @@
 package org.opendatakit.suitcase.utils;
 
 public enum ButtonAction {
-    REMOVE("remove"),
-    ADD("add");
+    REMOVE("Remove"),
+    ADD("Add");
     String action;
 
     ButtonAction(String s) {

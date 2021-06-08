@@ -34,6 +34,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     private JTextField sTableIdText;
     private PathChooserPanel savePathChooser;
     private JComboBox<String> sTableIdDropdown;
+    private SelectedTablesList selectedTablesList;
 
     // other instance vars
     private IOPanel parent;
@@ -75,6 +76,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
                         String action = ((JButton) e.getSource()).getActionCommand();
                         if (ButtonAction.ADD.getStringValueOfAction().equals(action)) {
                             selectedTableIds.add( (String)comboBoxModel.getSelectedItem() );
+                            selectedTablesList.addNewTableId((String)comboBoxModel.getSelectedItem());
                             comboBoxModel.removeElement(comboBoxModel.getSelectedItem());
                         }
                     }
@@ -83,12 +85,21 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         );
         gbc.weighty = 2;
         this.add(pullDropdown, gbc);
+        selectedTablesList = new SelectedTablesList( new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("called");
+                }
+            }
 
+        );
+        gbc.weighty = 3;
+        this.add(selectedTablesList,gbc);
         JPanel pullPrefPanel = new CheckboxPanel(
                 new String[]{"Download attachments?", "Apply Scan formatting?", "Extra metadata columns?"},
                 new JCheckBox[]{sDownloadAttachment, sApplyScanFmt, sExtraMetadata}, 1, 3
         );
-        gbc.weighty = 5;
+        gbc.weighty = 2;
         this.add(pullPrefPanel, gbc);
 
         gbc.weighty = 1;
