@@ -64,6 +64,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
   private static final String LOGIN_LABEL = "Login";
   private static final String LOGIN_ANON_LABEL = "Anonymous Login";
   private static final String LOGIN_LOADING_LABEL = "Loading";
+  private static final String LOGO_DESCRIPTION = "ODK-X Logo";
 
   private CloudEndpointInfo cloudEndpointInfo;
   private JTextField sCloudEndpointAddressText;
@@ -125,23 +126,24 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
     GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
     gbc.gridy = 0;
     gbc.gridx = GridBagConstraints.RELATIVE;
-    gbc.weightx = 25;
+    gbc.weightx = 20;
     gbc.insets = new Insets(0, 0, 0, 0);
+
+    try (InputStream resourceAsStream = this.getClass().getResourceAsStream(LayoutConsts.ODKX_LOGO_FILE_NAME)){
+      Image image = ImageIO.read(resourceAsStream);
+      ImageIcon imageIcon = new ImageIcon(image,LOGO_DESCRIPTION);
+      JLabel iconLabel = new JLabel(imageIcon);
+      iconLabel.setHorizontalAlignment(SwingConstants.LEFT);
+      logoAndInputPanel.add(iconLabel,gbc);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    gbc.weightx=80;
     JPanel inputPanel = new InputPanel(
             new String[] {"Cloud Endpoint Address", "App ID", "Username", "Password"},
             new JTextField[] {sCloudEndpointAddressText, sAppIdText, sUserNameText, sPasswordText},
             new String[] {"https://cloud-endpoint-server-url.appspot.com", "default", "", ""}
     );
-    InputStream resourceAsStream = this.getClass().getResourceAsStream("logo.png");
-    try {
-      Image image = ImageIO.read(resourceAsStream);
-      ImageIcon imageIcon = new ImageIcon(image,"ODK-X Logo");
-      JLabel iconLabel = new JLabel(imageIcon);
-      logoAndInputPanel.add(iconLabel,gbc);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    gbc.weightx=75;
     logoAndInputPanel.add(inputPanel,gbc);
   }
 
