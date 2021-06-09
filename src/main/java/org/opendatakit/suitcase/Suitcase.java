@@ -11,6 +11,7 @@ import static org.opendatakit.suitcase.ui.LayoutConsts.WINDOW_HEIGHT;
 import static org.opendatakit.suitcase.ui.LayoutConsts.WINDOW_WIDTH;
 
 public class Suitcase {
+  private static final String suitcaseConst = "Suitcase";
   public static void main(String[] args) {
     int retCode = SuitcaseSwingWorker.okCode;
     if (args.length > 0) {
@@ -20,7 +21,7 @@ public class Suitcase {
       EventQueue.invokeLater(new Runnable() {
         @Override
         public void run() {
-          JFrame frame = new JFrame("Suitcase");
+          JFrame frame = new JFrame(suitcaseConst);
           frame.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
           frame.setLocationRelativeTo(null);
           frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
