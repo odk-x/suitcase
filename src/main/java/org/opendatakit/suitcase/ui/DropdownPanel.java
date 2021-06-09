@@ -1,6 +1,7 @@
 package org.opendatakit.suitcase.ui;
 
 import org.opendatakit.suitcase.utils.ButtonAction;
+import org.opendatakit.suitcase.utils.ButtonState;
 
 import javax.swing.*;
 import java.awt.*;
@@ -8,6 +9,7 @@ import java.awt.event.ActionListener;
 
 public class DropdownPanel extends JPanel{
     private static final String ADD_BUTTON_LABEL = "Add";
+    private JButton addButton;
 
     public DropdownPanel(String label, JComboBox<String> dropdown, ActionListener addActionListener) {
         super(new FlowLayout(FlowLayout.LEFT));  // flow layout with left alignment of elements
@@ -32,7 +34,7 @@ public class DropdownPanel extends JPanel{
         JPanel inputPanel = new JPanel(new GridLayout(1,2));
 
         inputPanel.add(dropdown);
-        JButton addButton = new JButton();
+        addButton = new JButton();
         dropdown.setMaximumSize(new Dimension(200,25));
         dropdown.setMinimumSize(new Dimension(150,25));
         dropdown.setPreferredSize(new Dimension(200,25));
@@ -43,5 +45,9 @@ public class DropdownPanel extends JPanel{
         inputPanel.add(addButton);
 
         this.add(inputPanel);
+    }
+
+    public void setButtonsState(ButtonState addButtonState) {
+        addButton.setEnabled(addButtonState.getButtonStateBooleanValue());
     }
 }

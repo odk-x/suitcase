@@ -34,6 +34,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     private PathChooserPanel savePathChooser;
     private JComboBox<String> sTableIdDropdown;
     private SelectedTablesListPanel selectedTablesListPanel;
+    private DropdownPanel pullDropdown;
 
     // other instance vars
     private IOPanel parent;
@@ -65,7 +66,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
 
         comboBoxModel = new DefaultComboBoxModel<>();
         sTableIdDropdown.setModel(comboBoxModel);
-        JPanel pullDropdown = new DropdownPanel(
+        pullDropdown = new DropdownPanel(
                 "Select Table ID",
                 sTableIdDropdown,
                 new ActionListener() {
@@ -149,7 +150,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         sRefreshButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                parent.setButtonsState(ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED);
+                parent.setButtonsState(ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED, ButtonState.DISABLED);
                 RefreshTask worker = new RefreshTask();
                 worker.addPropertyChangeListener(parent.getProgressBar());
                 worker.addPropertyChangeListener(PullPanel.this);
@@ -167,7 +168,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
                     DialogUtils.showError(error, true);
                 } else {
                     // disable download button
-                    parent.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED);
+                    parent.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED);
 
                     sPullButton.setText(DOWNLOADING_LABEL);
 
@@ -202,9 +203,10 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         pullButtonPanel.add(sPullButton);
     }
 
-    public void setButtonsState(ButtonState pullButtonState,ButtonState refreshButtonState) {
+    public void setButtonsState(ButtonState pullButtonState,ButtonState refreshButtonState,ButtonState addButtonState) {
         sPullButton.setEnabled(pullButtonState.getButtonStateBooleanValue());
         sRefreshButton.setEnabled(refreshButtonState.getButtonStateBooleanValue());
+        pullDropdown.setButtonsState(addButtonState);
     }
 
     private static String[] getAllTableIds(CloudEndpointInfo cloudEndpointInfo) {
@@ -222,7 +224,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         if (evt.getNewValue() != null && evt.getPropertyName().equals(SuitcaseSwingWorker.DONE_PROPERTY)) {
             // re-enable download button and restore its label
             sPullButton.setText(DOWNLOAD_LABEL);
-            parent.setButtonsState(ButtonState.ENABLED, ButtonState.ENABLED, ButtonState.ENABLED,ButtonState.ENABLED);
+            parent.setButtonsState(ButtonState.ENABLED, ButtonState.ENABLED, ButtonState.ENABLED,ButtonState.ENABLED, ButtonState.ENABLED);
             comboBoxModel.removeAllElements();
             final String[] allTableIds = getAllTableIds(parent.getCloudEndpointInfo());
             for (String s : allTableIds) {
