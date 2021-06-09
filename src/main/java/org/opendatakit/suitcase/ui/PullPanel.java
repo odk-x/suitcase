@@ -31,10 +31,9 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     private JCheckBox sExtraMetadata;
     private JButton sPullButton;
     private JButton sRefreshButton;
-    private JTextField sTableIdText;
     private PathChooserPanel savePathChooser;
     private JComboBox<String> sTableIdDropdown;
-    private SelectedTablesList selectedTablesList;
+    private SelectedTablesListPanel selectedTablesListPanel;
 
     // other instance vars
     private IOPanel parent;
@@ -49,13 +48,12 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         this.parent = parent;
         this.attachMngr = null;
         this.csv = null;
-        this.selectedTableIds = new ArrayList<String>();
+        this.selectedTableIds = new ArrayList<>();
         this.sDownloadAttachment = new JCheckBox();
         this.sApplyScanFmt = new JCheckBox();
         this.sExtraMetadata = new JCheckBox();
         this.sPullButton = new JButton();
         this.sRefreshButton = new JButton();
-        this.sTableIdText = new JTextField(1);
         this.sTableIdDropdown = new JComboBox<>();
         this.savePathChooser = new PathChooserPanel(
                 SAVE_PATH_LABEL,FILE_CHOOSER_LABEL ,FileUtils.getDefaultSavePath().toString()
@@ -65,7 +63,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         gbc.gridx = 0;
         gbc.gridy = GridBagConstraints.RELATIVE;
 
-        comboBoxModel = new DefaultComboBoxModel<String>(getAllTableIds(parent.getCloudEndpointInfo()));
+        comboBoxModel = new DefaultComboBoxModel<>();
         sTableIdDropdown.setModel(comboBoxModel);
         JPanel pullDropdown = new DropdownPanel(
                 "Select Table ID",
@@ -74,32 +72,43 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         String action = ((JButton) e.getSource()).getActionCommand();
-                        if (ButtonAction.ADD.getStringValueOfAction().equals(action)) {
+                        if (ButtonAction.ADD.getStringValueOfAction().equals(action)&&comboBoxModel.getSelectedItem()!=null) {
                             selectedTableIds.add( (String)comboBoxModel.getSelectedItem() );
-                            selectedTablesList.addNewTableId((String)comboBoxModel.getSelectedItem());
+                            selectedTablesListPanel.addNewTableId((String)comboBoxModel.getSelectedItem(),selectedTableIds.size());
                             comboBoxModel.removeElement(comboBoxModel.getSelectedItem());
                         }
                     }
                 }
 
         );
-        gbc.weighty = 2;
+        gbc.weighty = 1;
         this.add(pullDropdown, gbc);
-        selectedTablesList = new SelectedTablesList( new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("called");
+        selectedTablesListPanel = new SelectedTablesListPanel(e -> {         //Action listener for remove button
+            for(int i=0;i<selectedTableIds.size();i++) {
+                if(selectedTableIds.get(i).equals(((RemoveButton)e.getSource()).getTableId()))    //finds the selected table id in the list
+                {
+                    selectedTablesListPanel.remove(i);                         // removes the component from UI
+                    comboBoxModel.addElement(selectedTableIds.get(i));         // Add element back to dropdown
+                    selectedTableIds.remove(i);                                // remove from the list of selected table ids
+                    break;
                 }
+
+            }
+            selectedTablesListPanel.updateSize(selectedTableIds.size());       // update the height of the JPanel to fit inside JScrollPane
+            selectedTablesListPanel.revalidate();                              // Call to revalidate and repaint the UI
+            selectedTablesListPanel.repaint();
             }
 
         );
-        gbc.weighty = 3;
-        this.add(selectedTablesList,gbc);
+        buildSelectedTableIdsArea(selectedTablesListPanel,gbc);
+
         JPanel pullPrefPanel = new CheckboxPanel(
                 new String[]{"Download attachments?", "Apply Scan formatting?", "Extra metadata columns?"},
                 new JCheckBox[]{sDownloadAttachment, sApplyScanFmt, sExtraMetadata}, 1, 3
         );
-        gbc.weighty = 2;
+        gbc.weighty = 3;
+
+        gbc.insets = new Insets(0,0,0,0);
         this.add(pullPrefPanel, gbc);
 
         gbc.weighty = 1;
@@ -110,6 +119,28 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         gbc.weighty = 2;
         gbc.insets = new Insets(10, 0, 0, 0);
         this.add(pullButtonPanel, gbc);
+    }
+
+    private void buildSelectedTableIdsArea(SelectedTablesListPanel selectedTablesListPanel,GridBagConstraints gridBagConstraints){
+
+        gridBagConstraints.weighty = 1;
+        JPanel labelPanel = new JPanel(new GridLayout(1, 1));
+
+        labelPanel.setBorder(BorderFactory.createEmptyBorder(0,10,0,20));
+        labelPanel.add(new JLabel("Selected Table Ids for download"));
+
+        this.add(labelPanel,gridBagConstraints);
+
+        JScrollPane tableIdsScrollPane = new JScrollPane(selectedTablesListPanel,JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,   //Make JScrollPane scroll only vertically
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+        tableIdsScrollPane.setMinimumSize(new Dimension(350,100));
+        tableIdsScrollPane.setPreferredSize(new Dimension(350,100));
+        tableIdsScrollPane.setMaximumSize(new Dimension(350,100));
+        tableIdsScrollPane.setSize(new Dimension(350,100));
+        tableIdsScrollPane.setBorder(BorderFactory.createEmptyBorder(0,10,0,20));
+        gridBagConstraints.weighty = 3;
+        this.add(tableIdsScrollPane,gridBagConstraints);
     }
 
     private void buildPullButtonArea(JPanel pullButtonPanel) {
@@ -128,32 +159,34 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         sPullButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                sTableIdText.setText(sTableIdText.getText().trim());
 
                 String error = FieldsValidatorUtils.checkDownloadFields(
-                        sTableIdText.getText(), savePathChooser.getPath(), parent.getCloudEndpointInfo());
+                        selectedTableIds, savePathChooser.getPath(), parent.getCloudEndpointInfo());
 
                 if (error != null) {
                     DialogUtils.showError(error, true);
                 } else {
                     // disable download button
-                    parent.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED,ButtonState.DISABLED);
+                    parent.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED);
 
                     sPullButton.setText(DOWNLOADING_LABEL);
 
-                    CsvConfig config = new CsvConfig(sDownloadAttachment.isSelected(), sApplyScanFmt.isSelected(), sExtraMetadata.isSelected());
+                    for(String tableId:selectedTableIds)
+                    {
+                     CsvConfig config = new CsvConfig(sDownloadAttachment.isSelected(), sApplyScanFmt.isSelected(), sExtraMetadata.isSelected());
 
                     if (attachMngr == null) {
-                        attachMngr = new AttachmentManager(parent.getCloudEndpointInfo(), sTableIdText.getText(),
+                        attachMngr = new AttachmentManager(parent.getCloudEndpointInfo(), tableId,
                                 savePathChooser.getPath());
                     } else {
                         attachMngr.setSavePath(savePathChooser.getPath());
+                        attachMngr.setTableId(tableId);
                     }
 
                     // create a new csv instance when csv == null or when table id changed
-                    if (csv == null || !csv.getTableId().equals(sTableIdText.getText())) {
+                    if (csv == null || !csv.getTableId().equals(tableId)) {
                         try {
-                            csv = new ODKCsv(attachMngr, parent.getCloudEndpointInfo(), sTableIdText.getText());
+                            csv = new ODKCsv(attachMngr, parent.getCloudEndpointInfo(), tableId);
                         } catch (JSONException e1) { /*should never happen*/ }
                     }
 
@@ -161,6 +194,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
                     worker.addPropertyChangeListener(parent.getProgressBar());
                     worker.addPropertyChangeListener(PullPanel.this);
                     worker.execute();
+                    }
                 }
             }
         });
@@ -173,7 +207,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         sRefreshButton.setEnabled(refreshButtonState.getButtonStateBooleanValue());
     }
 
-    private String[] getAllTableIds(CloudEndpointInfo cloudEndpointInfo) {
+    private static String[] getAllTableIds(CloudEndpointInfo cloudEndpointInfo) {
         String[] tableIds;
         if (cloudEndpointInfo != null) {
             tableIds = cloudEndpointInfo.getAllTableId().toArray(new String[0]);
