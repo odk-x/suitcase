@@ -47,7 +47,7 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
 
     // check existing data, skip check for CLI
     if (FileUtils.isDownloaded(cloudEndpointInfo, csv.getTableId(), csvConfig, savePath) &&
-        DialogUtils.promptConfirm(OVERWRITE_CSV, isGUI, !isGUI)) {
+        DialogUtils.promptConfirm(getOverwriteCsvString(csv.getTableId()), isGUI, !isGUI)) {
       FileUtils.deleteCsv(cloudEndpointInfo, csvConfig, csv.getTableId(), savePath);
     }
 

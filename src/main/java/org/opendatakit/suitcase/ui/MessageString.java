@@ -42,5 +42,8 @@ public class MessageString {
 
   // Prompts
   public static final String OVERWRITE_DATA = "Data from a previous session detected. Delete existing data and download data from the Cloud Endpoint?";
-  public static final String OVERWRITE_CSV = "This CSV has already been downloaded. Delete existing CSV and download data from the Cloud Endpoint?";
+
+  public static String getOverwriteCsvString(String tableId) {
+    return "This CSV for table Id " + tableId + " has already been downloaded. Delete existing CSV and download data from the Cloud Endpoint?";
+  }
 }
