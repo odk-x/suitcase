@@ -176,13 +176,8 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
                     {
                      CsvConfig config = new CsvConfig(sDownloadAttachment.isSelected(), sApplyScanFmt.isSelected(), sExtraMetadata.isSelected());
 
-                    if (attachMngr == null) {
-                        attachMngr = new AttachmentManager(parent.getCloudEndpointInfo(), tableId,
-                                savePathChooser.getPath());
-                    } else {
-                        attachMngr.setSavePath(savePathChooser.getPath());
-                        attachMngr.setTableId(tableId);
-                    }
+                     // create a new attachment manager for every table id
+                     attachMngr = new AttachmentManager(parent.getCloudEndpointInfo(), tableId, savePathChooser.getPath());
 
                     // create a new csv instance when csv == null or when table id changed
                     if (csv == null || !csv.getTableId().equals(tableId)) {

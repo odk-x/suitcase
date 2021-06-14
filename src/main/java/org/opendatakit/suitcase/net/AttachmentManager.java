@@ -166,15 +166,6 @@ public class AttachmentManager {
   }
 
   /**
-   * Overwrites the existing tableId
-   *
-   * @param tableId tableId
-   */
-  public void setTableId(String tableId) {
-    this.tableId = tableId;
-  }
-
-  /**
    * Infers local path to attachment directory with rowId and cloudEndpointInfo info.
    *
    * @param rowId
