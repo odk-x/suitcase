@@ -6,6 +6,7 @@ import org.opendatakit.suitcase.net.UploadTask;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.opendatakit.suitcase.ui.MessageString.*;
 
@@ -46,7 +47,7 @@ public class FieldsValidatorUtils {
     return errorMsgBuilder.length() > 0 ? errorMsgBuilder.toString().trim() : null;
   }
 
-  public static String checkDownloadFields(ArrayList<String> tableIds, String savePath,
+  public static String checkDownloadFields(List<String> tableIds, String savePath,
                                            CloudEndpointInfo cloudEndpointInfo) {
     StringBuilder errorMsgBuilder = new StringBuilder();
 

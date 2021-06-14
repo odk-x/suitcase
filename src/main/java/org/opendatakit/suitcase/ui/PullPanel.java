@@ -17,6 +17,7 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.List;
 
 public class PullPanel extends JPanel implements PropertyChangeListener {
     private static final String DOWNLOAD_LABEL = "Download";
@@ -38,10 +39,10 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
 
     // other instance vars
     private IOPanel parent;
-    private DefaultComboBoxModel<String> comboBoxModel;
+    private MutableComboBoxModel<String> comboBoxModel;
     private AttachmentManager attachMngr;
     private ODKCsv csv;
-    private ArrayList<String> selectedTableIds;
+    private List<String> selectedTableIds;
 
     public PullPanel(IOPanel parent) {
         super(new GridBagLayout());
@@ -220,7 +221,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
             // re-enable download button and restore its label
             sPullButton.setText(DOWNLOAD_LABEL);
             parent.setButtonsState(ButtonState.ENABLED, ButtonState.ENABLED, ButtonState.ENABLED,ButtonState.ENABLED, ButtonState.ENABLED);
-            comboBoxModel.removeAllElements();
+            ((DefaultComboBoxModel)comboBoxModel).removeAllElements();
             final String[] allTableIds = getAllTableIds(parent.getCloudEndpointInfo());
             for (String s : allTableIds) {
                 comboBoxModel.addElement(s);
