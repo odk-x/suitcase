@@ -12,6 +12,7 @@ public class MainPanel extends JPanel {
   public MainPanel() {
     super(new CardLayout());
 
+    this.setName("main_panel");
     this.progressBar = new SuitcaseProgressBar();
     this.loginPanel = new LoginPanel(this);
 

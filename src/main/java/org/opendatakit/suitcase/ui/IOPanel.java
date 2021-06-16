@@ -19,6 +19,7 @@ public class IOPanel extends JPanel {
 
     this.parent = parent;
 
+    this.setName("io_panel");
     JTabbedPane tabs = new JTabbedPane();
     pullPanel = new PullPanel(this);
     pushPanel = new PushPanel(this);
