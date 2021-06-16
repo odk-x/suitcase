@@ -31,7 +31,7 @@ public class DropdownPanel extends JPanel{
 
     // build the drop down of table ids with an add button
     private void buildDropDown(JComboBox<String> dropdown,ActionListener addActionListener) {
-        JPanel inputPanel = new JPanel(new GridLayout(1,2));
+        JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         inputPanel.add(dropdown);
         addButton = new JButton();
@@ -41,7 +41,7 @@ public class DropdownPanel extends JPanel{
         addButton.setActionCommand(ButtonAction.ADD.getStringValueOfAction());
         addButton.setText(ADD_BUTTON_LABEL);
         addButton.addActionListener(addActionListener);
-
+        addButton.setSize(LayoutConsts.ADD_AND_REMOVE_BUTTON_DIMENSION);
         inputPanel.add(addButton);
 
         this.add(inputPanel);

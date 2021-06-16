@@ -18,6 +18,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class PullPanel extends JPanel implements PropertyChangeListener {
     private static final String DOWNLOAD_LABEL = "Download";
@@ -43,6 +44,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     private AttachmentManager attachMngr;
     private ODKCsv csv;
     private List<String> selectedTableIds;
+    private Dimension tableIdsScrollPaneDimension;
 
     public PullPanel(IOPanel parent) {
         super(new GridBagLayout());
@@ -60,6 +62,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         this.savePathChooser = new PathChooserPanel(
                 SAVE_PATH_LABEL,FILE_CHOOSER_LABEL ,FileUtils.getDefaultSavePath().toString()
         );
+        this.tableIdsScrollPaneDimension = new Dimension(350,100);
 
         GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
         gbc.gridx = 0;
@@ -86,19 +89,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         gbc.weighty = 1;
         this.add(pullDropdown, gbc);
         selectedTablesListPanel = new SelectedTablesListPanel(e -> {         //Action listener for remove button
-            for(int i=0;i<selectedTableIds.size();i++) {
-                if(selectedTableIds.get(i).equals(((RemoveButton)e.getSource()).getTableId()))    //finds the selected table id in the list
-                {
-                    selectedTablesListPanel.remove(i);                         // removes the component from UI
-                    comboBoxModel.addElement(selectedTableIds.get(i));         // Add element back to dropdown
-                    selectedTableIds.remove(i);                                // remove from the list of selected table ids
-                    break;
-                }
-
-            }
-            selectedTablesListPanel.updateSize(selectedTableIds.size());       // update the height of the JPanel to fit inside JScrollPane
-            selectedTablesListPanel.revalidate();                              // Call to revalidate and repaint the UI
-            selectedTablesListPanel.repaint();
+            removeSelectedTableId(((RemoveButton)e.getSource()).getTableId());
             }
 
         );
@@ -133,13 +124,13 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
 
         this.add(labelPanel,gridBagConstraints);
 
-        JScrollPane tableIdsScrollPane = new JScrollPane(selectedTablesListPanel,JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,   //Make JScrollPane scroll only vertically
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        JScrollPane tableIdsScrollPane = new JScrollPane(selectedTablesListPanel,ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,   //Make JScrollPane scroll only vertically
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
-        tableIdsScrollPane.setMinimumSize(new Dimension(350,100));
-        tableIdsScrollPane.setPreferredSize(new Dimension(350,100));
-        tableIdsScrollPane.setMaximumSize(new Dimension(350,100));
-        tableIdsScrollPane.setSize(new Dimension(350,100));
+        tableIdsScrollPane.setMinimumSize(tableIdsScrollPaneDimension);
+        tableIdsScrollPane.setPreferredSize(tableIdsScrollPaneDimension);
+        tableIdsScrollPane.setMaximumSize(tableIdsScrollPaneDimension);
+        tableIdsScrollPane.setSize(tableIdsScrollPaneDimension);
         tableIdsScrollPane.setBorder(BorderFactory.createEmptyBorder(0,10,0,20));
         gridBagConstraints.weighty = 3;
         this.add(tableIdsScrollPane,gridBagConstraints);
@@ -151,7 +142,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         sRefreshButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                parent.setButtonsState(ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED, ButtonState.DISABLED);
+                parent.setButtonsState(ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED);
                 RefreshTask worker = new RefreshTask();
                 worker.addPropertyChangeListener(parent.getProgressBar());
                 worker.addPropertyChangeListener(PullPanel.this);
@@ -169,7 +160,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
                     DialogUtils.showError(error, true);
                 } else {
                     // disable download button
-                    parent.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED);
+                    parent.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED);
 
                     sPullButton.setText(DOWNLOADING_LABEL);
 
@@ -199,20 +190,24 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         pullButtonPanel.add(sPullButton);
     }
 
-    public void setButtonsState(ButtonState pullButtonState,ButtonState refreshButtonState,ButtonState addButtonState) {
+    public void setButtonsState(ButtonState pullButtonState,ButtonState refreshButtonState,ButtonState addButtonState,ButtonState removeButtonState) {
         sPullButton.setEnabled(pullButtonState.getButtonStateBooleanValue());
         sRefreshButton.setEnabled(refreshButtonState.getButtonStateBooleanValue());
         pullDropdown.setButtonsState(addButtonState);
+        selectedTablesListPanel.setRemoveButtonState(removeButtonState);
     }
 
-    private static String[] getAllTableIds(CloudEndpointInfo cloudEndpointInfo) {
-        String[] tableIds;
-        if (cloudEndpointInfo != null) {
-            tableIds = cloudEndpointInfo.getAllTableId().toArray(new String[0]);
-        } else {
-            tableIds = new String[]{};
+    private void removeSelectedTableId(String tableId) {
+        for(int i=0;i<selectedTableIds.size();i++) {
+            if(selectedTableIds.get(i).equals(tableId))    //finds the selected table id in the list
+            {
+                selectedTablesListPanel.removeTableId(i,selectedTableIds.size()-1);                         // removes the component from UI
+                comboBoxModel.addElement(selectedTableIds.get(i));         // Add element back to dropdown
+                selectedTableIds.remove(i);                                // remove from the list of selected table ids
+                break;
+            }
+
         }
-        return tableIds;
     }
 
     @Override
@@ -220,9 +215,9 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         if (evt.getNewValue() != null && evt.getPropertyName().equals(SuitcaseSwingWorker.DONE_PROPERTY)) {
             // re-enable download button and restore its label
             sPullButton.setText(DOWNLOAD_LABEL);
-            parent.setButtonsState(ButtonState.ENABLED, ButtonState.ENABLED, ButtonState.ENABLED,ButtonState.ENABLED, ButtonState.ENABLED);
+            parent.setButtonsState(ButtonState.ENABLED, ButtonState.ENABLED, ButtonState.ENABLED,ButtonState.ENABLED, ButtonState.ENABLED, ButtonState.ENABLED);
             ((DefaultComboBoxModel)comboBoxModel).removeAllElements();
-            final String[] allTableIds = getAllTableIds(parent.getCloudEndpointInfo());
+            final Set<String> allTableIds = parent.getCloudEndpointInfo().getAllTableId();
             for (String s : allTableIds) {
                 comboBoxModel.addElement(s);
             }

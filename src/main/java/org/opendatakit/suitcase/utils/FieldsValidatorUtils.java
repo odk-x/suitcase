@@ -57,7 +57,7 @@ public class FieldsValidatorUtils {
 
     for(String tableId:tableIds) {
       if (!cloudEndpointInfo.tableIdExists(tableId)) {
-        errorMsgBuilder.append(BAD_TABLE_ID).append(NEW_LINE);
+        errorMsgBuilder.append(getBadTableIdString(tableId)).append(NEW_LINE);
       }
     }
 

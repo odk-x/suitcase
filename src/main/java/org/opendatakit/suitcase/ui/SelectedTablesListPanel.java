@@ -1,45 +1,56 @@
 package org.opendatakit.suitcase.ui;
 
-import org.opendatakit.suitcase.utils.ButtonAction;
+import org.opendatakit.suitcase.utils.ButtonState;
 
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import javax.swing.*;
 
-public class SelectedTablesListPanel extends JPanel {
+public class SelectedTablesListPanel extends JPanel implements PropertyChangeListener {
     private final ActionListener removeActionListener;
+    private int totalSelectedTableIds;
 
     SelectedTablesListPanel(ActionListener removeActionListener) {
-        this.setLayout(new FlowLayout(FlowLayout.LEFT));
+        super(new FlowLayout(FlowLayout.LEFT));
         this.setSize(new Dimension(400, 100));
         this.setMaximumSize(new Dimension(400, 1000));
         this.setPreferredSize(new Dimension(400, 150));
         this.setMinimumSize(new Dimension(400,150));
         this.removeActionListener = removeActionListener;
-
+        this.totalSelectedTableIds=0;
     }
 
-    void addNewTableId(String tableId,int totalSelectedTableIds) {      // Method to add new Table Id in UI.
+    public void addNewTableId(String tableId,int totalSelectedTableIds) {      // Method to add new Table Id in UI.
 
         updateSize(totalSelectedTableIds);
-        JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel label = new JLabel();                                    // JLabel containing the tableId
-        label.setPreferredSize(new Dimension(200, 25));
-        label.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        label.setText(tableId);
-        inputPanel.add(label);
-        RemoveButton removeButton = new RemoveButton(tableId);          // Remove Button on the left side of JLabel
-
-        removeButton.addActionListener(removeActionListener);
-
-        inputPanel.add(removeButton);
-
-        this.add(inputPanel);
+        SelectedTableIdListItem selectedTableIdListItem = new SelectedTableIdListItem(tableId,removeActionListener);
+        this.add(selectedTableIdListItem);
         this.revalidate();
         this.repaint();
     }
 
+    public void removeTableId(int index,int totalSelectedTableIds){
+        this.remove(index);
+        this.revalidate();                              // Call to revalidate and repaint the UI
+        this.repaint();
+        updateSize(totalSelectedTableIds);
+    }
+
     public void updateSize(int totalSelectedTableIds) {                                    // Method to update size of the panel inside the JScrollPane. Height increases with increasing number of elements.
         this.setPreferredSize(new Dimension(400, 25*totalSelectedTableIds));
+        this.totalSelectedTableIds=totalSelectedTableIds;
+    }
+
+    public void setRemoveButtonState(ButtonState removeButtonState){
+        for(int i=0;i<totalSelectedTableIds;i++)
+        {
+            ((SelectedTableIdListItem)this.getComponent(i)).setRemoveButtonState(removeButtonState);
+        }
+    }
+    @Override
+    public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
+
     }
 }

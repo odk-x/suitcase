@@ -14,7 +14,7 @@ public class RemoveButton extends JButton {
         this.tableId = tableId;
         this.setActionCommand(ButtonAction.REMOVE.getStringValueOfAction());
         this.setText(REMOVE_BUTTON_LABEL);
-        this.setSize(new Dimension(100, 25));
+        this.setSize(LayoutConsts.ADD_AND_REMOVE_BUTTON_DIMENSION);
     }
 
     public String getTableId() {

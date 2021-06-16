@@ -26,7 +26,6 @@ public class MessageString {
 
   // ... does not exist error
   private static final String NONEXISTENCE_SUFFIX = " does not exist";
-  public static final String BAD_TABLE_ID = TABLE_ID + NONEXISTENCE_SUFFIX;
   public static final String DATA_DIR_NOT_EXIST = "Data directory" + NONEXISTENCE_SUFFIX;
 
   // ... cannot be empty error
@@ -45,5 +44,9 @@ public class MessageString {
 
   public static String getOverwriteCsvString(String tableId) {
     return "This CSV for table Id " + tableId + " has already been downloaded. Delete existing CSV and download data from the Cloud Endpoint?";
+  }
+
+  public static String getBadTableIdString(String tableId){
+    return TABLE_ID + " " + tableId + NONEXISTENCE_SUFFIX;
   }
 }
