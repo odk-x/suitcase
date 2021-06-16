@@ -114,10 +114,14 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
     // Define buttons
     sLoginButton.setText(LOGIN_LABEL);
     sLoginButton.addActionListener(new LoginActionListener(false, sLoginButton, sAnonLoginButton));
-
+    sLoginButton.setBorder(LayoutConsts.BUTTON_BORDER);
+    sLoginButton.setBackground(LayoutConsts.BUTTON_BACKGROUND_COLOR);
+    sLoginButton.setForeground(LayoutConsts.BUTTON_FOREGROUND_COLOR);
     sAnonLoginButton.setText(LOGIN_ANON_LABEL);
     sAnonLoginButton.addActionListener(new LoginActionListener(true, sLoginButton, sAnonLoginButton));
-
+    sAnonLoginButton.setBackground(LayoutConsts.BUTTON_BACKGROUND_COLOR);
+    sAnonLoginButton.setForeground(LayoutConsts.BUTTON_FOREGROUND_COLOR);
+    sAnonLoginButton.setBorder(LayoutConsts.BUTTON_BORDER);
     buttonsPanel.add(sLoginButton);
     buttonsPanel.add(sAnonLoginButton);
   }
