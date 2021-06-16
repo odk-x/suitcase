@@ -5,7 +5,6 @@ import org.opendatakit.suitcase.net.UploadTask;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.opendatakit.suitcase.ui.MessageString.*;

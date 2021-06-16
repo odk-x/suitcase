@@ -10,7 +10,8 @@ import org.opendatakit.suitcase.utils.FieldsValidatorUtils;
 import org.opendatakit.suitcase.utils.FileUtils;
 
 import java.net.MalformedURLException;
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static org.opendatakit.suitcase.ui.MessageString.*;
 
@@ -110,8 +111,7 @@ public class SuitcaseCLI {
       } catch (JSONException e) { /* should never happen */}
       CsvConfig config = new CsvConfig(downloadAttachment, scanFormatting, extraMetadata);
 
-      ArrayList<String> tableIds = new ArrayList<>();
-      tableIds.add(tableId);
+      List<String> tableIds = Collections.singletonList(tableId);
       error = FieldsValidatorUtils.checkDownloadFields(tableIds, path, cloudEndpointInfo);
       if (error != null) {
         DialogUtils.showError(error, false);
