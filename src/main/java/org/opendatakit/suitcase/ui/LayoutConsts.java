@@ -12,4 +12,5 @@ public class LayoutConsts {
   public static final Border BUTTON_BORDER = BorderFactory.createLineBorder(Color.BLACK);
   public static final String ODKX_LOGO_FILE_NAME = "logo.png";
   public static final Dimension ADD_AND_REMOVE_BUTTON_DIMENSION = new Dimension(250, 25);
+  public static final Dimension DEFAULT_BUTTON_DIMENSION = new Dimension(200,50);
 }
