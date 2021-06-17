@@ -254,7 +254,9 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
             ((DefaultComboBoxModel)comboBoxModel).removeAllElements();
             final Set<String> allTableIds = parent.getCloudEndpointInfo().getAllTableId();
             for (String s : allTableIds) {
-                comboBoxModel.addElement(s);
+                if(!selectedTableIds.contains(s)){
+                    comboBoxModel.addElement(s);
+                }
             }
         }
     }
