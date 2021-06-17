@@ -19,7 +19,17 @@ public class IOPanel extends JPanel {
 
     this.parent = parent;
 
-    JTabbedPane tabs = new JTabbedPane();
+    UIManager.put("TabbedPane.selected", LayoutConsts.BUTTON_BACKGROUND_COLOR);
+    JTabbedPane tabs = new JTabbedPane(){
+      public Color getForegroundAt(int index){
+        if(getSelectedIndex() == index){
+        return Color.WHITE;
+        }
+        else {
+          return Color.BLACK;
+        }
+      }
+    };
     pullPanel = new PullPanel(this);
     pushPanel = new PushPanel(this);
     tabs.addTab(PULL_TAB_LABEL, pullPanel);
