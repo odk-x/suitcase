@@ -11,6 +11,7 @@ public class SelectedTableIdListItem extends JPanel {
 
     SelectedTableIdListItem(String tableId,ActionListener removeActionListener){
         super(new FlowLayout(FlowLayout.LEFT));
+        this.setBackground(Color.WHITE);
         JLabel label = new JLabel();                                    // JLabel containing the tableId
         label.setPreferredSize(new Dimension(200, 25));
         label.setBorder(BorderFactory.createLineBorder(Color.BLACK));
