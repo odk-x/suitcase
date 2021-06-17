@@ -18,6 +18,7 @@ public class SelectedTablesListPanel extends JPanel implements PropertyChangeLis
         this.setMaximumSize(new Dimension(400, 1000));
         this.setPreferredSize(new Dimension(400, 150));
         this.setMinimumSize(new Dimension(400,150));
+        this.setBackground(Color.WHITE);
         this.removeActionListener = removeActionListener;
         this.totalSelectedTableIds=0;
     }
