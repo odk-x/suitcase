@@ -39,6 +39,13 @@ public class SelectedTablesListPanel extends JPanel implements PropertyChangeLis
         updateSize(totalSelectedTableIds);
     }
 
+    public void removeAllTableIds(int totalSelectedTableIds){
+        for(int i=0;i<totalSelectedTableIds;i++)
+        {
+            this.removeTableId(0,totalSelectedTableIds);
+        }
+    }
+
     public void updateSize(int totalSelectedTableIds) {                                    // Method to update size of the panel inside the JScrollPane. Height increases with increasing number of elements.
         this.setPreferredSize(new Dimension(400, 25*totalSelectedTableIds));
         this.totalSelectedTableIds=totalSelectedTableIds;
