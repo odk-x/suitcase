@@ -50,7 +50,8 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
             new JTextField[] {sVersionPushText},
             new String[] {"2"}
     );
-    gbc.weighty = 2;
+    gbc.weighty = 1;
+    gbc.insets = new Insets(20,15,0,20);
     this.add(pushInputPanel, gbc);
 
     // Will add upload options in the future, adding these now makes layout easier (a lot easier)
@@ -63,25 +64,25 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
             new JCheckBox[] {placeholderCheckbox, placeholderCheckbox2},
             2, 1
     );
-    gbc.weighty = 5;
+    gbc.weighty = 6;
     this.add(pushPrefPanel, gbc);
 
     gbc.weighty = 1;
     this.add(dataPathChooser, gbc);
 
-    JPanel pushButtonPanel = new JPanel(new GridBagLayout());
+    JPanel pushButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER,20,0));
     buildPushButtonArea(pushButtonPanel);
-    gbc.insets = new Insets(10, -100, 0, 0);
+    gbc.insets = new Insets(20, -100, 0, 0);
     gbc.weighty = 2;
     this.add(pushButtonPanel, gbc);
   }
 
   private void buildPushButtonArea(JPanel pushButtonPanel) {
-    GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
-    gbc.gridx = GridBagConstraints.RELATIVE;
-    gbc.gridy = 0;
 
     sPushButton.setText(PUSH_LABEL);
+    sPushButton.setPreferredSize(LayoutConsts.DEFAULT_BUTTON_DIMENSION);
+    sPushButton.setBackground(LayoutConsts.BUTTON_BACKGROUND_COLOR);
+    sPushButton.setForeground(LayoutConsts.BUTTON_FOREGROUND_COLOR);
     sPushButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -106,6 +107,9 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
     });
 
     sResetButton.setText(RESET_LABEL);
+    sResetButton.setPreferredSize(LayoutConsts.DEFAULT_BUTTON_DIMENSION);
+    sResetButton.setBackground(LayoutConsts.BUTTON_BACKGROUND_COLOR);
+    sResetButton.setForeground(LayoutConsts.BUTTON_FOREGROUND_COLOR);
     sResetButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -132,8 +136,8 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
       }
     });
 
-    pushButtonPanel.add(sResetButton, gbc);
-    pushButtonPanel.add(sPushButton, gbc);
+    pushButtonPanel.add(sResetButton);
+    pushButtonPanel.add(sPushButton);
   }
 
   public void setButtonsState(ButtonState pushButtonState , ButtonState resetButtonState) {
