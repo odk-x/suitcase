@@ -22,8 +22,8 @@ import java.util.concurrent.ExecutionException;
 import static org.opendatakit.suitcase.ui.MessageString.*;
 
 public class DownloadTask extends SuitcaseSwingWorker<Void> {
-  private static final String RETRIEVING_ROW = "Retrieving rows";
-  private static final String PROCESSING_ROW = "Processing and writing data";
+  private static final String RETRIEVING_ROW_PREFIX = "Retrieving rows for ";
+  private static final String PROCESSING_ROW_PREFIX = "Processing and writing data for ";
 
   private CloudEndpointInfo cloudEndpointInfo;
   private CsvConfig csvConfig;
@@ -60,7 +60,7 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
 
     // retrieve data from Cloud Endpoint and store in csv
     if (csv.getSize() == 0) {
-      publish(new ProgressBarStatus(0, RETRIEVING_ROW, true));
+      publish(new ProgressBarStatus(0, RETRIEVING_ROW_PREFIX+tableId, true));
 
       JSONObject rows;
       String cursor = null;
@@ -73,7 +73,7 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
     }
 
     // write out csv to file
-    publish(new ProgressBarStatus(0, PROCESSING_ROW, false));
+    publish(new ProgressBarStatus(0, PROCESSING_ROW_PREFIX + tableId, false));
     RFC4180CsvWriter csvWriter = null;
     try {
       csvWriter = new RFC4180CsvWriter(Files.newBufferedWriter(
