@@ -16,9 +16,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import static org.opendatakit.suitcase.ui.MessageString.getOverwriteCsvString;
 
 public class PullPanel extends JPanel implements PropertyChangeListener {
     private static final String DOWNLOAD_LABEL = "Download";
@@ -193,25 +195,36 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
 
                     sPullButton.setText(DOWNLOADING_LABEL);
 
-                    for(String tableId:selectedTableIds)
-                    {
-                     CsvConfig config = new CsvConfig(sDownloadAttachment.isSelected(), sApplyScanFmt.isSelected(), sExtraMetadata.isSelected());
-
-                     // create a new attachment manager for every table id
-                     attachMngr = new AttachmentManager(parent.getCloudEndpointInfo(), tableId, savePathChooser.getPath());
-
-                    // create a new csv instance when csv == null or when table id changed
-                    if (csv == null || !csv.getTableId().equals(tableId)) {
-                        try {
-                            csv = new ODKCsv(attachMngr, parent.getCloudEndpointInfo(), tableId);
-                        } catch (JSONException e1) { /*should never happen*/ }
+                    CsvConfig config = new CsvConfig(sDownloadAttachment.isSelected(), sApplyScanFmt.isSelected(), sExtraMetadata.isSelected());
+                    List<String> alreadyDownloadedTableIds = new ArrayList<>();
+                    for (String tableId:selectedTableIds){
+                        if (FileUtils.isDownloaded(parent.getCloudEndpointInfo(), tableId, config, savePathChooser.getPath())){
+                            alreadyDownloadedTableIds.add(tableId);
+                        }
                     }
 
-                    DownloadTask worker = new DownloadTask(parent.getCloudEndpointInfo(), csv, config, savePathChooser.getPath(), true);
+                    if(alreadyDownloadedTableIds.size()!=0){
+                        if (DialogUtils.promptConfirm(getOverwriteCsvString(alreadyDownloadedTableIds), true, false)) {
+                            for(String tableId:alreadyDownloadedTableIds){
+                                try {
+                                    FileUtils.deleteCsv(parent.getCloudEndpointInfo(), config, tableId, savePathChooser.getPath()); // Delete existing csv if user selects "yes" to overwrite
+                                } catch (IOException ex) {
+                                    ex.printStackTrace();
+                                }
+                            }
+                        }
+                        else {
+                            for(String tableId:alreadyDownloadedTableIds){
+                                removeSelectedTableId(tableId);                                             // Remove from list of table ids to download if user selects "no" to overwrite.
+                            }
+                        }
+                    }
+
+                    DownloadTask worker = new DownloadTask(parent.getCloudEndpointInfo(), selectedTableIds, config, savePathChooser.getPath(), true);
                     worker.addPropertyChangeListener(parent.getProgressBar());
                     worker.addPropertyChangeListener(PullPanel.this);
                     worker.execute();
-                    }
+
                 }
             }
         });

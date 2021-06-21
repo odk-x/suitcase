@@ -104,11 +104,6 @@ public class SuitcaseCLI {
 
     switch (operation) {
     case DOWNLOAD:
-      AttachmentManager attMngr = new AttachmentManager(cloudEndpointInfo, tableId, path);
-      ODKCsv csv = null;
-      try {
-        csv = new ODKCsv(attMngr, cloudEndpointInfo, tableId);
-      } catch (JSONException e) { /* should never happen */}
       CsvConfig config = new CsvConfig(downloadAttachment, scanFormatting, extraMetadata);
 
       List<String> tableIds = Collections.singletonList(tableId);
@@ -117,7 +112,7 @@ public class SuitcaseCLI {
         DialogUtils.showError(error, false);
         retCode = PARAM_ERROR_CODE;
       } else {
-        retCode = new DownloadTask(cloudEndpointInfo, csv, config, path, false).blockingExecute();
+        retCode = new DownloadTask(cloudEndpointInfo, tableIds, config, path, false).blockingExecute();
       }
       break;
     case UPLOAD:

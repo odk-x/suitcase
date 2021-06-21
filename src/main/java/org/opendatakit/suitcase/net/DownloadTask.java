@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static org.opendatakit.suitcase.ui.MessageString.*;
@@ -25,17 +26,16 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
   private static final String PROCESSING_ROW = "Processing and writing data";
 
   private CloudEndpointInfo cloudEndpointInfo;
-  private ODKCsv csv;
   private CsvConfig csvConfig;
   private String savePath;
+  private List<String> tableIds;
   private boolean isGUI;
 
-  public DownloadTask(CloudEndpointInfo cloudEndpointInfo, ODKCsv csv, CsvConfig csvConfig, String savePath,
+  public DownloadTask(CloudEndpointInfo cloudEndpointInfo, List<String> tableIds, CsvConfig csvConfig, String savePath,
                       boolean isGUI) {
     super();
-
     this.cloudEndpointInfo = cloudEndpointInfo;
-    this.csv = csv;
+    this.tableIds = tableIds;
     this.csvConfig = csvConfig;
     this.savePath = savePath;
     this.isGUI = isGUI;
@@ -43,13 +43,15 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
 
   @Override
   protected Void doInBackground() throws IOException, JSONException {
-    //assume csv has already been initialized by caller of this worker
 
     // check existing data, skip check for CLI
-    if (FileUtils.isDownloaded(cloudEndpointInfo, csv.getTableId(), csvConfig, savePath) &&
-        DialogUtils.promptConfirm(getOverwriteCsvString(csv.getTableId()), isGUI, !isGUI)) {
-      FileUtils.deleteCsv(cloudEndpointInfo, csvConfig, csv.getTableId(), savePath);
-    }
+
+    for(String tableId:tableIds){
+      // create a new attachment manager for every table id
+      AttachmentManager attachMngr = new AttachmentManager(cloudEndpointInfo, tableId, savePath);
+      // create a new ODKCsv for every table id
+      ODKCsv csv = new ODKCsv(attachMngr,cloudEndpointInfo,tableId);
+
 
     // then create directory structure when needed
     FileUtils.createDirectory(cloudEndpointInfo, csvConfig, csv.getTableId(), savePath);
@@ -75,10 +77,10 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
     RFC4180CsvWriter csvWriter = null;
     try {
       csvWriter = new RFC4180CsvWriter(Files.newBufferedWriter(
-          FileUtils.getCSVPath(cloudEndpointInfo, csv.getTableId(), csvConfig, savePath),
-          StandardCharsets.UTF_8,
-          StandardOpenOption.CREATE,
-          StandardOpenOption.TRUNCATE_EXISTING
+              FileUtils.getCSVPath(cloudEndpointInfo, csv.getTableId(), csvConfig, savePath),
+              StandardCharsets.UTF_8,
+              StandardOpenOption.CREATE,
+              StandardOpenOption.TRUNCATE_EXISTING
       ));
 
       //Write header then rows
@@ -97,6 +99,7 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
         csvWriter.close();
       }
     }
+  }
 
     return null;
   }
