@@ -3,6 +3,7 @@ package org.opendatakit.suitcase.net;
 import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.apache.wink.json4j.JSONException;
 import org.opendatakit.suitcase.ui.DialogUtils;
+import org.opendatakit.suitcase.ui.ProgressBarStatus;
 import org.opendatakit.suitcase.ui.SuitcaseProgressBar;
 
 import java.io.IOException;
@@ -56,6 +57,7 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
       }
 
       DialogUtils.showError(errMsg, isGUI);
+      setError(errMsg);
       cause.printStackTrace();
       returnCode = SuitcaseSwingWorker.errorCode;
     }
