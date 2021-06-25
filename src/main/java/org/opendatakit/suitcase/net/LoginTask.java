@@ -12,6 +12,8 @@ import java.util.concurrent.ExecutionException;
 import static org.opendatakit.suitcase.ui.MessageString.*;
 
 public class LoginTask extends SuitcaseSwingWorker<Void> {
+  private static final String UPDATING_TABLES_LIST = "Updating Tables List";
+  private static final String UPDATING_PRIVILEGES_LIST = "Updating Privileges";
   private CloudEndpointInfo cloudEndpointInfo;
   private boolean isGUI;
 
@@ -28,8 +30,12 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
 
     syncWrapper.reset();
     syncWrapper.init(cloudEndpointInfo);
-    syncWrapper.setPrivilegesInfo();
-
+    if(syncWrapper.isInitialized()) {
+      publish(new ProgressBarStatus(0, UPDATING_TABLES_LIST, false));
+      syncWrapper.updateTableList();
+      publish(new ProgressBarStatus(0, UPDATING_PRIVILEGES_LIST, false));
+      syncWrapper.setPrivilegesInfo();
+    }
     return null;
   }
 
@@ -44,6 +50,7 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
       e.printStackTrace();
       DialogUtils.showError(GENERIC_ERR, isGUI);
       returnCode = SuitcaseSwingWorker.errorCode;
+      SyncWrapper.getInstance().reset();
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();
 
@@ -60,6 +67,7 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
       setError(errMsg);
       cause.printStackTrace();
       returnCode = SuitcaseSwingWorker.errorCode;
+      SyncWrapper.getInstance().reset();
     }
   }
 }
