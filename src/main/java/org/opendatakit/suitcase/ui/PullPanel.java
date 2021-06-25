@@ -7,6 +7,7 @@ import org.apache.wink.json4j.JSONException;
 import org.opendatakit.suitcase.utils.ButtonState;
 import org.opendatakit.suitcase.utils.FieldsValidatorUtils;
 import org.opendatakit.suitcase.utils.FileUtils;
+import org.opendatakit.suitcase.utils.SuitcaseConst;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,6 +15,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Properties;
 
 public class PullPanel extends JPanel implements PropertyChangeListener {
     private static final String DOWNLOAD_LABEL = "Download";
@@ -21,6 +27,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     private static final String DOWNLOADING_LABEL = "Downloading";
     private static final String SAVE_PATH_LABEL = "Save to";
     private static final String FILE_CHOOSER_LABEL = "Save";
+    private static final String LOGOUT = "Logout";
 
     // ui components
     private JCheckBox sDownloadAttachment;
@@ -50,7 +57,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         this.sRefreshButton = new JButton();
         this.sTableIdText = new JTextField(1);
         this.savePathChooser = new PathChooserPanel(
-                SAVE_PATH_LABEL,FILE_CHOOSER_LABEL ,FileUtils.getDefaultSavePath().toString()
+                SAVE_PATH_LABEL, FILE_CHOOSER_LABEL, FileUtils.getDefaultSavePath().toString()
         );
 
         GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
@@ -65,11 +72,22 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         gbc.weighty = 2;
         this.add(pullInputPanel, gbc);
 
+        JButton logoutButton = new JButton();
+        logoutButton.setText(LOGOUT);
+        logoutButton.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+        logoutButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+              logout();
+            }
+        });
+        gbc.weighty = 1;
+        this.add(logoutButton);
         JPanel pullPrefPanel = new CheckboxPanel(
                 new String[]{"Download attachments?", "Apply Scan formatting?", "Extra metadata columns?"},
                 new JCheckBox[]{sDownloadAttachment, sApplyScanFmt, sExtraMetadata}, 3, 1
         );
-        gbc.weighty = 5;
+        gbc.weighty = 4;
         this.add(pullPrefPanel, gbc);
 
         gbc.weighty = 1;
@@ -88,7 +106,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         sRefreshButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                parent.setButtonsState(ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED);
+                parent.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED);
                 RefreshTask worker = new RefreshTask();
                 worker.addPropertyChangeListener(parent.getProgressBar());
                 worker.addPropertyChangeListener(PullPanel.this);
@@ -107,7 +125,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
                     DialogUtils.showError(error, true);
                 } else {
                     // disable download button
-                    parent.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED,ButtonState.DISABLED);
+                    parent.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED);
 
                     sPullButton.setText(DOWNLOADING_LABEL);
 
@@ -138,17 +156,42 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         pullButtonPanel.add(sPullButton);
     }
 
-    public void setButtonsState(ButtonState pullButtonState,ButtonState refreshButtonState) {
+    public void setButtonsState(ButtonState pullButtonState, ButtonState refreshButtonState) {
         sPullButton.setEnabled(pullButtonState.getButtonStateBooleanValue());
         sRefreshButton.setEnabled(refreshButtonState.getButtonStateBooleanValue());
     }
 
+    private void logout(){
+        File propFile = new File(SuitcaseConst.PROPERTIES_FILE);
+        if (propFile.exists()) {
+            Properties appProperties = new Properties();
+            try (FileInputStream fileInputStream = new FileInputStream(SuitcaseConst.PROPERTIES_FILE)) {
+                appProperties.load(fileInputStream);
+                appProperties.clear();
+                appProperties.store(new FileOutputStream(SuitcaseConst.PROPERTIES_FILE),"File to Store login credentials");
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        SyncWrapper.getInstance().reset();
+        ((CardLayout) (parent.getParent().getLayout())).previous(parent.getParent());
+    }
+
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if (evt.getNewValue() != null && evt.getPropertyName().equals(SuitcaseSwingWorker.DONE_PROPERTY)) {
-            // re-enable download button and restore its label
-            sPullButton.setText(DOWNLOAD_LABEL);
-            parent.setButtonsState(ButtonState.ENABLED, ButtonState.ENABLED, ButtonState.ENABLED,ButtonState.ENABLED);
+        if (evt.getNewValue() != null) {
+            switch (evt.getPropertyName()) {
+                // re-enable download button and restore its label
+                case SuitcaseSwingWorker.DONE_PROPERTY: {
+                    sPullButton.setText(DOWNLOAD_LABEL);
+                    parent.setButtonsState(ButtonState.ENABLED, ButtonState.ENABLED, ButtonState.ENABLED, ButtonState.ENABLED);
+                    break;
+                }
+                case SuitcaseSwingWorker.LOGIN_ERROR_PROPERTY: {
+                    logout();
+                    break;
+                }
+            }
         }
     }
 }
