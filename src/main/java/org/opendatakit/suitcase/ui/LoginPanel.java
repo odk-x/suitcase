@@ -67,6 +67,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
     private static final String LOGIN_ANON_LABEL = "Anonymous Login";
     private static final String LOGIN_LOADING_LABEL = "Loading";
     private static final String LOGO_DESCRIPTION = "ODK-X Logo";
+    private static final String DEFAULT_APP_ID = "default";
 
     private CloudEndpointInfo cloudEndpointInfo;
     private JTextField sCloudEndpointAddressText;
@@ -75,8 +76,8 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
     private JPasswordField sPasswordText;
     private JButton sLoginButton;
     private JButton sAnonLoginButton;
-    private JCheckBox sRememberMeCheckbox;
-    private JCheckBox sDoNotSavePasswordCheckbox;
+    private JCheckBox sUseDefaultAppIdCheckbox;
+    private JCheckBox sSavePasswordCheckbox;
 
     private MainPanel parent;
 
@@ -91,8 +92,8 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
         this.sPasswordText = new JPasswordField(1);
         this.sLoginButton = new JButton();
         this.sAnonLoginButton = new JButton();
-        this.sRememberMeCheckbox = new JCheckBox();
-        this.sDoNotSavePasswordCheckbox = new JCheckBox();
+        this.sUseDefaultAppIdCheckbox = new JCheckBox();
+        this.sSavePasswordCheckbox = new JCheckBox();
 
         GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
         gbc.gridx = 0;
@@ -107,10 +108,8 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
         gbc.insets = new Insets(10, LayoutConsts.WINDOW_WIDTH / 2, 0, 40);
         JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 20, 0));
         buildLoginButtonArea(buttonPanel);
-        JPanel checkBoxPanel = new CheckboxPanel(new String[]{"Remember me", "Don't save password"},
-                new JCheckBox[]{sRememberMeCheckbox, sDoNotSavePasswordCheckbox}, 1, 2);
-        gbc.weighty = 10;
-        this.add(checkBoxPanel,gbc);
+
+        buildCheckBoxArea(gbc);
         gbc.weighty = 15;
         gbc.insets = new Insets(10, LayoutConsts.WINDOW_WIDTH / 2, 40, 40);
         this.add(buttonPanel, gbc);
@@ -164,6 +163,27 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
         buttonsPanel.add(sAnonLoginButton);
     }
 
+    private void buildCheckBoxArea(GridBagConstraints gbc){
+        sUseDefaultAppIdCheckbox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                if(sUseDefaultAppIdCheckbox.isSelected()){
+                    sAppIdText.setText(DEFAULT_APP_ID);
+                    sAppIdText.setEditable(false);
+                }
+                else {
+                    sAppIdText.setEditable(true);
+                }
+            }
+        });
+        sUseDefaultAppIdCheckbox.setSelected(true);
+        sAppIdText.setEditable(false);
+        JPanel checkBoxPanel = new CheckboxPanel(new String[]{"Use default app id", "Don't save password"},
+                new JCheckBox[]{sUseDefaultAppIdCheckbox, sSavePasswordCheckbox}, 1, 2);
+        gbc.weighty = 10;
+        this.add(checkBoxPanel,gbc);
+    }
+
     private void buildInputPanel(JPanel logoAndInputPanel) {
 
         GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
@@ -183,9 +203,9 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
         }
         gbc.weightx = 80;
         JPanel inputPanel = new InputPanel(
-                new String[]{"Cloud Endpoint Address", "App ID", "Username", "Password"},
-                new JTextField[]{sCloudEndpointAddressText, sAppIdText, sUserNameText, sPasswordText},
-                new String[]{"https://cloud-endpoint-server-url.appspot.com", "default", "", ""}
+                new String[]{"Cloud Endpoint Address", "Username", "Password", "App ID"},
+                new JTextField[]{sCloudEndpointAddressText, sUserNameText, sPasswordText, sAppIdText},
+                new String[]{"https://cloud-endpoint-server-url.appspot.com", "", "", DEFAULT_APP_ID}
         );
         logoAndInputPanel.add(inputPanel, gbc);
     }
@@ -220,7 +240,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
 
             // if login is successful, let parent switch to the next card
             if (SyncWrapper.getInstance().isInitialized()) {
-              if(sRememberMeCheckbox.isSelected()&&!sUserNameText.getText().equals("")){
+              if(!sUserNameText.getText().equals("")){
                 File propFile = new File(SuitcaseConst.PROPERTIES_FILE);
                 if(!propFile.exists()){
                   try {
@@ -233,7 +253,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
                 appProperties.put("username",sUserNameText.getText());
                 appProperties.put("app_id",sAppIdText.getText());
                 appProperties.put("server_url",sCloudEndpointAddressText.getText());
-                if(!sDoNotSavePasswordCheckbox.isSelected())
+                if(sSavePasswordCheckbox.isSelected())
                 {
                     appProperties.put("password", String.valueOf(sPasswordText.getPassword()));
                 }
