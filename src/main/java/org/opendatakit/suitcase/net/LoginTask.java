@@ -57,6 +57,7 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
       String errMsg;
       if (cause instanceof JSONException) {
         errMsg = BAD_CRED;
+        setError(errMsg);                            // call in case of bad credentials to logout user if the user is logged in via save credentials
       } else if (cause instanceof IOException) {
         errMsg = HTTP_IO_ERROR;
       } else {
@@ -64,7 +65,6 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
       }
 
       DialogUtils.showError(errMsg, isGUI);
-      setError(errMsg);
       cause.printStackTrace();
       returnCode = SuitcaseSwingWorker.errorCode;
       SyncWrapper.getInstance().reset();
