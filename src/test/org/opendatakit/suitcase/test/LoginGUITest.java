@@ -1,5 +1,6 @@
 package org.opendatakit.suitcase.test;
 
+import com.github.caciocavallosilano.cacio.ctc.junit.CacioTestRunner;
 import org.assertj.swing.core.ComponentLookupScope;
 import org.assertj.swing.core.GenericTypeMatcher;
 import org.assertj.swing.edt.FailOnThreadViolationRepaintManager;
@@ -8,6 +9,7 @@ import org.assertj.swing.fixture.JPanelFixture;
 import org.assertj.swing.testing.AssertJSwingTestCaseTemplate;
 import org.assertj.swing.timing.Pause;
 import org.junit.*;
+import org.junit.runner.RunWith;
 import org.opendatakit.suitcase.Suitcase;
 
 import javax.swing.*;
@@ -16,6 +18,7 @@ import java.awt.*;
 import static org.assertj.swing.finder.WindowFinder.findFrame;
 import static org.assertj.swing.launcher.ApplicationLauncher.application;
 
+@RunWith(CacioTestRunner.class)
 public class LoginGUITest extends AssertJSwingTestCaseTemplate {
 
     private FrameFixture frame;
