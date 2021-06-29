@@ -54,7 +54,7 @@ public class LoginGUITest extends AssertJSwingTestCaseTemplate {
     }
 
     @Test
-    public void test1() {
+    public void loginTest() {
     JPanelFixture ioPanelFixture = frame.panel(new GenericTypeMatcher<JPanel>(JPanel.class) {
             @Override
             protected boolean isMatching(JPanel panel) {
