@@ -179,7 +179,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if (evt.getNewValue() != null) {
+        if (evt.getNewValue() != null&&evt.getPropertyName()!=null) {
             switch (evt.getPropertyName()) {
                 // re-enable download button and restore its label
                 case SuitcaseSwingWorker.DONE_PROPERTY: {
