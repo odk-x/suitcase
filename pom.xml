@@ -15,6 +15,7 @@
         <org.apache.wink.version>1.4</org.apache.wink.version>
         <org.apache.commons.cli.version>1.4</org.apache.commons.cli.version>
         <org.apache.httpcomponents.version>4.5.13</org.apache.httpcomponents.version>
+        <org.apache.maven.plugins.surefire.version>2.22.0</org.apache.maven.plugins.surefire.version>
 
         <maven.jar.plugin.version>3.2.0</maven.jar.plugin.version>
         <maven.javadoc.plugin.version>3.2.0</maven.javadoc.plugin.version>
@@ -155,7 +156,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.0</version>
+                <version>${org.apache.maven.plugins.surefire.version}</version>
             </plugin>
 
         </plugins>
