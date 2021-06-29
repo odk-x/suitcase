@@ -72,17 +72,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         gbc.weighty = 2;
         this.add(pullInputPanel, gbc);
 
-        JButton logoutButton = new JButton();
-        logoutButton.setText(LOGOUT);
-        logoutButton.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
-        logoutButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-              logout();
-            }
-        });
-        gbc.weighty = 1;
-        this.add(logoutButton);
+        buildLogoutButton(gbc);
         JPanel pullPrefPanel = new CheckboxPanel(
                 new String[]{"Download attachments?", "Apply Scan formatting?", "Extra metadata columns?"},
                 new JCheckBox[]{sDownloadAttachment, sApplyScanFmt, sExtraMetadata}, 3, 1
@@ -100,6 +90,19 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         this.add(pullButtonPanel, gbc);
     }
 
+    private void buildLogoutButton(GridBagConstraints gbc){
+        JButton logoutButton = new JButton();
+        logoutButton.setText(LOGOUT);
+        logoutButton.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+        logoutButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                logout();
+            }
+        });
+        gbc.weighty = 1;
+        this.add(logoutButton);
+    }
     private void buildPullButtonArea(JPanel pullButtonPanel) {
         sPullButton.setText(DOWNLOAD_LABEL);
         sRefreshButton.setText(REFRESH_LABEL);
