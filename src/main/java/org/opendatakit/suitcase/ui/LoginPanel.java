@@ -178,7 +178,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
         });
         sUseDefaultAppIdCheckbox.setSelected(true);
         sAppIdText.setEditable(false);
-        JPanel checkBoxPanel = new CheckboxPanel(new String[]{"Use default app id", "Don't save password"},
+        JPanel checkBoxPanel = new CheckboxPanel(new String[]{"Use default app id", "Save password"},
                 new JCheckBox[]{sUseDefaultAppIdCheckbox, sSavePasswordCheckbox}, 1, 2);
         gbc.weighty = 10;
         this.add(checkBoxPanel,gbc);
