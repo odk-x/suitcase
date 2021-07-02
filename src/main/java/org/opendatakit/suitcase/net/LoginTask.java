@@ -2,6 +2,7 @@ package org.opendatakit.suitcase.net;
 
 import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.apache.wink.json4j.JSONException;
+import org.opendatakit.suitcase.model.SyncClientError;
 import org.opendatakit.suitcase.ui.DialogUtils;
 import org.opendatakit.suitcase.ui.ProgressBarStatus;
 import org.opendatakit.suitcase.ui.SuitcaseProgressBar;
@@ -56,7 +57,13 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
 
       String errMsg;
       if (cause instanceof JSONException) {
-        errMsg = BAD_CRED;
+        SyncClientError syncClientError = new SyncClientError(e);
+        if(syncClientError.getStatusCode()==401){
+          errMsg = BAD_CRED;
+        }
+        else {
+          errMsg = syncClientError.getMessage();
+        }
         setError(errMsg);                            // call in case of bad credentials to logout user if the user is logged in via save credentials
       } else if (cause instanceof IOException) {
         errMsg = HTTP_IO_ERROR;
