@@ -7,6 +7,7 @@ import org.assertj.swing.edt.FailOnThreadViolationRepaintManager;
 import org.assertj.swing.fixture.*;
 import org.assertj.swing.testing.AssertJSwingTestCaseTemplate;
 import org.assertj.swing.timing.Pause;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -165,4 +166,12 @@ public class DownloadGUITest extends AssertJSwingTestCaseTemplate {
         progressBarFixture.requireText(SuitcaseProgressBar.PB_DONE);
     }
 
+    @After
+    public final void tearDown() {
+        try {
+            this.frame = null;
+        } finally {
+            cleanUp();
+        }
+    }
 }
