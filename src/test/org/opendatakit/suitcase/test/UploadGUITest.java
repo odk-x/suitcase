@@ -13,7 +13,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.opendatakit.suitcase.Suitcase;
-import org.opendatakit.suitcase.net.UploadTask;
 import org.opendatakit.suitcase.ui.IOPanel;
 import org.opendatakit.suitcase.ui.SuitcaseProgressBar;
 
@@ -113,9 +112,8 @@ public class UploadGUITest extends AssertJSwingTestCaseTemplate {
                 return "progress_bar".equals(progressBar.getName());
             }
         });
-        progressBarFixture.requireText(UploadTask.IN_PROGRESS_STRING);          // Upload should start with status update in progress bar
         Pause.pause(UPLOAD_TIMEOUT);
-        progressBarFixture.requireText(SuitcaseProgressBar.PB_DONE);            // After Upload completes progress bar should display "Done!"
+        progressBarFixture.requireText(SuitcaseProgressBar.PB_DONE);            // After Upload completes progress bar should display "Done!" .if there is an error "Error" is displayed
     }
 
     @After
