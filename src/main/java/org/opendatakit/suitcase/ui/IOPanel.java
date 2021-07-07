@@ -21,6 +21,7 @@ public class IOPanel extends JPanel {
 
     this.setName("io_panel");
     JTabbedPane tabs = new JTabbedPane();
+    tabs.setName("tabs");
     pullPanel = new PullPanel(this);
     pushPanel = new PushPanel(this);
     tabs.addTab(PULL_TAB_LABEL, pullPanel);

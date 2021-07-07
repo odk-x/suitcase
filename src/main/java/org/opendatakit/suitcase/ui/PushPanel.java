@@ -82,6 +82,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
     gbc.gridy = 0;
 
     sPushButton.setText(PUSH_LABEL);
+    sPushButton.setName("upload_button");
     sPushButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {

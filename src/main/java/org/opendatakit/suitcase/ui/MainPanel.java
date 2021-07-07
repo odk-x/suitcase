@@ -14,6 +14,7 @@ public class MainPanel extends JPanel {
 
     this.setName("main_panel");
     this.progressBar = new SuitcaseProgressBar();
+    this.progressBar.setName("progress_bar");
     this.loginPanel = new LoginPanel(this);
 
     this.add(loginPanel);
