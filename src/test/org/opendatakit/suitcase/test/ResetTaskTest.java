@@ -80,7 +80,7 @@ public class ResetTaskTest extends TestCase {
         }
     }
 
-    public void testResetTable_ExpectPass() {
+    public void testReset_ExpectPass() {
         int retCode;
         SyncClient sc = null;
 
