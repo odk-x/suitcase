@@ -1,5 +1,6 @@
 package org.opendatakit.suitcase.ui;
 
+import org.opendatakit.suitcase.Suitcase;
 import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.opendatakit.suitcase.net.LoginTask;
 import org.opendatakit.suitcase.net.SuitcaseSwingWorker;
@@ -17,7 +18,10 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.*;
 import java.net.MalformedURLException;
-import java.util.Properties;
+import java.util.Arrays;
+import java.util.List;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
 public class LoginPanel extends JPanel implements PropertyChangeListener {
   private class LoginActionListener implements ActionListener {
@@ -119,23 +123,29 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
         return this.cloudEndpointInfo;
     }
 
-    public void loginFromProperties(){
+    public void loginFromPreferences(){
         // Auto login if credentials are present
-        File propFile = new File(SuitcaseConst.PROPERTIES_FILE);
-        if(propFile.exists()){
-            Properties appProperties = new Properties();
-            try (FileInputStream fileInputStream = new FileInputStream(propFile)){
-                appProperties.load(fileInputStream);
-                if(appProperties.containsKey("username")&&appProperties.containsKey("app_id")&&appProperties.containsKey("server_url")) {
-                    String username = appProperties.getProperty("username");
-                    String serverUrl = appProperties.getProperty("server_url");
-                    String appId = appProperties.getProperty("app_id");
-                    String password = appProperties.getProperty("password");
-                    if (!appProperties.containsKey("password")) {
+        Preferences userPreferences = Preferences.userNodeForPackage(Suitcase.class);
+        List<String> keys;
+        try {
+            keys = Arrays.asList(userPreferences.keys());
+        } catch (BackingStoreException e) {
+            e.printStackTrace();
+            return;
+        }
+        if(keys.contains(SuitcaseConst.PREFERENCES_USERNAME_KEY)&&
+                keys.contains(SuitcaseConst.PREFERENCES_SERVER_URL_KEY)&&
+                keys.contains(SuitcaseConst.PREFERENCES_APP_ID_KEY)){
+            try {
+                    String username = userPreferences.get(SuitcaseConst.PREFERENCES_USERNAME_KEY,"");
+                    String serverUrl = userPreferences.get(SuitcaseConst.PREFERENCES_SERVER_URL_KEY,"");
+                    String appId = userPreferences.get(SuitcaseConst.PREFERENCES_APP_ID_KEY,"");
+                    if (!keys.contains(SuitcaseConst.PREFERENCES_PASSWORD_KEY)) {
                         sUserNameText.setText(username);
                         sAppIdText.setText(appId);
                         sCloudEndpointAddressText.setText(serverUrl);
                     } else {
+                        String password = userPreferences.get(SuitcaseConst.PREFERENCES_PASSWORD_KEY,"");
                         this.cloudEndpointInfo = new CloudEndpointInfo(serverUrl, appId, username, password);
                         ((CardLayout) getParent().getLayout()).next(getParent());
                         LoginTask worker = new LoginTask(cloudEndpointInfo, true);
@@ -144,9 +154,9 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
                         parent.getIoPanel().setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED, ButtonState.DISABLED);
                         worker.execute();
                     }
-                }
-            } catch (IOException e) {
+                } catch (MalformedURLException e) {
                 e.printStackTrace();
+                return;
             }
         }
     }
@@ -215,7 +225,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
         sCloudEndpointAddressText.setText(sCloudEndpointAddressText.getText().trim());
         sAppIdText.setText(sAppIdText.getText().trim());
         sUserNameText.setText(sUserNameText.getText().trim());
-
+        sSavePasswordCheckbox.setSelected(false);
         if (anonymous) {
             sUserNameText.setText("");
             sPasswordText.setText("");
@@ -241,28 +251,14 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
             // if login is successful, let parent switch to the next card
             if (SyncWrapper.getInstance().isInitialized()) {
               if(!sUserNameText.getText().equals("")){
-                File propFile = new File(SuitcaseConst.PROPERTIES_FILE);
-                if(!propFile.exists()){
-                  try {
-                    propFile.createNewFile();
-                  } catch (IOException e) {
-                    e.printStackTrace();
-                  }
-                }
-                Properties appProperties = new Properties();
-                appProperties.put("username",sUserNameText.getText());
-                appProperties.put("app_id",sAppIdText.getText());
-                appProperties.put("server_url",sCloudEndpointAddressText.getText());
+                Preferences userPreferences = Preferences.userNodeForPackage(Suitcase.class);
+                userPreferences.put(SuitcaseConst.PREFERENCES_USERNAME_KEY,sUserNameText.getText());
+                userPreferences.put(SuitcaseConst.PREFERENCES_APP_ID_KEY,sAppIdText.getText());
+                userPreferences.put(SuitcaseConst.PREFERENCES_SERVER_URL_KEY,sCloudEndpointAddressText.getText());
                 if(sSavePasswordCheckbox.isSelected())
                 {
-                    appProperties.put("password", String.valueOf(sPasswordText.getPassword()));
+                    userPreferences.put(SuitcaseConst.PREFERENCES_PASSWORD_KEY, String.valueOf(sPasswordText.getPassword()));
                 }
-
-                try(FileOutputStream fileOutputStream = new FileOutputStream(SuitcaseConst.PROPERTIES_FILE)) {
-                    appProperties.store(fileOutputStream,"Save login credentials");
-                  } catch (IOException e) {
-                      e.printStackTrace();
-                  }
               }
                 ((CardLayout) getParent().getLayout()).next(getParent());
             }

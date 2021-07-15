@@ -1,5 +1,6 @@
 package org.opendatakit.suitcase.ui;
 
+import org.opendatakit.suitcase.Suitcase;
 import org.opendatakit.suitcase.model.CsvConfig;
 import org.opendatakit.suitcase.model.ODKCsv;
 import org.opendatakit.suitcase.net.*;
@@ -15,11 +16,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Properties;
+import java.util.prefs.Preferences;
 
 public class PullPanel extends JPanel implements PropertyChangeListener {
     private static final String DOWNLOAD_LABEL = "Download";
@@ -165,17 +162,8 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     }
 
     private void logout(){
-        File propFile = new File(SuitcaseConst.PROPERTIES_FILE);
-        if (propFile.exists()) {
-            Properties appProperties = new Properties();
-            try (FileInputStream fileInputStream = new FileInputStream(SuitcaseConst.PROPERTIES_FILE)) {
-                appProperties.load(fileInputStream);
-                appProperties.clear();
-                appProperties.store(new FileOutputStream(SuitcaseConst.PROPERTIES_FILE),"File to Store login credentials");
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        }
+        Preferences userPreferences = Preferences.userNodeForPackage(Suitcase.class);
+        userPreferences.remove(SuitcaseConst.PREFERENCES_PASSWORD_KEY);
         SyncWrapper.getInstance().reset();
         ((CardLayout) (parent.getParent().getLayout())).previous(parent.getParent());
     }
