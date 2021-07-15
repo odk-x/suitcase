@@ -58,7 +58,7 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
       String errMsg;
       if (cause instanceof JSONException) {
         SyncClientError syncClientError = new SyncClientError(e);
-        if(syncClientError.getStatusCode()==401){
+        if(syncClientError.getStatusCode() == 401){
           errMsg = BAD_CRED;
         }
         else {
