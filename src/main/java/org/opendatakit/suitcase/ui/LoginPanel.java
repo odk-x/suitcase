@@ -53,6 +53,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
           worker.addPropertyChangeListener(parent.getProgressBar());
           worker.addPropertyChangeListener(LoginPanel.this);
           worker.addPropertyChangeListener(parent.getIoPanel().getPullPanel());
+          worker.addPropertyChangeListener(parent.getIoPanel().getModifyPanel());
           worker.execute();
         } catch (MalformedURLException e1) {
           DialogUtils.showError(MessageString.BAD_URL, true);
@@ -147,7 +148,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
     JPanel inputPanel = new InputPanel(
             new String[] {"Cloud Endpoint Address", "App ID", "Username", "Password"},
             new JTextField[] {sCloudEndpointAddressText, sAppIdText, sUserNameText, sPasswordText},
-            new String[] {"https://cloud-endpoint-server-url.appspot.com", "default", "", ""}
+            new String[] {"https://opendatakit-tablesdemo.appspot.com", "default", "", ""}
     );
     logoAndInputPanel.add(inputPanel,gbc);
   }
