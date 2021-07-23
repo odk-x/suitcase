@@ -9,10 +9,12 @@ import java.awt.*;
 public class IOPanel extends JPanel {
   public static final String PULL_TAB_LABEL = "Download";
   public static final String PUSH_TAB_LABEL = "Upload";
+  public static final String MODIFY_TAB_LABEL = "Modify";
 
   private MainPanel parent;
   private PullPanel pullPanel;
   private PushPanel pushPanel;
+  private ModifyPanel modifyPanel;
 
   public IOPanel(MainPanel parent) {
     super(new GridBagLayout());
@@ -32,8 +34,10 @@ public class IOPanel extends JPanel {
     };
     pullPanel = new PullPanel(this);
     pushPanel = new PushPanel(this);
+    modifyPanel = new ModifyPanel(this);
     tabs.addTab(PULL_TAB_LABEL, pullPanel);
     tabs.addTab(PUSH_TAB_LABEL, pushPanel);
+    tabs.addTab(MODIFY_TAB_LABEL, modifyPanel);
 
     JSplitPane splitPane =
             new JSplitPane(JSplitPane.VERTICAL_SPLIT, tabs, parent.getProgressBar());
@@ -45,13 +49,15 @@ public class IOPanel extends JPanel {
   }
 
   public void disableAllButtons(){
-    pushPanel.setButtonsState(ButtonState.DISABLED,ButtonState.DISABLED);
-    pullPanel.setButtonsState(ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED);
+    pushPanel.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED);
+    pullPanel.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED);
+    modifyPanel.setButtonState(ButtonState.DISABLED, ButtonState.DISABLED);
   }
 
   public void enableAllButtons(){
     pushPanel.setButtonsState(ButtonState.ENABLED,ButtonState.ENABLED);
     pullPanel.setButtonsState(ButtonState.ENABLED,ButtonState.ENABLED,ButtonState.ENABLED,ButtonState.ENABLED,ButtonState.ENABLED);
+    modifyPanel.setButtonState(ButtonState.ENABLED, ButtonState.ENABLED);
   }
   public CloudEndpointInfo getCloudEndpointInfo() {
     return parent.getCloudEndpointInfo();
@@ -63,5 +69,9 @@ public class IOPanel extends JPanel {
 
   public PullPanel getPullPanel() {
     return pullPanel;
+  }
+
+  public ModifyPanel getModifyPanel() {
+    return modifyPanel;
   }
 }
