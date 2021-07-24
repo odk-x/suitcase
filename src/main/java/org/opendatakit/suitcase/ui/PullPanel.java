@@ -1,10 +1,8 @@
 package org.opendatakit.suitcase.ui;
 
-import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.opendatakit.suitcase.model.CsvConfig;
 import org.opendatakit.suitcase.model.ODKCsv;
 import org.opendatakit.suitcase.net.*;
-import org.apache.wink.json4j.JSONException;
 import org.opendatakit.suitcase.utils.ButtonAction;
 import org.opendatakit.suitcase.utils.ButtonState;
 import org.opendatakit.suitcase.utils.FieldsValidatorUtils;
@@ -65,7 +63,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         this.sAddAllButton = new JButton();
         this.sTableIdDropdown = new JComboBox<>();
         this.savePathChooser = new PathChooserPanel(
-                SAVE_PATH_LABEL,FILE_CHOOSER_LABEL ,FileUtils.getDefaultSavePath().toString()
+                SAVE_PATH_LABEL,FILE_CHOOSER_LABEL ,FileUtils.getDefaultSavePath().toString(), JFileChooser.DIRECTORIES_ONLY
         );
         this.tableIdsScrollPaneDimension = new Dimension(350,100);
         this.sRefreshButton.setBackground(LayoutConsts.BUTTON_BACKGROUND_COLOR);
@@ -156,6 +154,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
                 RefreshTask worker = new RefreshTask();
                 worker.addPropertyChangeListener(parent.getProgressBar());
                 worker.addPropertyChangeListener(PullPanel.this);
+                worker.addPropertyChangeListener(parent.getModifyPanel());
                 worker.execute();
             }
         });

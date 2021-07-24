@@ -38,7 +38,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
     this.sPushButton = new JButton();
     this.sResetButton = new JButton();
     this.dataPathChooser = new PathChooserPanel(
-            DATA_PATH_LABEL, FILE_CHOOSER_LABEL ,FileUtils.getDefaultUploadPath().toString()
+            DATA_PATH_LABEL, FILE_CHOOSER_LABEL ,FileUtils.getDefaultUploadPath().toString(), JFileChooser.DIRECTORIES_ONLY
     );
 
     GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
@@ -101,6 +101,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
                   sVersionPushText.getText(), true, null, null);
           worker.addPropertyChangeListener(parent.getProgressBar());
           worker.addPropertyChangeListener(PushPanel.this);
+          worker.addPropertyChangeListener(parent.getModifyPanel());
           worker.addPropertyChangeListener(parent.getPullPanel());         // Add pull panel as property change listener as list of table ids get updated.
           worker.execute();
         }

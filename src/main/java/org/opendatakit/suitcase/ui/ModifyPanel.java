@@ -130,7 +130,8 @@ public class ModifyPanel extends JPanel implements PropertyChangeListener {
                 parent.disableAllButtons();
                 DeleteTask worker = new DeleteTask((String) deleteComboBoxModel.getSelectedItem(), DEFAULT_DATA_VERSION);
                 worker.addPropertyChangeListener(parent.getProgressBar());
-                worker.addPropertyChangeListener(ModifyPanel.this);
+                worker.addPropertyChangeListener(parent.getModifyPanel());
+                worker.addPropertyChangeListener(parent.getPullPanel());
                 worker.execute();
                }
             }
