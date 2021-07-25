@@ -7,22 +7,25 @@ import org.assertj.swing.edt.FailOnThreadViolationRepaintManager;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JPanelFixture;
 import org.assertj.swing.testing.AssertJSwingTestCaseTemplate;
-import org.assertj.swing.timing.Pause;
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.opendatakit.suitcase.Suitcase;
+import org.opendatakit.suitcase.net.SyncWrapper;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.swing.finder.WindowFinder.findFrame;
 import static org.assertj.swing.launcher.ApplicationLauncher.application;
+import static org.awaitility.Awaitility.await;
 
 @RunWith(CacioTestRunner.class)
 public class LoginGUITest extends AssertJSwingTestCaseTemplate {
 
     private FrameFixture frame;
-    private static final int LOGIN_TIMEOUT = 15000;
     private String serverUrl = null;
     private String appId = null;
     private String userName = null;
@@ -51,6 +54,9 @@ public class LoginGUITest extends AssertJSwingTestCaseTemplate {
             }
         }).using(robot());
         this.frame.show();
+        Awaitility.setDefaultPollInterval(10, TimeUnit.MILLISECONDS);
+        Awaitility.setDefaultPollDelay(Duration.ZERO);
+        Awaitility.setDefaultTimeout(Duration.TEN_SECONDS);
     }
 
     @Test
@@ -68,7 +74,7 @@ public class LoginGUITest extends AssertJSwingTestCaseTemplate {
      ioPanelFixture.requireNotVisible();          // IOPanel should not be visible on starting the application
      frame.panel("main_panel").requireVisible();  // MainPanel should be visible on start of the application
      frame.button("login_button").click();
-     Pause.pause(LOGIN_TIMEOUT);                          // Wait for 15 seconds for login to complete
+     await().until(SyncWrapper.getInstance()::isInitialized);                          // Wait for login to complete
      ioPanelFixture.requireVisible();             // IOPanel should be visible after login
     }
 
