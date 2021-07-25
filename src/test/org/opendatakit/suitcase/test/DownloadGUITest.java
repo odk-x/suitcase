@@ -1,5 +1,6 @@
 package org.opendatakit.suitcase.test;
 
+import com.github.caciocavallosilano.cacio.ctc.junit.CacioTestRunner;
 import org.apache.wink.json4j.JSONObject;
 import org.assertj.swing.core.ComponentLookupScope;
 import org.assertj.swing.core.GenericTypeMatcher;
@@ -11,6 +12,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.opendatakit.suitcase.Suitcase;
 import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.opendatakit.suitcase.net.*;
@@ -29,6 +31,7 @@ import static org.assertj.swing.finder.WindowFinder.findFrame;
 import static org.assertj.swing.launcher.ApplicationLauncher.application;
 import static org.junit.Assert.assertEquals;
 
+@RunWith(CacioTestRunner.class)
 public class DownloadGUITest extends AssertJSwingTestCaseTemplate {
 
     private FrameFixture frame;
