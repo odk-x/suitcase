@@ -1,12 +1,10 @@
 package org.opendatakit.suitcase.ui;
 
+import org.opendatakit.suitcase.Suitcase;
 import org.opendatakit.suitcase.model.CsvConfig;
 import org.opendatakit.suitcase.model.ODKCsv;
 import org.opendatakit.suitcase.net.*;
-import org.opendatakit.suitcase.utils.ButtonAction;
-import org.opendatakit.suitcase.utils.ButtonState;
-import org.opendatakit.suitcase.utils.FieldsValidatorUtils;
-import org.opendatakit.suitcase.utils.FileUtils;
+import org.opendatakit.suitcase.utils.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,7 +15,8 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.prefs.Preferences;
+
 import static org.opendatakit.suitcase.ui.MessageString.getOverwriteCsvString;
 
 public class PullPanel extends JPanel implements PropertyChangeListener {
@@ -96,7 +95,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         this.add(pullDropdown, gbc);
         selectedTablesListPanel = new SelectedTablesListPanel(e -> {         //Action listener for remove button
             removeSelectedTableId(((RemoveButton)e.getSource()).getTableId());
-            }
+        }
         );
         JPanel tableOptionsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT,15,0));
 
@@ -257,17 +256,26 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         comboBoxModel.removeElement(comboBoxModel.getSelectedItem());
     }
 
+    private void logout(){
+        Preferences userPreferences = Preferences.userNodeForPackage(Suitcase.class);
+        userPreferences.remove(SuitcaseConst.PREFERENCES_PASSWORD_KEY);
+        SyncWrapper.getInstance().reset();
+        ((CardLayout) (parent.getParent().getLayout())).previous(parent.getParent());
+    }
+
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if (evt.getNewValue() != null && evt.getPropertyName().equals(SuitcaseSwingWorker.DONE_PROPERTY)) {
-            // re-enable download button and restore its label
-            sPullButton.setText(DOWNLOAD_LABEL);
-            parent.enableAllButtons();
-            ((DefaultComboBoxModel)comboBoxModel).removeAllElements();
-            final Set<String> allTableIds = parent.getCloudEndpointInfo().getAllTableId();
-            for (String s : allTableIds) {
-                if(!selectedTableIds.contains(s)){
-                    comboBoxModel.addElement(s);
+        if (evt.getNewValue() != null&&evt.getPropertyName()!=null) {
+            switch (evt.getPropertyName()) {
+                // re-enable download button and restore its label
+                case SuitcaseSwingWorker.DONE_PROPERTY: {
+                    sPullButton.setText(DOWNLOAD_LABEL);
+                    parent.enableAllButtons();
+                    break;
+                }
+                case SuitcaseSwingWorker.LOGIN_ERROR_PROPERTY: {
+                    parent.logout();
+                    break;
                 }
             }
         }

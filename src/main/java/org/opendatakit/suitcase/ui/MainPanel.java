@@ -18,6 +18,7 @@ public class MainPanel extends JPanel {
     this.ioPanel = new IOPanel(this);
     this.add(loginPanel);
     this.add(ioPanel);
+    loginPanel.loginFromPreferences();
   }
 
   public CloudEndpointInfo getCloudEndpointInfo() {
