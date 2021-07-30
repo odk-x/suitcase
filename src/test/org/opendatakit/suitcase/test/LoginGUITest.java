@@ -4,8 +4,8 @@ import com.github.caciocavallosilano.cacio.ctc.junit.CacioTestRunner;
 import org.assertj.swing.core.ComponentLookupScope;
 import org.assertj.swing.core.GenericTypeMatcher;
 import org.assertj.swing.edt.FailOnThreadViolationRepaintManager;
-import org.assertj.swing.fixture.FrameFixture;
-import org.assertj.swing.fixture.JPanelFixture;
+import org.assertj.swing.finder.JOptionPaneFinder;
+import org.assertj.swing.fixture.*;
 import org.assertj.swing.testing.AssertJSwingTestCaseTemplate;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
@@ -25,6 +25,10 @@ import static org.awaitility.Awaitility.await;
 @RunWith(CacioTestRunner.class)
 public class LoginGUITest extends AssertJSwingTestCaseTemplate {
 
+    private static final String PASSWORD_EMPTY_ERROR = "Password cannot be empty.";
+    private static final String SERVER_URL_EMPTY_ERROR = "Cloud Endpoint address cannot be empty.";
+    private static final String USERNAME_URL_EMPTY_ERROR = "Username cannot be empty.";
+    private static final String APP_ID_EMPTY_ERROR = "App Id cannot be empty.";
     private FrameFixture frame;
     private String serverUrl = null;
     private String appId = null;
@@ -57,6 +61,32 @@ public class LoginGUITest extends AssertJSwingTestCaseTemplate {
         Awaitility.setDefaultPollInterval(10, TimeUnit.MILLISECONDS);
         Awaitility.setDefaultPollDelay(Duration.ZERO);
         Awaitility.setDefaultTimeout(Duration.TEN_SECONDS);
+    }
+
+    @Test
+    public void loginErrorTest() {
+        JPanelFixture ioPanelFixture = frame.panel(new GenericTypeMatcher<JPanel>(JPanel.class) {
+            @Override
+            protected boolean isMatching(JPanel panel) {
+                return "io_panel".equals(panel.getName());
+            }
+        });
+        frame.textBox("username").setText("test");
+        frame.textBox("app_id").setText("test");
+        frame.textBox("password").setText("");
+        frame.textBox("server_url").setText("test");
+        frame.button("login_button").click();
+        JOptionPaneFixture jOptionPaneFixture = JOptionPaneFinder.findOptionPane(new GenericTypeMatcher<JOptionPane>(JOptionPane.class) {
+            @Override
+            protected boolean isMatching(JOptionPane pane) {
+                if (pane.isShowing()) {      // isShowing() should be true because multiple instances of path chooser is initialized across different tabs
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }).using(robot());
+        jOptionPaneFixture.requireMessage(PASSWORD_EMPTY_ERROR);
     }
 
     @Test
