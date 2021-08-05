@@ -258,7 +258,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
             sAnonLoginButton.setEnabled(true);
 
             // if login is successful, let parent switch to the next card
-            if (false) {
+            if (SyncWrapper.getInstance().isInitialized()) {
                 sPasswordText.setText("");  // Clear the password After login
                 if(!sUserNameText.getText().equals("")){
                     Preferences userPreferences = Preferences.userNodeForPackage(Suitcase.class);
