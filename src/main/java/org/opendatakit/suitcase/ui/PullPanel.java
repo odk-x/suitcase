@@ -256,13 +256,6 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         comboBoxModel.removeElement(comboBoxModel.getSelectedItem());
     }
 
-    private void logout(){
-        Preferences userPreferences = Preferences.userNodeForPackage(Suitcase.class);
-        userPreferences.remove(SuitcaseConst.PREFERENCES_PASSWORD_KEY);
-        SyncWrapper.getInstance().reset();
-        ((CardLayout) (parent.getParent().getLayout())).previous(parent.getParent());
-    }
-
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getNewValue() != null&&evt.getPropertyName()!=null) {
