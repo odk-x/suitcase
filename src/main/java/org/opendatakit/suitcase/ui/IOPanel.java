@@ -87,7 +87,7 @@ public class IOPanel extends JPanel {
     Preferences userPreferences = Preferences.userNodeForPackage(Suitcase.class);
     userPreferences.remove(SuitcaseConst.PREFERENCES_PASSWORD_KEY);
     SyncWrapper.getInstance().reset();
-    ((CardLayout) (parent.getLayout())).previous(parent);
+    ((CardLayout) (parent.getLayout())).first(parent);
   }
 
   private void buildMenu(){
