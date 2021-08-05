@@ -67,6 +67,22 @@ public class FieldsValidatorUtils {
     return errorMsgBuilder.length() > 0 ? errorMsgBuilder.toString().trim() : null;
   }
 
+  public static String checkDeleteFields(List<String> tableIds, CloudEndpointInfo cloudEndpointInfo) {
+    StringBuilder errorMsgBuilder = new StringBuilder();
+
+    if (tableIds.isEmpty()) {
+      errorMsgBuilder.append(TABLE_ID_EMPTY).append(NEW_LINE);
+    }
+
+    for(String tableId:tableIds) {
+      if (!cloudEndpointInfo.tableIdExists(tableId)) {
+        errorMsgBuilder.append(getBadTableIdString(tableId)).append(NEW_LINE);
+      }
+    }
+
+    return errorMsgBuilder.length() > 0 ? errorMsgBuilder.toString().trim() : null;
+  }
+
   public static String checkUploadFields(String version, String dataPath, String uploadOp) {
     StringBuilder errorMsgBuilder = new StringBuilder();
 

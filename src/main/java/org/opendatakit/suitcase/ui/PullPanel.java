@@ -15,6 +15,7 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.prefs.Preferences;
 
 import static org.opendatakit.suitcase.ui.MessageString.getOverwriteCsvString;
@@ -264,6 +265,12 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
                 case SuitcaseSwingWorker.DONE_PROPERTY: {
                     sPullButton.setText(DOWNLOAD_LABEL);
                     parent.enableAllButtons();
+                    ((DefaultComboBoxModel) comboBoxModel).removeAllElements();
+                    final Set<String> allTableIds = parent.getCloudEndpointInfo().getAllTableId();
+                    for (String s : allTableIds) {
+                        if(!selectedTableIds.contains(s))
+                        comboBoxModel.addElement(s);
+                    }
                     break;
                 }
                 case SuitcaseSwingWorker.LOGIN_ERROR_PROPERTY: {
