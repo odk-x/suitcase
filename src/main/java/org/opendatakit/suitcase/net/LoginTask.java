@@ -31,15 +31,11 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
 
     syncWrapper.reset();
     syncWrapper.init(cloudEndpointInfo);
-    try {
+    if(syncWrapper.isInitialized()) {
       publish(new ProgressBarStatus(0, UPDATING_TABLES_LIST, false));
       syncWrapper.updateTableList();
       publish(new ProgressBarStatus(0, UPDATING_PRIVILEGES_LIST, false));
       syncWrapper.setPrivilegesInfo();
-    }
-    catch (Exception e){
-      syncWrapper.reset();
-      throw e;
     }
     return null;
   }
@@ -55,8 +51,10 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
       e.printStackTrace();
       DialogUtils.showError(GENERIC_ERR, isGUI);
       returnCode = SuitcaseSwingWorker.errorCode;
+      SyncWrapper.getInstance().reset();
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();
+      SyncWrapper.getInstance().reset();
       String errMsg;
       if (cause instanceof JSONException) {
         SyncClientError syncClientError = new SyncClientError(e);
