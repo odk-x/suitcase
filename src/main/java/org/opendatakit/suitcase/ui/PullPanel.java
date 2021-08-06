@@ -1,6 +1,5 @@
 package org.opendatakit.suitcase.ui;
 
-import org.opendatakit.suitcase.Suitcase;
 import org.opendatakit.suitcase.model.CsvConfig;
 import org.opendatakit.suitcase.model.ODKCsv;
 import org.opendatakit.suitcase.net.*;
@@ -16,7 +15,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.prefs.Preferences;
 
 import static org.opendatakit.suitcase.ui.MessageString.getOverwriteCsvString;
 
@@ -154,7 +152,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
                 RefreshTask worker = new RefreshTask();
                 worker.addPropertyChangeListener(parent.getProgressBar());
                 worker.addPropertyChangeListener(PullPanel.this);
-                worker.addPropertyChangeListener(parent.getModifyPanel());
+                worker.addPropertyChangeListener(parent.getUpdatePanel());
                 worker.execute();
             }
         });

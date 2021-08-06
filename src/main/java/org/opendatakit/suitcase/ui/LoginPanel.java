@@ -59,7 +59,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
                     worker.addPropertyChangeListener(parent.getProgressBar());
                     worker.addPropertyChangeListener(LoginPanel.this);
                     worker.addPropertyChangeListener(parent.getIoPanel().getPullPanel());
-                    worker.addPropertyChangeListener(parent.getIoPanel().getModifyPanel());
+                    worker.addPropertyChangeListener(parent.getIoPanel().getUpdatePanel());
                     worker.execute();
                 } catch (MalformedURLException e1) {
                     DialogUtils.showError(MessageString.BAD_URL, true);

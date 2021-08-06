@@ -16,13 +16,13 @@ import java.util.prefs.Preferences;
 public class IOPanel extends JPanel {
   public static final String PULL_TAB_LABEL = "Download";
   public static final String PUSH_TAB_LABEL = "Upload";
-  public static final String MODIFY_TAB_LABEL = "Modify";
+  public static final String UPDATE_TAB_LABEL = "Update";
   public static final String SUITCASE_DOCUMENTATION_URL = "https://docs.odk-x.org/suitcase-intro/";
 
   private MainPanel parent;
   private PullPanel pullPanel;
   private PushPanel pushPanel;
-  private ModifyPanel modifyPanel;
+  private UpdatePanel updatePanel;
 
   public IOPanel(MainPanel parent) {
     super(new BorderLayout());
@@ -42,10 +42,10 @@ public class IOPanel extends JPanel {
     };
     pullPanel = new PullPanel(this);
     pushPanel = new PushPanel(this);
-    modifyPanel = new ModifyPanel(this);
+    updatePanel = new UpdatePanel(this);
     tabs.addTab(PULL_TAB_LABEL, pullPanel);
     tabs.addTab(PUSH_TAB_LABEL, pushPanel);
-    tabs.addTab(MODIFY_TAB_LABEL, modifyPanel);
+    tabs.addTab(UPDATE_TAB_LABEL, updatePanel);
     buildMenu();
     JSplitPane splitPane =
             new JSplitPane(JSplitPane.VERTICAL_SPLIT, tabs, parent.getProgressBar());
@@ -59,13 +59,13 @@ public class IOPanel extends JPanel {
   public void disableAllButtons(){
     pushPanel.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED);
     pullPanel.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED);
-    modifyPanel.setButtonState(ButtonState.DISABLED, ButtonState.DISABLED);
+    updatePanel.setButtonState(ButtonState.DISABLED, ButtonState.DISABLED);
   }
 
   public void enableAllButtons(){
     pushPanel.setButtonsState(ButtonState.ENABLED,ButtonState.ENABLED);
     pullPanel.setButtonsState(ButtonState.ENABLED,ButtonState.ENABLED,ButtonState.ENABLED,ButtonState.ENABLED,ButtonState.ENABLED);
-    modifyPanel.setButtonState(ButtonState.ENABLED, ButtonState.ENABLED);
+    updatePanel.setButtonState(ButtonState.ENABLED, ButtonState.ENABLED);
   }
   public CloudEndpointInfo getCloudEndpointInfo() {
     return parent.getCloudEndpointInfo();
@@ -79,8 +79,8 @@ public class IOPanel extends JPanel {
     return pullPanel;
   }
 
-  public ModifyPanel getModifyPanel() {
-    return modifyPanel;
+  public UpdatePanel getUpdatePanel() {
+    return updatePanel;
   }
 
   public void logout(){

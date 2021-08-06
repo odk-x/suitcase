@@ -101,7 +101,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
                   sVersionPushText.getText(), true, null, null);
           worker.addPropertyChangeListener(parent.getProgressBar());
           worker.addPropertyChangeListener(PushPanel.this);
-          worker.addPropertyChangeListener(parent.getModifyPanel());
+          worker.addPropertyChangeListener(parent.getUpdatePanel());
           worker.addPropertyChangeListener(parent.getPullPanel());         // Add pull panel as property change listener as list of table ids get updated.
           worker.execute();
         }

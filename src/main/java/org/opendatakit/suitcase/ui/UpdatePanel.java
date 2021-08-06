@@ -15,7 +15,7 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.Set;
 
-public class ModifyPanel extends JPanel implements PropertyChangeListener {
+public class UpdatePanel extends JPanel implements PropertyChangeListener {
     private static final String UPDATE_LABEL = "Update Table";
     private static final String DELETE_LABEL = "Delete Table";
     private static final String CSV_PATH_LABEL = "CSV Path";
@@ -33,7 +33,7 @@ public class ModifyPanel extends JPanel implements PropertyChangeListener {
     private MutableComboBoxModel<String> updateComboBoxModel;
     private MutableComboBoxModel<String> deleteComboBoxModel;
 
-    public ModifyPanel(IOPanel parent) {
+    public UpdatePanel(IOPanel parent) {
         super(new GridBagLayout());
 
         this.parent = parent;
@@ -110,7 +110,7 @@ public class ModifyPanel extends JPanel implements PropertyChangeListener {
                 String outcomePath = new File("").getAbsolutePath()+UPDATE_LOG_PATH_OPT;
                 UpdateTask worker = new UpdateTask(parent.getCloudEndpointInfo(), pathChooser.getPath(),DEFAULT_DATA_VERSION, (String) updateComboBoxModel.getSelectedItem(),outcomePath,true);
                 worker.addPropertyChangeListener(parent.getProgressBar());
-                worker.addPropertyChangeListener(ModifyPanel.this);
+                worker.addPropertyChangeListener(UpdatePanel.this);
                 worker.execute();
             }
         });
@@ -127,7 +127,7 @@ public class ModifyPanel extends JPanel implements PropertyChangeListener {
                 parent.disableAllButtons();
                 DeleteTask worker = new DeleteTask((String) deleteComboBoxModel.getSelectedItem(), DEFAULT_DATA_VERSION);
                 worker.addPropertyChangeListener(parent.getProgressBar());
-                worker.addPropertyChangeListener(parent.getModifyPanel());
+                worker.addPropertyChangeListener(parent.getUpdatePanel());
                 worker.addPropertyChangeListener(parent.getPullPanel());
                 worker.execute();
                }
