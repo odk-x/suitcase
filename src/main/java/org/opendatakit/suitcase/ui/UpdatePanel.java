@@ -27,14 +27,11 @@ public class ModifyPanel extends JPanel implements PropertyChangeListener {
     private JButton sDeleteButton;
     private PathChooserPanel pathChooser;
     private JComboBox<String> sTableIdDropdownForUpdate;
-    private DropdownPanel updateDropdown;
     private JComboBox<String> sTableIdDropdownForDelete;
-    private DropdownPanel deleteDropdown;
     // other instance vars
     private IOPanel parent;
     private MutableComboBoxModel<String> updateComboBoxModel;
     private MutableComboBoxModel<String> deleteComboBoxModel;
-    private String selectedTableID;
 
     public ModifyPanel(IOPanel parent) {
         super(new GridBagLayout());
