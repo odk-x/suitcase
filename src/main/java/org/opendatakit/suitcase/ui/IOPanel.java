@@ -17,14 +17,20 @@ public class IOPanel extends JPanel {
   public static final String PULL_TAB_LABEL = "Download";
   public static final String PUSH_TAB_LABEL = "Upload";
   public static final String UPDATE_TAB_LABEL = "Update";
+  public static final String CLEAR_TAB_LABEL = "Clear";
   public static final String SUITCASE_DOCUMENTATION_URL = "https://docs.odk-x.org/suitcase-intro/";
 
   private MainPanel parent;
   private PullPanel pullPanel;
   private PushPanel pushPanel;
   private UpdatePanel updatePanel;
+  private ClearPanel clearPanel;
 
-  public IOPanel(MainPanel parent) {
+    public ClearPanel getClearPanel() {
+        return clearPanel;
+    }
+
+    public IOPanel(MainPanel parent) {
     super(new BorderLayout());
 
     this.parent = parent;
@@ -43,9 +49,11 @@ public class IOPanel extends JPanel {
     pullPanel = new PullPanel(this);
     pushPanel = new PushPanel(this);
     updatePanel = new UpdatePanel(this);
+    clearPanel = new ClearPanel(this);
     tabs.addTab(PULL_TAB_LABEL, pullPanel);
     tabs.addTab(PUSH_TAB_LABEL, pushPanel);
     tabs.addTab(UPDATE_TAB_LABEL, updatePanel);
+    tabs.addTab(CLEAR_TAB_LABEL, clearPanel);
     buildMenu();
     JSplitPane splitPane =
             new JSplitPane(JSplitPane.VERTICAL_SPLIT, tabs, parent.getProgressBar());
@@ -57,15 +65,17 @@ public class IOPanel extends JPanel {
   }
 
   public void disableAllButtons(){
-    pushPanel.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED);
+    pushPanel.setButtonsState(ButtonState.DISABLED);
     pullPanel.setButtonsState(ButtonState.DISABLED, ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED,ButtonState.DISABLED);
-    updatePanel.setButtonState(ButtonState.DISABLED, ButtonState.DISABLED);
+    updatePanel.setButtonState(ButtonState.DISABLED);
+    clearPanel.setButtonState(ButtonState.DISABLED,ButtonState.DISABLED);
   }
 
   public void enableAllButtons(){
-    pushPanel.setButtonsState(ButtonState.ENABLED,ButtonState.ENABLED);
+    pushPanel.setButtonsState(ButtonState.ENABLED);
     pullPanel.setButtonsState(ButtonState.ENABLED,ButtonState.ENABLED,ButtonState.ENABLED,ButtonState.ENABLED,ButtonState.ENABLED);
-    updatePanel.setButtonState(ButtonState.ENABLED, ButtonState.ENABLED);
+    updatePanel.setButtonState(ButtonState.ENABLED);
+    clearPanel.setButtonState(ButtonState.ENABLED,ButtonState.ENABLED);
   }
   public CloudEndpointInfo getCloudEndpointInfo() {
     return parent.getCloudEndpointInfo();
