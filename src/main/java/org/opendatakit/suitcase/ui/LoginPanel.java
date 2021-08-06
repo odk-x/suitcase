@@ -259,7 +259,6 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
 
             // if login is successful, let parent switch to the next card
             if (SyncWrapper.getInstance().isInitialized()) {
-                sPasswordText.setText("");  // Clear the password After login
                 if(!sUserNameText.getText().equals("")){
                     Preferences userPreferences = Preferences.userNodeForPackage(Suitcase.class);
                     userPreferences.put(SuitcaseConst.PREFERENCES_USERNAME_KEY,sUserNameText.getText());
@@ -269,6 +268,8 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
                     {
                         userPreferences.put(SuitcaseConst.PREFERENCES_PASSWORD_KEY, String.valueOf(sPasswordText.getPassword()));
                     }
+
+                    sPasswordText.setText("");  // Clear the password After login
                 }
                 ((CardLayout) getParent().getLayout()).next(getParent());
             }
