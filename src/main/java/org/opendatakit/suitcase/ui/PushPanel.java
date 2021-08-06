@@ -17,14 +17,12 @@ import java.beans.PropertyChangeListener;
 public class PushPanel extends JPanel implements PropertyChangeListener {
   private static final String PUSH_LABEL = "Upload";
   private static final String PUSHING_LABEL = "Uploading";
-  private static final String RESET_LABEL = "Reset";
-  private static final String RESETTING_LABEL = "Resetting";
+
   private static final String DATA_PATH_LABEL = "Upload";
   private static final String FILE_CHOOSER_LABEL = "Select";
 
   private JTextField sVersionPushText;
   private JButton sPushButton;
-  private JButton sResetButton;
   private PathChooserPanel dataPathChooser;
 
   private IOPanel parent;
@@ -36,7 +34,6 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
 
     this.sVersionPushText = new JTextField(1);
     this.sPushButton = new JButton();
-    this.sResetButton = new JButton();
     this.dataPathChooser = new PathChooserPanel(
             DATA_PATH_LABEL, FILE_CHOOSER_LABEL ,FileUtils.getDefaultUploadPath().toString(), JFileChooser.DIRECTORIES_ONLY
     );
@@ -108,43 +105,11 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
       }
     });
 
-    sResetButton.setText(RESET_LABEL);
-    sResetButton.setPreferredSize(LayoutConsts.DEFAULT_BUTTON_DIMENSION);
-    sResetButton.setBackground(LayoutConsts.BUTTON_BACKGROUND_COLOR);
-    sResetButton.setForeground(LayoutConsts.BUTTON_FOREGROUND_COLOR);
-    sResetButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        sVersionPushText.setText(sVersionPushText.getText().trim());
-
-        String error = FieldsValidatorUtils.checkResetFields(sVersionPushText.getText());
-
-        if (error != null) {
-          DialogUtils.showError(error, true);
-        } else {
-
-          if(DialogUtils.promptConfirm("Are you sure you want to RESET? "
-                  + "This will delete ALL your data on the server?", true, false)) {
-            sResetButton.setText(RESETTING_LABEL);
-            parent.disableAllButtons();
-
-            ResetTask worker = new ResetTask(sVersionPushText.getText(), true);
-            worker.addPropertyChangeListener(parent.getProgressBar());
-            worker.addPropertyChangeListener(PushPanel.this);
-            worker.execute();
-          }
-
-        }
-      }
-    });
-
-    pushButtonPanel.add(sResetButton);
     pushButtonPanel.add(sPushButton);
   }
 
-  public void setButtonsState(ButtonState pushButtonState , ButtonState resetButtonState) {
+  public void setButtonsState(ButtonState pushButtonState) {
   sPushButton.setEnabled(pushButtonState.getButtonStateBooleanValue());
-  sResetButton.setEnabled(resetButtonState.getButtonStateBooleanValue());
   }
 
   @Override
@@ -152,7 +117,6 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
     if (evt.getNewValue() != null && evt.getPropertyName().equals(SuitcaseSwingWorker.DONE_PROPERTY)) {
       parent.enableAllButtons();
       sPushButton.setText(PUSH_LABEL);
-      sResetButton.setText(RESET_LABEL);
     }
   }
 }
