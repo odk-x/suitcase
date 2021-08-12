@@ -11,6 +11,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.net.URI;
 import java.util.prefs.Preferences;
 
 public class IOPanel extends JPanel {
@@ -114,11 +115,7 @@ public class IOPanel extends JPanel {
     documentationButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        try {
-          openWebpage(SUITCASE_DOCUMENTATION_URL);
-        } catch (IOException ex) {
-          ex.printStackTrace();
-        }
+        openWebpage(SUITCASE_DOCUMENTATION_URL);
       }
     });
     menu.add(logoutButton);
@@ -127,8 +124,14 @@ public class IOPanel extends JPanel {
     this.add(mb,BorderLayout.NORTH);
   }
 
-  private void openWebpage(String url) throws IOException {
-    Runtime rt = Runtime.getRuntime();
-    rt.exec("xdg-open "+url);
+  private void openWebpage(String url){
+    try{
+      if(Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+        Desktop.getDesktop().browse(new URI(url));
+      }
+    }
+    catch (Exception e){
+      e.printStackTrace();
+    }
   }
 }

@@ -35,6 +35,7 @@ public class ClearPanel extends JPanel implements PropertyChangeListener {
         this.sDeleteButton = new JButton();
         this.sResetButton = new JButton();
         this.sTableIdDropdownForDelete = new JComboBox<>();
+
         GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
         gbc.gridx = 0;
         gbc.gridy = GridBagConstraints.RELATIVE;
@@ -46,6 +47,7 @@ public class ClearPanel extends JPanel implements PropertyChangeListener {
                 "Select Table ID to Delete",
                 gbc
         );
+        sTableIdDropdownForDelete.setModel(deleteComboBoxModel);
 
         JPanel tableDeleteButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
 
@@ -89,6 +91,7 @@ public class ClearPanel extends JPanel implements PropertyChangeListener {
                     worker.addPropertyChangeListener(parent.getProgressBar());
                     worker.addPropertyChangeListener(parent.getUpdatePanel());
                     worker.addPropertyChangeListener(parent.getPullPanel());
+                    worker.addPropertyChangeListener(ClearPanel.this);
                     worker.execute();
                 }
             }
@@ -113,6 +116,8 @@ public class ClearPanel extends JPanel implements PropertyChangeListener {
 
                         ResetTask worker = new ResetTask(DEFAULT_DATA_VERSION, true);
                         worker.addPropertyChangeListener(parent.getProgressBar());
+                        worker.addPropertyChangeListener(parent.getPullPanel());
+                        worker.addPropertyChangeListener(parent.getUpdatePanel());
                         worker.addPropertyChangeListener(ClearPanel.this);
                         worker.execute();
                     }

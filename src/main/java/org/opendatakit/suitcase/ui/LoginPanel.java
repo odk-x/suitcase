@@ -155,6 +155,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
                     LoginTask worker = new LoginTask(cloudEndpointInfo, true);
                     worker.addPropertyChangeListener(parent.getProgressBar());
                     worker.addPropertyChangeListener(parent.getIoPanel().getPullPanel());
+                    worker.addPropertyChangeListener(parent.getIoPanel().getUpdatePanel());
                     worker.addPropertyChangeListener(parent.getIoPanel().getClearPanel());
                     ((CardLayout)getParent().getLayout()).next(getParent());
                     parent.getIoPanel().disableAllButtons();
