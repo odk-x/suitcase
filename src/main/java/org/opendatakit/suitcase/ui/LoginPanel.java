@@ -64,6 +64,10 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
                     worker.execute();
                 } catch (MalformedURLException e1) {
                     DialogUtils.showError(MessageString.BAD_URL, true);
+                    loginButton.setEnabled(true);
+                    anonLoginButton.setEnabled(true);
+                    anonLoginButton.setText(LOGIN_ANON_LABEL);
+                    sLoginButton.setText(LOGIN_LABEL);
                     e1.printStackTrace();
                 }
             }
