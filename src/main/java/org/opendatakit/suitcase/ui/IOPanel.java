@@ -35,7 +35,9 @@ public class IOPanel extends JPanel {
 
     this.parent = parent;
 
-    UIManager.put("TabbedPane.selected", LayoutConsts.BUTTON_BACKGROUND_COLOR);
+    // Set Color For Selected Tab.
+    // "TabbedPane.selected" is the default for the application.
+    UIManager.put("TabbedPane.selected", LayoutConsts.SELECTED_TAB_COLOR);
     JTabbedPane tabs = new JTabbedPane(){
       public Color getForegroundAt(int index){
         if(getSelectedIndex() == index){
@@ -101,7 +103,7 @@ public class IOPanel extends JPanel {
   }
 
   private void buildMenu(){
-    JMenuBar mb=new JMenuBar();
+    JMenuBar mb = new JMenuBar();
     JMenu menu = new JMenu("Menu");
     JMenuItem logoutButton = new JMenuItem("Logout");
     logoutButton.addActionListener(new ActionListener() {
@@ -120,7 +122,6 @@ public class IOPanel extends JPanel {
     menu.add(logoutButton);
     menu.addSeparator();
     JMenu submenu = new JMenu("Documentation");
-
     JMenuItem copyLink = new JMenuItem("Copy Link");
 
     copyLink.addActionListener(new ActionListener() {
