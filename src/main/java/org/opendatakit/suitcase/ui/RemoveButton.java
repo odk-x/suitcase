@@ -3,7 +3,6 @@ package org.opendatakit.suitcase.ui;
 import org.opendatakit.suitcase.utils.ButtonAction;
 
 import javax.swing.*;
-import java.awt.*;
 
 public class RemoveButton extends JButton {
     private final String tableId;
