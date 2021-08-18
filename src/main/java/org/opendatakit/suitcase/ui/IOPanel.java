@@ -10,7 +10,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.net.URI;
 import java.util.prefs.Preferences;
 
@@ -111,7 +110,7 @@ public class IOPanel extends JPanel {
         logout();
       }
     });
-    JMenuItem documentationButton = new JMenuItem("Documentation");
+    JMenuItem documentationButton = new JMenuItem("Open In Browser");
     documentationButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -119,7 +118,20 @@ public class IOPanel extends JPanel {
       }
     });
     menu.add(logoutButton);
-    menu.add(documentationButton);
+    menu.addSeparator();
+    JMenu submenu = new JMenu("Documentation");
+
+    JMenuItem copyLink = new JMenuItem("Copy Link");
+
+    copyLink.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        JOptionPane.showInputDialog("Copy the following link:",SUITCASE_DOCUMENTATION_URL);
+      }
+    });
+    submenu.add(copyLink);
+    submenu.add(documentationButton);
+    menu.add(submenu);
     mb.add(menu);
     this.add(mb,BorderLayout.NORTH);
   }
