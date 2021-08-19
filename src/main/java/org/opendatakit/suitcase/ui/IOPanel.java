@@ -18,6 +18,11 @@ public class IOPanel extends JPanel {
   public static final String PUSH_TAB_LABEL = "Upload";
   public static final String UPDATE_TAB_LABEL = "Update";
   public static final String CLEAR_TAB_LABEL = "Clear";
+  public static final String MENU_LABEL = "Menu";
+  public static final String LOGOUT_LABEL = "Logout";
+  public static final String DOCUMENTATION_LABEL = "Documentation";
+  public static final String OPEN_IN_BROWSER_LABEL = "Open in Browser";
+  public static final String COPY_LINK_LABEL = "Copy link";
   public static final String SUITCASE_DOCUMENTATION_URL = "https://docs.odk-x.org/suitcase-intro/";
 
   private MainPanel parent;
@@ -103,31 +108,42 @@ public class IOPanel extends JPanel {
   }
 
   private void buildMenu(){
+    // Set color of selected Item in Menu
+    UIManager.put("MenuItem.selectionBackground", LayoutConsts.SELECTED_MENU_ITEM_COLOR);
+    UIManager.put("MenuItem.selectionForeground", LayoutConsts.MENU_ITEM_FOREGROUND_COLOR);
+
+    // Two Items are there in  the menu. One for logout and another is a submenu for documentation
+    // Sub menu has two options to either copy the link or to open the Documentation in a browser
     JMenuBar mb = new JMenuBar();
-    JMenu menu = new JMenu("Menu");
-    JMenuItem logoutButton = new JMenuItem("Logout");
+    JMenu menu = new JMenu(MENU_LABEL);
+    JMenuItem logoutButton = new JMenuItem(LOGOUT_LABEL);
     logoutButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         logout();
       }
     });
-    JMenuItem documentationButton = new JMenuItem("Open In Browser");
-    documentationButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        openWebpage(SUITCASE_DOCUMENTATION_URL);
-      }
-    });
     menu.add(logoutButton);
     menu.addSeparator();
-    JMenu submenu = new JMenu("Documentation");
-    JMenuItem copyLink = new JMenuItem("Copy Link");
-
+    JMenu submenu = new JMenu(DOCUMENTATION_LABEL);
+    JMenuItem copyLink = new JMenuItem(COPY_LINK_LABEL);
+    JMenuItem documentationButton = new JMenuItem(OPEN_IN_BROWSER_LABEL);
+    documentationButton.addActionListener(new ActionListener() {
+          @Override
+          public void actionPerformed(ActionEvent e) {
+              openWebpage(SUITCASE_DOCUMENTATION_URL);
+          }
+    });
     copyLink.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        JOptionPane.showInputDialog("Copy the following link:",SUITCASE_DOCUMENTATION_URL);
+          String[] options = {"OK"};
+          JPanel panel = new JPanel();
+          JLabel lbl = new JLabel("Copy the following Link:");
+          JTextField txt = new JTextField(SUITCASE_DOCUMENTATION_URL);
+          panel.add(lbl);
+          panel.add(txt);
+          JOptionPane.showOptionDialog(null, panel, "Copy Link", JOptionPane.NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options , options[0]);
       }
     });
     submenu.add(copyLink);
