@@ -33,7 +33,7 @@ public class Suitcase {
           Font defaultLabelFont;
           try(InputStream resourceStream = this.getClass().getResourceAsStream(LayoutConsts.DEFAULT_LABEL_FONT_FILE)) {
             defaultLabelFont = Font.createFont(Font.TRUETYPE_FONT, resourceStream);
-            UIManager.put("Label.font", defaultLabelFont.deriveFont(Font.PLAIN));
+            UIManager.put("Label.font", defaultLabelFont.deriveFont(Font.PLAIN,14));
           } catch (FontFormatException e) {
             e.printStackTrace();
           } catch (IOException e) {
