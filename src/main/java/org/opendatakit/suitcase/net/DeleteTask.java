@@ -21,7 +21,7 @@ public class DeleteTask extends SuitcaseSwingWorker<Void>{
     }
 
     @Override
-    protected Void doInBackground() throws IOException, JSONException {
+    protected Void doInBackground() throws Exception {
         setString(IN_PROGRESS_STRING);
 
         SyncWrapper syncWrapper = SyncWrapper.getInstance();
@@ -37,8 +37,11 @@ public class DeleteTask extends SuitcaseSwingWorker<Void>{
             syncWrapper.deleteFile(filePath, version);
         }
 
-        syncWrapper.deleteTableDefinition(tableID);
+        int result = syncWrapper.deleteTableDefinition(tableID);
 
+        if(result != 200) {
+            throw new Exception("Unknown Error Occurred");
+        }
         return null;
     }
 
