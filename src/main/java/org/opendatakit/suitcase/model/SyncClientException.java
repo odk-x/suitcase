@@ -1,12 +1,12 @@
 package org.opendatakit.suitcase.model;
 
-public class SyncClientError {
+public class SyncClientException extends Exception{
     private static final int UNKNOWN_ERROR_STATUS_CODE = 500;
     private static final String UNKNOWN_ERROR_MESSAGE = "Unknown error occurred";
     private final int statusCode;
     private final String message;
 
-    public SyncClientError(Exception e) {
+    public SyncClientException(Exception e) {
         String errorMsg = e.getCause().getMessage();
         int startIndex = errorMsg.indexOf("Status");
         if (startIndex != -1) {

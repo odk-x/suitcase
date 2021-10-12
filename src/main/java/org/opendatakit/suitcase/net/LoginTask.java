@@ -2,7 +2,7 @@ package org.opendatakit.suitcase.net;
 
 import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.apache.wink.json4j.JSONException;
-import org.opendatakit.suitcase.model.SyncClientError;
+import org.opendatakit.suitcase.model.SyncClientException;
 import org.opendatakit.suitcase.ui.DialogUtils;
 import org.opendatakit.suitcase.ui.ProgressBarStatus;
 import org.opendatakit.suitcase.ui.SuitcaseProgressBar;
@@ -57,7 +57,7 @@ public class LoginTask extends SuitcaseSwingWorker<Void> {
       SyncWrapper.getInstance().reset();
       String errMsg;
       if (cause instanceof JSONException) {
-        SyncClientError syncClientError = new SyncClientError(e);
+        SyncClientException syncClientError = new SyncClientException(e);
         if(syncClientError.getStatusCode() == 401){
           errMsg = BAD_CRED;
         }
