@@ -1,3 +1,3 @@
 mvn install:install-file -Dpackaging=pom -Dfile=sync-endpoint-2.1.8.pom -DpomFile=sync-endpoint-2.1.8.pom
 mvn install:install-file -Dfile=odk-rest-interface-2.1.8.jar -Djavadoc=odk-rest-interface-2.1.8-javadoc.jar -Dsources=odk-rest-interface-2.1.8-sources.jar -DgroupId=org.opendatakit -DartifactId=odk-rest-interface -Dversion=2.1.8 -Dpackaging=jar -DupdateReleaseInfo=true
-mvn install:install-file -Dfile=sync-client-2.1.8.jar -Djavadoc=sync-client-2.1.8-javadoc.jar -Dsources=sync-client-2.1.8-sources.jar -DpomFile=sync-client-2.1.8.pom -Dpackaging=jar -DupdateReleaseInfo=true
+mvn install:install-file -Dfile=sync-client-2.1.9p.jar -Djavadoc=sync-client-2.1.9p-javadoc.jar -Dsources=sync-client-2.1.9p-sources.jar -DpomFile=sync-client-2.1.9p.pom -Dpackaging=jar -DupdateReleaseInfo=true
