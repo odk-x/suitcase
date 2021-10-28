@@ -103,6 +103,7 @@ public class ClearPanel extends JPanel implements PropertyChangeListener {
     private void buildResetButtonArea(JPanel tableOptionsPanel, GridBagConstraints gbc){
 
         sResetButton.setText(RESET_LABEL);
+        sResetButton.setName("reset_button");
         sResetButton.setBackground(LayoutConsts.WARNING_BACKGROUND_COLOR);
         sResetButton.setForeground(LayoutConsts.BUTTON_FOREGROUND_COLOR);
         sResetButton.addActionListener(new ActionListener() {
