@@ -219,8 +219,8 @@
         <!-- Test Dependencies -->
 
         <dependency>
-    		<groupId>junit</groupId>
-    		<artifactId>junit</artifactId>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
             <version>${junit.version}</version> <!-- Or whatever JUnit you're using. -->
             <scope>test</scope>
 		</dependency>
