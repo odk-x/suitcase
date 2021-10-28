@@ -63,6 +63,8 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
         this.savePathChooser = new PathChooserPanel(
                 SAVE_PATH_LABEL,FILE_CHOOSER_LABEL ,FileUtils.getDefaultSavePath().toString(), JFileChooser.DIRECTORIES_ONLY
         );
+
+        this.sTableIdText.setName("table_id_text");
         this.tableIdsScrollPaneDimension = new Dimension(350,100);
         this.sRefreshButton.setBackground(LayoutConsts.BUTTON_BACKGROUND_COLOR);
         this.sRefreshButton.setForeground(LayoutConsts.BUTTON_FOREGROUND_COLOR);
@@ -177,6 +179,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
     private void buildPullButtonArea(JPanel pullButtonPanel) {
         sPullButton.setText(DOWNLOAD_LABEL);
         sPullButton.setPreferredSize(LayoutConsts.DEFAULT_BUTTON_DIMENSION);
+        sPullButton.setName("download_button");
         sPullButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

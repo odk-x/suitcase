@@ -39,7 +39,6 @@ public class IOPanel extends JPanel {
     super(new BorderLayout());
 
     this.parent = parent;
-
     // Set Color For Selected Tab.
     // "TabbedPane.selected" is the default for the application.
     UIManager.put("TabbedPane.selected", LayoutConsts.SELECTED_TAB_COLOR);
@@ -53,6 +52,10 @@ public class IOPanel extends JPanel {
         }
       }
     };
+    this.setName("io_panel");
+    tabs.setName("tabs");
+    
+
     pullPanel = new PullPanel(this);
     pushPanel = new PushPanel(this);
     updatePanel = new UpdatePanel(this);

@@ -77,6 +77,7 @@ public class PushPanel extends JPanel implements PropertyChangeListener {
   private void buildPushButtonArea(JPanel pushButtonPanel) {
 
     sPushButton.setText(PUSH_LABEL);
+    sPushButton.setName("upload_button");
     sPushButton.setPreferredSize(LayoutConsts.DEFAULT_BUTTON_DIMENSION);
     sPushButton.setBackground(LayoutConsts.BUTTON_BACKGROUND_COLOR);
     sPushButton.setForeground(LayoutConsts.BUTTON_FOREGROUND_COLOR);
