@@ -64,7 +64,7 @@ public class PullPanel extends JPanel implements PropertyChangeListener {
                 SAVE_PATH_LABEL,FILE_CHOOSER_LABEL ,FileUtils.getDefaultSavePath().toString(), JFileChooser.DIRECTORIES_ONLY
         );
 
-        this.sTableIdText.setName("table_id_text");
+        this.sTableIdDropdown.setName("table_id_text");
         this.tableIdsScrollPaneDimension = new Dimension(350,100);
         this.sRefreshButton.setBackground(LayoutConsts.BUTTON_BACKGROUND_COLOR);
         this.sRefreshButton.setForeground(LayoutConsts.BUTTON_FOREGROUND_COLOR);
