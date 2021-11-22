@@ -10,6 +10,8 @@ import org.opendatakit.suitcase.utils.FieldsValidatorUtils;
 import org.opendatakit.suitcase.utils.FileUtils;
 
 import java.net.MalformedURLException;
+import java.util.Collections;
+import java.util.List;
 
 import static org.opendatakit.suitcase.ui.MessageString.*;
 
@@ -17,12 +19,13 @@ public class SuitcaseCLI {
 
   public static final int PARAM_ERROR_CODE = 1;
   private enum Operation {
-    DOWNLOAD, UPLOAD, UPDATE, RESET, INFO, TABLE_OP, PERMISSION
+    DOWNLOAD, UPLOAD, UPDATE, RESET, INFO, TABLE_OP, PERMISSION, DELETE
   }
 
   private static final String DOWNLOAD_OP = "download";
   private static final String UPLOAD_OP = "upload";
   private static final String RESET_OP = "reset";
+  private static final String DELETE_OP = "delete";
   private static final String UPDATE_OP = "update";
   private static final String TABLE_OP = "tableOp";
   private static final String PERMISSION_OP = "permission";
@@ -102,19 +105,15 @@ public class SuitcaseCLI {
 
     switch (operation) {
     case DOWNLOAD:
-      AttachmentManager attMngr = new AttachmentManager(cloudEndpointInfo, tableId, path);
-      ODKCsv csv = null;
-      try {
-        csv = new ODKCsv(attMngr, cloudEndpointInfo, tableId);
-      } catch (JSONException e) { /* should never happen */}
       CsvConfig config = new CsvConfig(downloadAttachment, scanFormatting, extraMetadata);
 
-      error = FieldsValidatorUtils.checkDownloadFields(tableId, path, cloudEndpointInfo);
+      List<String> tableIds = Collections.singletonList(tableId);
+      error = FieldsValidatorUtils.checkDownloadFields(tableIds, path, cloudEndpointInfo);
       if (error != null) {
         DialogUtils.showError(error, false);
         retCode = PARAM_ERROR_CODE;
       } else {
-        retCode = new DownloadTask(cloudEndpointInfo, csv, config, path, false).blockingExecute();
+        retCode = new DownloadTask(cloudEndpointInfo, tableIds, config, path, false).blockingExecute();
       }
       break;
     case UPLOAD:
@@ -137,7 +136,16 @@ public class SuitcaseCLI {
         retCode = new ResetTask(version, false).blockingExecute();
       }
       break;
-
+     case DELETE:
+       List<String> tableIdsList = Collections.singletonList(tableId);
+       error = FieldsValidatorUtils.checkDeleteFields(tableIdsList,cloudEndpointInfo);
+       if (error != null) {
+         DialogUtils.showError(error, false);
+         retCode = PARAM_ERROR_CODE;
+       } else {
+         retCode = new DeleteTask(tableId,version).blockingExecute();
+       }
+       break;
     case UPDATE:
       error = FieldsValidatorUtils.checkUpdateFields(tableId, path, version);
 
@@ -182,6 +190,7 @@ public class SuitcaseCLI {
     //operations
     OptionGroup operation = new OptionGroup();
     operation.addOption(new Option(DOWNLOAD_OP, false, "Download csv"));
+    operation.addOption(new Option(DELETE_OP,false,"Delete a table from the server"));
     operation.addOption(new Option(UPLOAD_OP, false, "Upload one file or all files in directory"));
     operation.addOption(new Option(RESET_OP, false, "Reset server"));
     operation.addOption(new Option(UPDATE_OP, false, "Update tableId using csv specified by path"));
@@ -272,6 +281,8 @@ public class SuitcaseCLI {
         operation = Operation.TABLE_OP;
       } else if (line.hasOption(PERMISSION_OP)) {
         operation = Operation.PERMISSION;
+      } else if (line.hasOption(DELETE_OP)) {
+        operation = Operation.DELETE;
       }
       else {
         operation = Operation.DOWNLOAD;

@@ -1,10 +1,12 @@
 package org.opendatakit.suitcase.ui;
 
+import org.opendatakit.suitcase.Suitcase;
 import org.opendatakit.suitcase.model.CloudEndpointInfo;
 import org.opendatakit.suitcase.net.LoginTask;
 import org.opendatakit.suitcase.net.SuitcaseSwingWorker;
 import org.opendatakit.suitcase.net.SyncWrapper;
 import org.opendatakit.suitcase.utils.FieldsValidatorUtils;
+import org.opendatakit.suitcase.utils.SuitcaseConst;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -16,6 +18,10 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
 public class LoginPanel extends JPanel implements PropertyChangeListener {
   private class LoginActionListener implements ActionListener {
@@ -33,8 +39,8 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
     public void actionPerformed(ActionEvent e) {
       sanitizeFields(isAnon);
       String error = FieldsValidatorUtils.checkLoginFields(
-          sCloudEndpointAddressText.getText(), sAppIdText.getText(), sUserNameText.getText(),
-          String.valueOf(sPasswordText.getPassword()), isAnon
+              sCloudEndpointAddressText.getText(), sAppIdText.getText(), sUserNameText.getText(),
+              String.valueOf(sPasswordText.getPassword()), isAnon
       );
 
       if (error != null) {
@@ -52,9 +58,16 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
           LoginTask worker = new LoginTask(cloudEndpointInfo, true);
           worker.addPropertyChangeListener(parent.getProgressBar());
           worker.addPropertyChangeListener(LoginPanel.this);
+          worker.addPropertyChangeListener(parent.getIoPanel().getPullPanel());
+          worker.addPropertyChangeListener(parent.getIoPanel().getUpdatePanel());
+          worker.addPropertyChangeListener(parent.getIoPanel().getClearPanel());
           worker.execute();
         } catch (MalformedURLException e1) {
           DialogUtils.showError(MessageString.BAD_URL, true);
+          loginButton.setEnabled(true);
+          anonLoginButton.setEnabled(true);
+          anonLoginButton.setText(LOGIN_ANON_LABEL);
+          sLoginButton.setText(LOGIN_LABEL);
           e1.printStackTrace();
         }
       }
@@ -64,6 +77,7 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
   private static final String LOGIN_LABEL = "Login";
   private static final String LOGIN_ANON_LABEL = "Anonymous Login";
   private static final String LOGIN_LOADING_LABEL = "Loading";
+  private static final String DEFAULT_APP_ID = "default";
   private static final String LOGO_DESCRIPTION = "ODK-X Logo";
 
   private CloudEndpointInfo cloudEndpointInfo;
@@ -73,6 +87,8 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
   private JPasswordField sPasswordText;
   private JButton sLoginButton;
   private JButton sAnonLoginButton;
+  private JCheckBox sUseDefaultAppIdCheckbox;
+  private JCheckBox sSavePasswordCheckbox;
 
   private MainPanel parent;
 
@@ -87,6 +103,8 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
     this.sPasswordText = new JPasswordField(1);
     this.sLoginButton = new JButton();
     this.sAnonLoginButton = new JButton();
+    this.sUseDefaultAppIdCheckbox = new JCheckBox();
+    this.sSavePasswordCheckbox = new JCheckBox();
 
     GridBagConstraints gbc = LayoutDefault.getDefaultGbc();
     gbc.gridx = 0;
@@ -94,29 +112,106 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
 
     JPanel logoAndInputPanel = new JPanel(new GridBagLayout());
     buildInputPanel(logoAndInputPanel);
-    gbc.weighty = 85;
+    gbc.weighty = 75;
     gbc.insets = new Insets(80, 40, 0, 40);
     this.add(logoAndInputPanel, gbc);
 
+    buildCheckBoxArea(gbc);
     JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 20, 0));
     buildLoginButtonArea(buttonPanel);
     gbc.weighty = 15;
     gbc.insets = new Insets(20, LayoutConsts.WINDOW_WIDTH / 2, 80, 40);
     this.add(buttonPanel, gbc);
+    this.sPasswordText.setName("password");
+    this.sCloudEndpointAddressText.setName("server_url");
+    this.sAppIdText.setName("app_id");
+    this.sUserNameText.setName("username");
+    this.sLoginButton.setName("login_button");
+    this.sAnonLoginButton.setName("anon_login_button");
   }
 
   public CloudEndpointInfo getCloudEndpointInfo() {
     return this.cloudEndpointInfo;
   }
 
+  public void loginFromPreferences(){
+    // Auto login if credentials are present
+    Preferences userPreferences = Preferences.userNodeForPackage(Suitcase.class);
+    List<String> keys;
+
+    try {
+      keys = Arrays.asList(userPreferences.keys());
+    } catch (BackingStoreException e) {
+      e.printStackTrace();
+      return;
+    }
+    if(keys.contains(SuitcaseConst.PREFERENCES_USERNAME_KEY)&&
+            keys.contains(SuitcaseConst.PREFERENCES_SERVER_URL_KEY)&&
+            keys.contains(SuitcaseConst.PREFERENCES_APP_ID_KEY)){
+      try {
+        String username = userPreferences.get(SuitcaseConst.PREFERENCES_USERNAME_KEY,"");
+        String serverUrl = userPreferences.get(SuitcaseConst.PREFERENCES_SERVER_URL_KEY,"");
+        String appId = userPreferences.get(SuitcaseConst.PREFERENCES_APP_ID_KEY,"");
+        if (!keys.contains(SuitcaseConst.PREFERENCES_PASSWORD_KEY)) {
+          sUserNameText.setText(username);
+          sAppIdText.setText(appId);
+          sCloudEndpointAddressText.setText(serverUrl);
+        } else {
+          String password = userPreferences.get(SuitcaseConst.PREFERENCES_PASSWORD_KEY,"");
+          sUserNameText.setText(username);
+          sAppIdText.setText(appId);
+          sCloudEndpointAddressText.setText(serverUrl);
+          this.cloudEndpointInfo = new CloudEndpointInfo(serverUrl, appId, username, password);
+          LoginTask worker = new LoginTask(cloudEndpointInfo, true);
+          worker.addPropertyChangeListener(parent.getProgressBar());
+          worker.addPropertyChangeListener(parent.getIoPanel().getPullPanel());
+          worker.addPropertyChangeListener(parent.getIoPanel().getUpdatePanel());
+          worker.addPropertyChangeListener(parent.getIoPanel().getClearPanel());
+          ((CardLayout)getParent().getLayout()).next(getParent());
+          parent.getIoPanel().disableAllButtons();
+          worker.execute();
+        }
+      } catch (MalformedURLException e) {
+        e.printStackTrace();
+        return;
+      }
+    }
+  }
+
+  private void buildCheckBoxArea(GridBagConstraints gbc){
+    sUseDefaultAppIdCheckbox.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent actionEvent) {
+        if(sUseDefaultAppIdCheckbox.isSelected()){
+          sAppIdText.setText(DEFAULT_APP_ID);
+          sAppIdText.setEditable(false);
+        }
+        else {
+          sAppIdText.setEditable(true);
+        }
+      }
+    });
+    sUseDefaultAppIdCheckbox.setSelected(true);
+    sAppIdText.setEditable(false);
+    JPanel checkBoxPanel = new CheckboxPanel(new String[]{"Use default app id", "Save password"},
+            new JCheckBox[]{sUseDefaultAppIdCheckbox, sSavePasswordCheckbox}, 1, 2);
+    gbc.weighty = 10;
+    gbc.insets = new Insets(20, LayoutConsts.WINDOW_WIDTH / 2, 20, 40);
+    this.add(checkBoxPanel,gbc);
+  }
+
   private void buildLoginButtonArea(JPanel buttonsPanel) {
     // Define buttons
     sLoginButton.setText(LOGIN_LABEL);
     sLoginButton.addActionListener(new LoginActionListener(false, sLoginButton, sAnonLoginButton));
-
+    sLoginButton.setBorder(LayoutConsts.BUTTON_BORDER);
+    sLoginButton.setBackground(LayoutConsts.BUTTON_BACKGROUND_COLOR);
+    sLoginButton.setForeground(LayoutConsts.BUTTON_FOREGROUND_COLOR);
     sAnonLoginButton.setText(LOGIN_ANON_LABEL);
     sAnonLoginButton.addActionListener(new LoginActionListener(true, sLoginButton, sAnonLoginButton));
-
+    sAnonLoginButton.setBackground(LayoutConsts.BUTTON_BACKGROUND_COLOR);
+    sAnonLoginButton.setForeground(LayoutConsts.BUTTON_FOREGROUND_COLOR);
+    sAnonLoginButton.setBorder(LayoutConsts.BUTTON_BORDER);
     buttonsPanel.add(sLoginButton);
     buttonsPanel.add(sAnonLoginButton);
   }
@@ -140,9 +235,9 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
     }
     gbc.weightx=80;
     JPanel inputPanel = new InputPanel(
-            new String[] {"Cloud Endpoint Address", "App ID", "Username", "Password"},
-            new JTextField[] {sCloudEndpointAddressText, sAppIdText, sUserNameText, sPasswordText},
-            new String[] {"https://cloud-endpoint-server-url.appspot.com", "default", "", ""}
+            new String[] {"Cloud Endpoint Address", "Username", "Password", "App ID"},
+            new JTextField[] {sCloudEndpointAddressText, sUserNameText, sPasswordText, sAppIdText},
+            new String[] {"https://opendatakit-tablesdemo.appspot.com","", "", "default"}
     );
     logoAndInputPanel.add(inputPanel,gbc);
   }
@@ -161,8 +256,8 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
 
   private void buildCloudEndpointInfo() throws MalformedURLException {
     this.cloudEndpointInfo = new CloudEndpointInfo(
-        sCloudEndpointAddressText.getText(), sAppIdText.getText(), sUserNameText.getText(),
-        String.valueOf(sPasswordText.getPassword())
+            sCloudEndpointAddressText.getText(), sAppIdText.getText(), sUserNameText.getText(),
+            String.valueOf(sPasswordText.getPassword())
     );
   }
 
@@ -177,6 +272,18 @@ public class LoginPanel extends JPanel implements PropertyChangeListener {
 
       // if login is successful, let parent switch to the next card
       if (SyncWrapper.getInstance().isInitialized()) {
+        if(!sUserNameText.getText().equals("")){
+          Preferences userPreferences = Preferences.userNodeForPackage(Suitcase.class);
+          userPreferences.put(SuitcaseConst.PREFERENCES_USERNAME_KEY,sUserNameText.getText());
+          userPreferences.put(SuitcaseConst.PREFERENCES_APP_ID_KEY,sAppIdText.getText());
+          userPreferences.put(SuitcaseConst.PREFERENCES_SERVER_URL_KEY,sCloudEndpointAddressText.getText());
+          if(sSavePasswordCheckbox.isSelected())
+          {
+            userPreferences.put(SuitcaseConst.PREFERENCES_PASSWORD_KEY, String.valueOf(sPasswordText.getPassword()));
+          }
+
+          sPasswordText.setText("");  // Clear the password After login
+        }
         ((CardLayout) getParent().getLayout()).next(getParent());
       }
     }
