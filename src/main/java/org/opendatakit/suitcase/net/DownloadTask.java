@@ -6,6 +6,7 @@ import org.opendatakit.suitcase.model.ODKCsv;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
 import org.opendatakit.aggregate.odktables.rest.RFC4180CsvWriter;
+import org.opendatakit.suitcase.model.ScanJsonException;
 import org.opendatakit.sync.client.SyncClient;
 import org.opendatakit.suitcase.ui.DialogUtils;
 import org.opendatakit.suitcase.ui.ProgressBarStatus;
@@ -16,40 +17,41 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static org.opendatakit.suitcase.ui.MessageString.*;
 
 public class DownloadTask extends SuitcaseSwingWorker<Void> {
-  private static final String RETRIEVING_ROW = "Retrieving rows";
-  private static final String PROCESSING_ROW = "Processing and writing data";
+  private static final String RETRIEVING_ROW_PREFIX = "Retrieving rows for ";
+  private static final String PROCESSING_ROW_PREFIX = "Processing and writing data for ";
 
   private CloudEndpointInfo cloudEndpointInfo;
-  private ODKCsv csv;
   private CsvConfig csvConfig;
   private String savePath;
+  private List<String> tableIds;
   private boolean isGUI;
 
-  public DownloadTask(CloudEndpointInfo cloudEndpointInfo, ODKCsv csv, CsvConfig csvConfig, String savePath,
+  public DownloadTask(CloudEndpointInfo cloudEndpointInfo, List<String> tableIds, CsvConfig csvConfig, String savePath,
                       boolean isGUI) {
     super();
-
     this.cloudEndpointInfo = cloudEndpointInfo;
-    this.csv = csv;
+    this.tableIds = tableIds;
     this.csvConfig = csvConfig;
     this.savePath = savePath;
     this.isGUI = isGUI;
   }
 
-  @Override
-  protected Void doInBackground() throws IOException, JSONException {
+  protected Void doInBackground() throws IOException, JSONException, ScanJsonException {
     //assume csv has already been initialized by caller of this worker
-
     // check existing data, skip check for CLI
-    if (FileUtils.isDownloaded(cloudEndpointInfo, csv.getTableId(), csvConfig, savePath) &&
-        DialogUtils.promptConfirm(OVERWRITE_CSV, isGUI, !isGUI)) {
-      FileUtils.deleteCsv(cloudEndpointInfo, csvConfig, csv.getTableId(), savePath);
-    }
+
+    for(String tableId:tableIds){
+      // create a new attachment manager for every table id
+      AttachmentManager attachMngr = new AttachmentManager(cloudEndpointInfo, tableId, savePath);
+      // create a new ODKCsv for every table id
+      ODKCsv csv = new ODKCsv(attachMngr,cloudEndpointInfo,tableId);
+
 
     // then create directory structure when needed
     FileUtils.createDirectory(cloudEndpointInfo, csvConfig, csv.getTableId(), savePath);
@@ -58,7 +60,7 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
 
     // retrieve data from Cloud Endpoint and store in csv
     if (csv.getSize() == 0) {
-      publish(new ProgressBarStatus(0, RETRIEVING_ROW, true));
+      publish(new ProgressBarStatus(0, RETRIEVING_ROW_PREFIX+tableId, true));
 
       JSONObject rows;
       String cursor = null;
@@ -71,14 +73,14 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
     }
 
     // write out csv to file
-    publish(new ProgressBarStatus(0, PROCESSING_ROW, false));
+    publish(new ProgressBarStatus(0, PROCESSING_ROW_PREFIX + tableId, false));
     RFC4180CsvWriter csvWriter = null;
     try {
       csvWriter = new RFC4180CsvWriter(Files.newBufferedWriter(
-          FileUtils.getCSVPath(cloudEndpointInfo, csv.getTableId(), csvConfig, savePath),
-          StandardCharsets.UTF_8,
-          StandardOpenOption.CREATE,
-          StandardOpenOption.TRUNCATE_EXISTING
+              FileUtils.getCSVPath(cloudEndpointInfo, csv.getTableId(), csvConfig, savePath),
+              StandardCharsets.UTF_8,
+              StandardOpenOption.CREATE,
+              StandardOpenOption.TRUNCATE_EXISTING
       ));
 
       //Write header then rows
@@ -97,6 +99,7 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
         csvWriter.close();
       }
     }
+  }
 
     return null;
   }
@@ -120,6 +123,8 @@ public class DownloadTask extends SuitcaseSwingWorker<Void> {
         errMsg = IO_WRITE_ERR;
       } else if (cause instanceof JSONException) {
         errMsg = VISIT_WEB_ERROR;
+      } else if (cause instanceof ScanJsonException) {
+        errMsg = SCAN_FORMATTING_ERROR;
       } else {
         errMsg = GENERIC_ERR;
       }

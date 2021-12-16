@@ -2,6 +2,7 @@ package org.opendatakit.suitcase.net;
 
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
+import org.opendatakit.suitcase.model.SyncClientException;
 import org.opendatakit.suitcase.ui.DialogUtils;
 import org.opendatakit.suitcase.ui.ProgressBarStatus;
 import org.opendatakit.suitcase.ui.SuitcaseProgressBar;
@@ -27,7 +28,7 @@ public class ResetTask extends SuitcaseSwingWorker<Void> {
   }
 
   @Override
-  protected Void doInBackground() throws JSONException, IOException, InterruptedException {
+  protected Void doInBackground() throws JSONException, IOException, InterruptedException, SyncClientException {
     setString(IN_PROGRESS_STRING);
 
     SyncWrapper syncWrapper = SyncWrapper.getInstance();
@@ -37,8 +38,10 @@ public class ResetTask extends SuitcaseSwingWorker<Void> {
     JSONArray appFiles = syncWrapper.getManifestForAppLevelFiles(version).getJSONArray("files");
     for (int i = 0; i < appFiles.size(); i++) {
       String filename = appFiles.getJSONObject(i).getString("filename");
-      syncWrapper.deleteFile(filename, version);
-
+      int ret = syncWrapper.deleteFile(filename, version);
+      if(ret!=200) {
+        throw new IOException("Unknown Error occurred");    // If operation fails the stop the reset process.
+      }
       int progress = (int) ((double) i / appFiles.size() * 100);
       publish(new ProgressBarStatus(progress, "Stage 1/3: Deleted " + filename, null));
     }
