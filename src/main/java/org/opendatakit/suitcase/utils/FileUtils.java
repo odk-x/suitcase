@@ -62,7 +62,7 @@ public class FileUtils {
    */
   public static Path getCSVPath(CloudEndpointInfo cloudEndpointInfo, String tableId, CsvConfig config,
                                 String savePath) {
-    return getBasePath(cloudEndpointInfo, tableId, savePath).resolve(getCSVName(config));
+    return getBasePath(cloudEndpointInfo, tableId, savePath).resolve(getCSVName(config, tableId));
   }
 
   /**
@@ -123,15 +123,16 @@ public class FileUtils {
     return getBasePath(cloudEndpointInfo, tableId, savePath).resolve(INSTANCES_PATH);
   }
 
-  public static String getCSVName(CsvConfig config) {
+  public static String getCSVName(CsvConfig config, String tableId) {
     StringBuilder csvNameBuilder = new StringBuilder();
 
     csvNameBuilder
-        .append(config.isDownloadAttachment() ? DATA_CSV_MODIFIER : LINK_CSV_MODIFIER);
-
-    csvNameBuilder
-        .append(CSV_MODIFIER_SEPARATOR)
-        .append(config.isScanFormatting() ? FORMATTED_CSV_MODIFIER : UNFORMATTED_CSV_MODIFIER);
+    	.append(tableId)
+    	.append(CSV_MODIFIER_SEPARATOR)
+    	.append(config.isDownloadAttachment() ? DATA_CSV_MODIFIER : LINK_CSV_MODIFIER);
+	csvNameBuilder
+	    .append(CSV_MODIFIER_SEPARATOR)
+	    .append(config.isScanFormatting() ? FORMATTED_CSV_MODIFIER : UNFORMATTED_CSV_MODIFIER);
 
     if (config.isExtraMetadata()) {
       csvNameBuilder
