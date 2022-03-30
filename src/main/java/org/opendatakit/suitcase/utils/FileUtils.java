@@ -127,6 +127,8 @@ public class FileUtils {
     StringBuilder csvNameBuilder = new StringBuilder();
 
     csvNameBuilder
+    	.append(tableId)
+    	.append(CSV_MODIFIER_SEPARATOR)
     	.append(config.isDownloadAttachment() ? DATA_CSV_MODIFIER : LINK_CSV_MODIFIER);
 	csvNameBuilder
 	    .append(CSV_MODIFIER_SEPARATOR)
@@ -134,7 +136,6 @@ public class FileUtils {
 
     if (config.isExtraMetadata()) {
       csvNameBuilder
-          .append(tableId)
           .append(CSV_MODIFIER_SEPARATOR)
           .append(EXTRA_DATA_CSV_MODIFIER);
     }
