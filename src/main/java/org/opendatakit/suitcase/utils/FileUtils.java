@@ -127,16 +127,14 @@ public class FileUtils {
     StringBuilder csvNameBuilder = new StringBuilder();
 
     csvNameBuilder
-        .append(config.isDownloadAttachment() ? DATA_CSV_MODIFIER : tableId);
-    
-    if (config.isDownloadAttachment()) {
-	  csvNameBuilder
-	      .append(CSV_MODIFIER_SEPARATOR)
-	      .append(config.isScanFormatting() ? FORMATTED_CSV_MODIFIER : UNFORMATTED_CSV_MODIFIER);
-    }
+    	.append(config.isDownloadAttachment() ? DATA_CSV_MODIFIER : LINK_CSV_MODIFIER);
+	csvNameBuilder
+	    .append(CSV_MODIFIER_SEPARATOR)
+	    .append(config.isScanFormatting() ? FORMATTED_CSV_MODIFIER : UNFORMATTED_CSV_MODIFIER);
 
     if (config.isExtraMetadata()) {
       csvNameBuilder
+          .append(tableId)
           .append(CSV_MODIFIER_SEPARATOR)
           .append(EXTRA_DATA_CSV_MODIFIER);
     }
