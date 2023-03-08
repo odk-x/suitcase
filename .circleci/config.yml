@@ -19,10 +19,19 @@ jobs:
       # Checkout the code as the first step.
       - checkout
       # Use mvn clean and package as the standard maven build phase
+      
       - run:
-          name: Build
-          command: mvn -B -DskipTests clean package
-    
+          name: install dependencies
+          command: sudo apt-get update && sudo apt-get install -y ant maven
+
+      - run:
+          name: Build Suitcase
+          command: |
+            cd dependencies
+            ant
+            cd ..
+            mvn clean package
+
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
