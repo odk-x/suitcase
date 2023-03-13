@@ -15,5 +15,11 @@ jobs:
       - run:
           name: suitcase build
           command: |
-            echo 'Hello my people @ odk-x'
-            echo 'This is the build pipeline'
+            cd dependencies
+            ant
+            cd ..
+            mvn clean package
+  workflows:
+   my-suitcase-build:
+     jobs:
+       - build
