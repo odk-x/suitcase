@@ -19,7 +19,7 @@ jobs:
             ant
             cd ..
             mvn clean package
-  workflows:
-   my-suitcase-build:
-     jobs:
-       - build
+workflows:
+  my-suitcase-build:
+    jobs:
+      - build
