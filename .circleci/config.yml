@@ -11,7 +11,7 @@ jobs:
       - run:
           name: dependencies installation
           command: |
-            sudo apt-get update && sudo apt-get install -y ant maven 
+            apt-get update && apt-get install -y ant maven 
       - run:
           name: suitcase build
           command: |
