@@ -10,7 +10,8 @@ jobs:
       - checkout
       - run:
           name: dependencies installation
-          command: sudo apt-get update && sudo apt-get install -y ant maven
+          command: |
+            sudo apt-get update && sudo apt-get install -y ant maven
       - run:
           name: suitcase build
           command: |
