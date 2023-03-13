@@ -5,7 +5,7 @@ jobs:
       - image: alpine:3.15
         auth:
           username: mydockerhub-user
-          password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
+          password: $DOCKERHUB_PASSWORD  # does it build context / project UI env-var reference
     steps:
       - run:
           name: suitcase build
