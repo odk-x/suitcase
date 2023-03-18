@@ -6,9 +6,7 @@ The developer [wiki](https://github.com/odk-x/tool-suite-X/wiki) (including rele
 
 ## Setting up Your Environment
 
-1. Install Maven and Ant onto your system.
-(We recommend using [Maven 3.8.6](https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.8.6/) if you are on Windows, and downloading the binary directly. Maven 3.9.0 currently has some issues that would cause the build to fail)
-
+1. Install [Maven](https://maven.apache.org/download.cgi) and [Ant](https://ant.apache.org/bindownload.cgi) onto your system. 
 2. Run `ant` in the dependencies folder. 
 3. From the root directory (with the pom.xml), run: *mvn clean package*
 
