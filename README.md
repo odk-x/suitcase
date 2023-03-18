@@ -8,7 +8,7 @@ The developer [wiki](https://github.com/odk-x/tool-suite-X/wiki) (including rele
 
 1. Install [Maven](https://maven.apache.org/download.cgi) and [Ant](https://ant.apache.org/bindownload.cgi) onto your system. 
 2. Run `ant` in the dependencies folder. 
-3. From the root directory (with the pom.xml), run: `mvn clean package`
+3. From the root directory (with the pom.xml) run: `mvn clean package`
 
 A new folder, target, will be created with the resulting jar file. 
 
