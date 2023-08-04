@@ -233,7 +233,7 @@
 		</dependency>
         <dependency>
             <groupId>org.assertj</groupId>
-            <artifactId>assertj-swing-core</artifactId>
+            <artifactId>assertj-core</artifactId>
             <version>${org.assertj.core.version}</version>
             <scope>test</scope>
         </dependency>
