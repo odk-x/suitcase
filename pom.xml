@@ -170,6 +170,11 @@
     </build>
 
     <dependencies>
+	<dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-swing-aut</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
         <!-- ODK -->
 
         <dependency>
