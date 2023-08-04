@@ -38,7 +38,7 @@
         <com.fasterxml.jackson.databind.version>2.11.4</com.fasterxml.jackson.databind.version>
         <com.github.caciocavallosilano.version>1.10</com.github.caciocavallosilano.version>
         <org.assertj.junit.version>3.6.0</org.assertj.junit.version>
-        <org.assertj.aut.version>1.0.0-SNAPSHOT</org.assertj.aut.version>
+        <org.assertj.core.version>3.6.0</org.assertj.core.version>
         <org.assertj.swing.version>1.0.0</org.assertj.swing.version>
 
         <mainClass>org.opendatakit.suitcase.Suitcase</mainClass>
@@ -170,11 +170,6 @@
     </build>
 
     <dependencies>
-	<dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-swing-aut</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
         <!-- ODK -->
 
         <dependency>
@@ -238,8 +233,8 @@
 		</dependency>
         <dependency>
             <groupId>org.assertj</groupId>
-            <artifactId>assertj-swing-aut</artifactId>
-            <version>${org.assertj.aut.version}</version>
+            <artifactId>assertj-swing-core</artifactId>
+            <version>${org.assertj.core.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
