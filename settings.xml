@@ -17,14 +17,14 @@
         </repository>
         <repository>
           <id>github</id>
-          <url>https://maven.pkg.github.com/tr-sangale/sync-endpoint</url>
+          <url>https://maven.pkg.github.com/odk-x/sync-endpoint</url>
           <snapshots>
             <enabled>true</enabled>
           </snapshots>
         </repository>
         <repository>
           <id>github</id>
-          <url>https://maven.pkg.github.com/tr-sangale/sync-client</url>
+          <url>https://maven.pkg.github.com/odk-x/sync-client</url>
           <snapshots>
             <enabled>true</enabled>
           </snapshots>
