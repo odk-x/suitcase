@@ -15,7 +15,7 @@
          </repository>
    </distributionManagement>
     <properties>
-        <org.opendatakit.sync-client.version>2.0.0</org.opendatakit.sync-client.version>
+        <org.opendatakit.sync-client.version>LATEST</org.opendatakit.sync-client.version>
         <org.opendatakit.odk.rest.interface>2.0.0</org.opendatakit.odk.rest.interface>
 	   
 
