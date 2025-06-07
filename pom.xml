@@ -27,7 +27,7 @@
         <jacoco.version>0.8.4</jacoco.version>
         <junit.version>4.13.1</junit.version>
 
-        <com.fasterxml.jackson.version>2.11.4</com.fasterxml.jackson.version>
+        <com.fasterxml.jackson.version>2.13.0</com.fasterxml.jackson.version>
         <com.fasterxml.jackson.databind.version>2.11.4</com.fasterxml.jackson.databind.version>
         <com.github.caciocavallosilano.version>1.10</com.github.caciocavallosilano.version>
         <org.assertj.junit.version>3.6.0</org.assertj.junit.version>
